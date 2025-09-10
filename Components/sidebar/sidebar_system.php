@@ -31,7 +31,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
   <div id="sidebar" class="bg-gray-800 text-white w-64 min-h-screen flex flex-col transition-width duration-300 ease-in-out overflow-hidden">
 
     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
-      <a href="http://localhost/admin/Main/Dashboard.php" class="flex items-center gap-2">
+      <a href="/admin/Main/Dashboard.php" class="flex items-center gap-2">
         <img src="../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
         <img src="../assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
       </a>
@@ -40,47 +40,63 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </button>
     </div>
 
-  <nav class="flex-1 px-2 py-4 space-y-2 overflow-y-auto text-gray-300">
-  <!-- Dashboard -->
-  <a href="/admin/Main/Dashboard.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'Dashboard.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="home" class="w-5 h-5"></i>
-    <span class="sidebar-text">Dashboard</span>
-  </a>
+    <nav class="flex-1 px-2 py-4 space-y-2 overflow-y-auto text-gray-300">
+      
+      <!-- Dashboard -->
+      <a href="/admin/Main/Dashboard.php"
+         class="flex items-center gap-3 px-3 py-2 rounded  <?= $currentPage === 'Dashboard.php' ? 'bg-gray-700 text-white' : '' ?>">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span class="sidebar-text">Dashboard</span>
+      </a>
+      
+      
+<!-- Core dropdown with label side-by-side -->
+      <div class="flex items-center px-3 py-2 space-x-3">
+       
+        <select
+          id="coreSelect"
+          class="flex-1 bg-gray-700 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onchange="if(this.value) window.location.href=this.value;"
+        >
+        
+          <option value="/admin/module-table/core1.php">Core 1</option>
+          <option value="/admin/module-table/core2.php">Core 2</option>
+        </select>
+      </div>
 
-  <!-- Facility Booking -->
-  <a href="/admin/module-table/facilities.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'facility.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="building" class="w-5 h-5"></i>
-    <span class="sidebar-text">Facility List</span>
-  </a>
+      <!-- HR dropdown with label side-by-side -->
+      <div class="flex items-center px-3 py-2 space-x-3">
+       
+        <select
+          id="hrSelect"
+          class="flex-1 bg-gray-700 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onchange="if(this.value) window.location.href=this.value;"
+        >
+        
+          <option value="/admin/module-table/hr1.php">HR 1</option>
+          <option value="/admin/module-table/hr2.php">HR 2</option>
+          <option value="/admin/module-table/hr3.php">HR 3</option>
+          <option value="/admin/module-table/hr4.php">HR 4</option>
+        </select>
+      </div>
 
-  <!-- Visitor Logs -->
-  <a href="/admin/module-table/visitors.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="users" class="w-5 h-5"></i>
-    <span class="sidebar-text">Visitor Logs</span>
-  </a>
-
-  <!-- Contract & Legal -->
-  <a href="/admin/main/contract.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="file-text" class="w-5 h-5"></i>
-    <span class="sidebar-text">Contract & Legal</span>
-  </a>
-
-
-   <a href="/admin/main/intergation.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="file-text" class="w-5 h-5"></i>
-    <span class="sidebar-text">intergation</span>
-  </a> 
-
-
- 
+      <!-- Logistic dropdown with label side-by-side -->
+      <div class="flex items-center px-3 py-2 space-x-3">
+        <select
+          id="logisticSelect"
+          class="flex-1 bg-gray-700 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onchange="if(this.value) window.location.href=this.value;"
+        >
+        
+          <option value="/admin/module-table/logistic1.php">Logistic 1</option>
+          <option value="/admin/module-table/logistic2.php">Logistic 2</option>
+        </select>
+      </div>
 
 
-
+</nav>
+      
+    </nav>
   </div>
 
   <div class="flex-1 min-h-screen overflow-auto">
@@ -97,7 +113,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       const icon = toggleBtn.querySelector("i");
 
       toggleBtn.addEventListener("click", () => {
-        // Toggle width classes
         sidebar.classList.toggle("w-64");
         sidebar.classList.toggle("w-20");
         sidebar.classList.toggle("overflow-hidden");

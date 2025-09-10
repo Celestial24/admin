@@ -31,9 +31,9 @@ $total_users = count($users);
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard - Admin</title>
+  <title>intergation</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
+  <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
   <style>
     html, body {
       overflow-y: hidden;
@@ -51,7 +51,7 @@ $total_users = count($users);
 
     <!-- Sidebar -->
     <div id="sidebar">
-      <?php include '../Components/sidebar/sidebar_admin.php'; ?>
+      <?php include '../Components/sidebar/sidebar_system.php'; ?>
     </div>
 
     <!-- Main Content -->

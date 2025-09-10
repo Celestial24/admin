@@ -1,48 +1,100 @@
 <?php
-// Start session and require DB connection
 session_start();
 require '../backend/sql/db.php';
 
-// Initialize error message
-$error = '';
+/**
+ * Attempts to log in a user using email or name and password.
+ *
+ * @param mysqli $conn
+ * @param string $emailOrName
+ * @param string $password
+ * @return array
+ */
+function loginUser(mysqli $conn, string $emailOrName, string $password): array {
+    if (empty($emailOrName) || empty($password)) {
+        return ['success' => false, 'error' => 'Please enter your email or username and password.', 'user' => null];
+    }
 
-// Handle form submission
+    // Query user
+    $stmt = $conn->prepare("SELECT id, name, email, password_hash, is_verified, role, department FROM users WHERE email = ? OR name = ?");
+    if (!$stmt) {
+        return ['success' => false, 'error' => 'Database error.', 'user' => null];
+    }
+
+    $stmt->bind_param("ss", $emailOrName, $emailOrName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+
+    if (!$user) {
+        return ['success' => false, 'error' => 'User not found.', 'user' => null];
+    }
+
+    if (!$user['is_verified']) {
+        return ['success' => false, 'error' => 'Your account is not yet verified.', 'user' => null];
+    }
+
+    // Verify password
+    if (!password_verify($password, $user['password_hash'])) {
+        return ['success' => false, 'error' => 'Incorrect password.', 'user' => null];
+    }
+
+    // Rehash password if needed
+    if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
+        $newHash = password_hash($password, PASSWORD_DEFAULT);
+        $updateStmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        if ($updateStmt) {
+            $updateStmt->bind_param("si", $newHash, $user['id']);
+            $updateStmt->execute();
+            $updateStmt->close();
+        }
+    }
+
+    // Don't return password hash
+    unset($user['password_hash']);
+
+    return ['success' => true, 'error' => null, 'user' => $user];
+}
+
+// --- HANDLE FORM SUBMISSION ---
+$error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usernameOrEmail = trim($_POST['username'] ?? '');
+    $emailOrName = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if (empty($usernameOrEmail) || empty($password)) {
-        $error = "Please enter username/email and password.";
-    } else {
-        // Prepare SQL query to prevent SQL injection
-        $stmt = $conn->prepare("SELECT * FROM admin_user WHERE username = ? OR email = ?");
-        $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    $result = loginUser($conn, $emailOrName, $password);
 
-        // Check if user exists
-        if ($user = $result->fetch_assoc()) {
-            // Verify password (assuming stored hashed with password_hash)
-            if (password_verify($password, $user['password'])) {
-                // Set session variables
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
+    if ($result['success']) {
+        $user = $result['user'];
 
-                // Redirect to main page after login
-               // Redirect to main page after login
+        // Store user info in session
+        $_SESSION['user_id']    = $user['id'];
+        $_SESSION['name']       = $user['name'];
+        $_SESSION['email']      = $user['email'];
+        $_SESSION['role']       = $user['role'];
+        $_SESSION['department'] = $user['department'];
+
+        // Redirect based on role
+        switch ($user['role']) {
+            case 'super-admin':
+                header("Location: ../super-admin/dashboard.php");
+                break;
+            case 'admin':
+                header("Location: ../admin/dashboard.php");
+                break;
+            default:
                 header("Location: ../Main/Dashboard.php");
-
-                exit();
-
-            } else {
-                $error = "Invalid password.";
-            }
-        } else {
-            $error = "User not found.";
+                break;
         }
+        exit();
+    } else {
+        $error = $result['error'];
     }
 }
 ?>
+
+
 
 
 <!DOCTYPE html>

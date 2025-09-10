@@ -1,17 +1,20 @@
-<?php 
+<?php
 session_start();
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-include_once __DIR__ . '/../backend/sql/db.php';
+include_once __DIR__ . '/../backend/sql/db.php'; // Your mysqli connection in $conn
 
 require_once __DIR__ . '/../backend/PHPMailer/src/Exception.php';
 require_once __DIR__ . '/../backend/PHPMailer/src/PHPMailer.php';
 require_once __DIR__ . '/../backend/PHPMailer/src/SMTP.php';
 
+// Define your actual admin registration code here:
+define('ADMIN_REG_CODE', 'admin1234'); // <-- CHANGE THIS to your actual secure admin code
+
 // Initialize variables
-$name = $email = $receiver_email = $department = "";
+$name = $email = $receiver_email = $admin_code = "";
 $errors = [];
 
 // Sanitize input function
@@ -24,9 +27,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $name = sanitize($_POST['name'] ?? '');
     $email = sanitize($_POST['email'] ?? '');
     $receiver_email = sanitize($_POST['receiver_email'] ?? '');
-    $department = sanitize($_POST['department'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $admin_code = sanitize($_POST['admin_code'] ?? '');
 
     // Validate inputs
     if (!$name) {
@@ -40,13 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$receiver_email) {
-        $errors[] = "Email to receive verification code is required.";
+        $errors[] = "Receiver email is required.";
     } elseif (!filter_var($receiver_email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid verification email format.";
-    }
-
-    if (!$department) {
-        $errors[] = "Department is required.";
+        $errors[] = "Invalid receiver email format.";
     }
 
     if (!$password) {
@@ -57,6 +56,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($password !== $confirm_password) {
         $errors[] = "Passwords do not match.";
+    }
+
+    if (!$admin_code || $admin_code !== ADMIN_REG_CODE) {
+        $errors[] = "Invalid admin registration code.";
     }
 
     // Check if email already exists in DB
@@ -75,30 +78,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    // Proceed with registration if no errors
+    // Proceed with registration
     if (empty($errors)) {
         $verification_code = random_int(100000, 999999);
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $insert_stmt = mysqli_prepare($conn, "INSERT INTO users (name, email, password_hash, verification_code, is_verified, department) VALUES (?, ?, ?, ?, 0, ?)");
+        $insert_stmt = mysqli_prepare($conn, "INSERT INTO users (name, email, password_hash, verification_code, is_verified) VALUES (?, ?, ?, ?, 0)");
         if (!$insert_stmt) {
             $errors[] = "Database error: " . mysqli_error($conn);
         } else {
-            mysqli_stmt_bind_param($insert_stmt, "sssss", $name, $email, $password_hash, $verification_code, $department);
+            mysqli_stmt_bind_param($insert_stmt, "ssss", $name, $email, $password_hash, $verification_code);
             if (mysqli_stmt_execute($insert_stmt)) {
                 $mail = new PHPMailer(true);
                 try {
+                    // SMTP configuration
                     $mail->isSMTP();
                     $mail->Host = 'smtp.gmail.com';
                     $mail->SMTPAuth = true;
                     $mail->Username = 'atiera41001@gmail.com'; // Your Gmail
-                    $mail->Password = 'potz sbxk unrz hdqc';    // Your Gmail app password
+                    $mail->Password = 'your-app-password';    // Your Gmail app password
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port = 587;
 
                     $mail->setFrom('atiera41001@gmail.com', 'Your Website Team');
                     $mail->addAddress($receiver_email, $name);
 
+                    // Email content
                     $mail->isHTML(false);
                     $mail->Subject = "Verify your email for account: $email";
                     $mail->Body = "Hello $name,
@@ -114,6 +119,7 @@ Your Website Team";
 
                     $mail->send();
 
+                    // Redirect to verification page
                     header("Location: verify.php?email=" . urlencode($email));
                     exit;
                 } catch (Exception $e) {
@@ -133,7 +139,6 @@ Your Website Team";
 <head>
   <meta charset="UTF-8" />
   <title>Create Admin Account</title>
-  <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
@@ -174,15 +179,10 @@ Your Website Team";
       </div>
 
       <div>
-        <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
-        <select id="department" name="department" required
-                class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">Select Department</option>
-          <option value="HR1" <?= $department == "HR1" ? "selected" : "" ?>>HR1</option>
-          <option value="HR2" <?= $department == "HR2" ? "selected" : "" ?>>HR2</option>
-          <option value="HR3" <?= $department == "HR3" ? "selected" : "" ?>>HR3</option>
-          <option value="HR4" <?= $department == "HR4" ? "selected" : "" ?>>HR4</option>
-        </select>
+        <label for="admin_code" class="block text-sm font-medium text-gray-700">Admin Registration Code</label>
+        <input type="text" id="admin_code" name="admin_code" required
+               value="<?= htmlspecialchars($admin_code) ?>"
+               class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
       <div>

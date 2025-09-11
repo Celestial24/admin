@@ -2,25 +2,36 @@
 session_start();
 require '../backend/sql/db.php';
 
-/**
- * Attempts to log in a user using email or name and password.
- *
- * @param mysqli $conn
- * @param string $emailOrName
- * @param string $password
- * @return array
- */
-function loginUser(mysqli $conn, string $emailOrName, string $password): array {
+function loginAdmin($conn, $usernameOrEmail, $password) {
+    if (empty($usernameOrEmail) || empty($password)) {
+        return ['success' => false, 'error' => 'Please enter username/email and password.'];
+    }
+
+    $stmt = $conn->prepare("SELECT * FROM admin_user WHERE username = ? OR email = ?");
+    $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $admin = $result->fetch_assoc();
+    $stmt->close();
+
+    if (!$admin) {
+        return ['success' => false, 'error' => 'Admin user not found.'];
+    }
+
+    // Ideally, use hashed password even for admin
+    if (!password_verify($password, $admin['password'])) {
+        return ['success' => false, 'error' => 'Incorrect password.'];
+    }
+
+    return ['success' => true, 'user' => $admin];
+}
+
+function loginUser($conn, $emailOrName, $password) {
     if (empty($emailOrName) || empty($password)) {
-        return ['success' => false, 'error' => 'Please enter your email or username and password.', 'user' => null];
+        return ['success' => false, 'error' => 'Please enter email/name and password.'];
     }
 
-    // Query user
-    $stmt = $conn->prepare("SELECT id, name, email, password_hash, is_verified, role, department FROM users WHERE email = ? OR name = ?");
-    if (!$stmt) {
-        return ['success' => false, 'error' => 'Database error.', 'user' => null];
-    }
-
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? OR name = ?");
     $stmt->bind_param("ss", $emailOrName, $emailOrName);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -28,203 +39,182 @@ function loginUser(mysqli $conn, string $emailOrName, string $password): array {
     $stmt->close();
 
     if (!$user) {
-        return ['success' => false, 'error' => 'User not found.', 'user' => null];
+        return ['success' => false, 'error' => 'User not found.'];
     }
 
     if (!$user['is_verified']) {
-        return ['success' => false, 'error' => 'Your account is not yet verified.', 'user' => null];
+        return ['success' => false, 'error' => 'Your account is not verified.'];
     }
 
-    // Verify password
     if (!password_verify($password, $user['password_hash'])) {
-        return ['success' => false, 'error' => 'Incorrect password.', 'user' => null];
+        return ['success' => false, 'error' => 'Incorrect password.'];
     }
 
-    // Rehash password if needed
-    if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
-        $newHash = password_hash($password, PASSWORD_DEFAULT);
-        $updateStmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-        if ($updateStmt) {
-            $updateStmt->bind_param("si", $newHash, $user['id']);
-            $updateStmt->execute();
-            $updateStmt->close();
-        }
-    }
-
-    // Don't return password hash
-    unset($user['password_hash']);
-
-    return ['success' => true, 'error' => null, 'user' => $user];
+    return ['success' => true, 'user' => $user];
 }
 
-// --- HANDLE FORM SUBMISSION ---
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $emailOrName = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+// --- Determine login type and credentials ---
+$login_type = $_POST['login_type'] ?? 'user';
+$usernameOrEmail = $_POST['username'] ?? '';
+$password = $_POST['password'] ?? '';
 
-    $result = loginUser($conn, $emailOrName, $password);
+if ($login_type === 'admin') {
+    $result = loginAdmin($conn, $usernameOrEmail, $password);
+} else {
+    $result = loginUser($conn, $usernameOrEmail, $password);
+}
 
-    if ($result['success']) {
-        $user = $result['user'];
+if ($result['success']) {
+    $user = $result['user'];
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
+    $_SESSION['email'] = $user['email'] ?? '';
+    $_SESSION['role'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
 
-        // Store user info in session
-        $_SESSION['user_id']    = $user['id'];
-        $_SESSION['name']       = $user['name'];
-        $_SESSION['email']      = $user['email'];
-        $_SESSION['role']       = $user['role'];
-        $_SESSION['department'] = $user['department'];
-
-        // Redirect based on role
-        switch ($user['role']) {
-            case 'super-admin':
-                header("Location: ../super-admin/dashboard.php");
-                break;
-            case 'admin':
-                header("Location: ../admin/dashboard.php");
-                break;
-            default:
-                header("Location: ../Main/Dashboard.php");
-                break;
-        }
-        exit();
+    // Redirect based on role
+    if ($login_type === 'admin') {
+        header("Location: ../user/dashboard.php");
     } else {
-        $error = $result['error'];
+        if ($user['role'] === 'super-admin') {
+            header("Location: ../super-admin/dashboard.php");
+        } else {
+            header("Location: ../Main/Dashboard.php");
+        }
     }
+    exit;
+} else {
+    $error = $result['error'];
+    // You can display this error in your frontend
 }
 ?>
-
 
 
 
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ATIERA — Secure Login</title>
-<link rel="icon" type="image/png" href="../assets/image/logo2.png" />
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ATIERA — Secure Login</title>
+  <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<style>
-  :root{
-    --blue-600:#1b2f73; --blue-700:#15265e; --blue-800:#0f1c49; --blue-a:#2342a6;
-    --gold:#d4af37; --ink:#0f172a; --muted:#64748b;
-    --ring:0 0 0 3px rgba(35,66,166,.28);
-    --card-bg: rgba(255,255,255,.95); --card-border: rgba(226,232,240,.9);
-    --wm-opa-light:.35; --wm-opa-dark:.55;
-  }
-  @media (prefers-color-scheme: dark){ :root{ --ink:#e5e7eb; --muted:#9ca3af; } }
+  <style>
+    :root{
+      --blue-600:#1b2f73; --blue-700:#15265e; --blue-800:#0f1c49; --blue-a:#2342a6;
+      --gold:#d4af37; --ink:#0f172a; --muted:#64748b;
+      --ring:0 0 0 3px rgba(35,66,166,.28);
+      --card-bg: rgba(255,255,255,.95); --card-border: rgba(226,232,240,.9);
+      --wm-opa-light:.35; --wm-opa-dark:.55;
+    }
+    @media (prefers-color-scheme: dark){ :root{ --ink:#e5e7eb; --muted:#9ca3af; } }
 
-  /* ===== Background ===== */
-  body{
-    min-height:100svh; margin:0; color:var(--ink);
-    background:
-      radial-gradient(70% 60% at 8% 10%, rgba(255,255,255,.18) 0, transparent 60%),
-      radial-gradient(40% 40% at 100% 0%, rgba(212,175,55,.08) 0, transparent 40%),
-      linear-gradient(140deg, rgba(15,28,73,1) 50%, rgba(255,255,255,1) 50%);
-  }
-  html.dark body{
-    background:
-      radial-gradient(70% 60% at 8% 10%, rgba(212,175,55,.08) 0, transparent 60%),
-      radial-gradient(40% 40% at 100% 0%, rgba(212,175,55,.12) 0, transparent 40%),
-      linear-gradient(140deg, rgba(7,12,38,1) 50%, rgba(11,21,56,1) 50%);
-    color:#e5e7eb;
-  }
+    /* ===== Background ===== */
+    body{
+      min-height:100svh; margin:0; color:var(--ink);
+      background:
+        radial-gradient(70% 60% at 8% 10%, rgba(255,255,255,.18) 0, transparent 60%),
+        radial-gradient(40% 40% at 100% 0%, rgba(212,175,55,.08) 0, transparent 40%),
+        linear-gradient(140deg, rgba(15,28,73,1) 50%, rgba(255,255,255,1) 50%);
+    }
+    html.dark body{
+      background:
+        radial-gradient(70% 60% at 8% 10%, rgba(212,175,55,.08) 0, transparent 60%),
+        radial-gradient(40% 40% at 100% 0%, rgba(212,175,55,.12) 0, transparent 40%),
+        linear-gradient(140deg, rgba(7,12,38,1) 50%, rgba(11,21,56,1) 50%);
+      color:#e5e7eb;
+    }
 
-  /* ===== Watermark ===== */
-  .bg-watermark{ position:fixed; inset:0; z-index:-1; display:grid; place-items:center; pointer-events:none; }
-  .bg-watermark img{
-    width:min(820px,70vw); max-height:68vh; object-fit:contain; opacity:var(--wm-opa-light);
-    filter: drop-shadow(0 0 26px rgba(255,255,255,.40)) drop-shadow(0 14px 34px rgba(0,0,0,.25));
-    transition:opacity .25s ease, filter .25s ease, transform .6s ease;
-  }
-  html.dark .bg-watermark img{
-    opacity:var(--wm-opa-dark);
-    filter: drop-shadow(0 0 34px rgba(255,255,255,.55)) drop-shadow(0 16px 40px rgba(0,0,0,.30));
-  }
+    /* ===== Watermark ===== */
+    .bg-watermark{ position:fixed; inset:0; z-index:-1; display:grid; place-items:center; pointer-events:none; }
+    .bg-watermark img{
+      width:min(820px,70vw); max-height:68vh; object-fit:contain; opacity:var(--wm-opa-light);
+      filter: drop-shadow(0 0 26px rgba(255,255,255,.40)) drop-shadow(0 14px 34px rgba(0,0,0,.25));
+      transition:opacity .25s ease, filter .25s ease, transform .6s ease;
+    }
+    html.dark .bg-watermark img{
+      opacity:var(--wm-opa-dark);
+      filter: drop-shadow(0 0 34px rgba(255,255,255,.55)) drop-shadow(0 16px 40px rgba(0,0,0,.30));
+    }
 
-  .reveal { opacity:0; transform:translateY(8px); animation:reveal .45s .05s both; }
-  @keyframes reveal { to { opacity:1; transform:none; } }
+    .reveal { opacity:0; transform:translateY(8px); animation:reveal .45s .05s both; }
+    @keyframes reveal { to { opacity:1; transform:none; } }
 
-  /* ===== Card ===== */
-  .card{
-    background:var(--card-bg); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    border:1px solid var(--card-border); border-radius:18px; box-shadow:0 16px 48px rgba(2,6,23,.18);
-  }
-  html.dark .card{ background:rgba(17,24,39,.92); border-color:rgba(71,85,105,.55); box-shadow:0 16px 48px rgba(0,0,0,.5); }
+    /* ===== Card ===== */
+    .card{
+      background:var(--card-bg); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+      border:1px solid var(--card-border); border-radius:18px; box-shadow:0 16px 48px rgba(2,6,23,.18);
+    }
+    html.dark .card{ background:rgba(17,24,39,.92); border-color:rgba(71,85,105,.55); box-shadow:0 16px 48px rgba(0,0,0,.5); }
 
-  /* ===== Inputs ===== */
-  .field{ position:relative; }
-  .input{
-    width:100%; border:1px solid #e5e7eb; border-radius:12px; background:#fff;
-    padding:1rem 2.6rem 1rem .95rem; outline:none; color:#0f172a; transition:border-color .15s, box-shadow .15s, background .15s;
-  }
-  .input:focus{ border-color:var(--blue-a); box-shadow:var(--ring) }
-  html.dark .input{ background:#0b1220; border-color:#243041; color:#e5e7eb; }
-  .float-label{
-    position:absolute; left:.9rem; top:50%; transform:translateY(-50%); padding:0 .25rem; color:#94a3b8;
-    pointer-events:none; background:transparent; transition:all .15s ease;
-  }
-  .input:focus + .float-label,
-  .input:not(:placeholder-shown) + .float-label{
-    top:0; transform:translateY(-50%) scale(.92); color:var(--blue-a); background:#fff;
-  }
-  html.dark .input:focus + .float-label,
-  html.dark .input:not(:placeholder-shown) + .float-label{ background:#0b1220; }
-  .icon-right{ position:absolute; right:.6rem; top:50%; transform:translateY(-50%); color:#64748b; }
-  html.dark .icon-right{ color:#94a3b8; }
+    /* ===== Inputs ===== */
+    .field{ position:relative; }
+    .input{
+      width:100%; border:1px solid #e5e7eb; border-radius:12px; background:#fff;
+      padding:1rem 2.6rem 1rem .95rem; outline:none; color:#0f172a; transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    .input:focus{ border-color:var(--blue-a); box-shadow:var(--ring) }
+    html.dark .input{ background:#0b1220; border-color:#243041; color:#e5e7eb; }
+    .float-label{
+      position:absolute; left:.9rem; top:50%; transform:translateY(-50%); padding:0 .25rem; color:#94a3b8;
+      pointer-events:none; background:transparent; transition:all .15s ease;
+    }
+    .input:focus + .float-label,
+    .input:not(:placeholder-shown) + .float-label{
+      top:0; transform:translateY(-50%) scale(.92); color:var(--blue-a); background:#fff;
+    }
+    html.dark .input:focus + .float-label,
+    html.dark .input:not(:placeholder-shown) + .float-label{ background:#0b1220; }
+    .icon-right{ position:absolute; right:.6rem; top:50%; transform:translateY(-50%); color:#64748b; }
+    html.dark .icon-right{ color:#94a3b8; }
 
-  /* ===== Buttons ===== */
-  .btn{
-    width:100%; display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
-    background:linear-gradient(180deg, var(--blue-600), var(--blue-800));
-    color:#fff; font-weight:800; border-radius:14px; padding:.95rem 1rem; border:1px solid rgba(255,255,255,.06);
-    transition:transform .08s ease, filter .15s ease, box-shadow .2s ease; box-shadow:0 8px 18px rgba(2,6,23,.18);
-  }
-  .btn:hover{ filter:saturate(1.08); box-shadow:0 12px 26px rgba(2,6,23,.26); }
-  .btn:active{ transform:translateY(1px) scale(.99); }
-  .btn[disabled]{ opacity:.85; cursor:not-allowed; }
+    /* ===== Buttons ===== */
+    .btn{
+      width:100%; display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
+      background:linear-gradient(180deg, var(--blue-600), var(--blue-800));
+      color:#fff; font-weight:800; border-radius:14px; padding:.95rem 1rem; border:1px solid rgba(255,255,255,.06);
+      transition:transform .08s ease, filter .15s ease, box-shadow .2s ease; box-shadow:0 8px 18px rgba(2,6,23,.18);
+    }
+    .btn:hover{ filter:saturate(1.08); box-shadow:0 12px 26px rgba(2,6,23,.26); }
+    .btn:active{ transform:translateY(1px) scale(.99); }
+    .btn[disabled]{ opacity:.85; cursor:not-allowed; }
 
-  /* ===== Alerts (inline attempts/info) ===== */
-  .alert{ border-radius:12px; padding:.65rem .8rem; font-size:.9rem }
-  .alert-error{ border:1px solid #fecaca; background:#fef2f2; color:#b91c1c }
-  .alert-info{ border:1px solid #c7d2fe; background:#eef2ff; color:#3730a3 }
-  html.dark .alert-error{ background:#3f1b1b; border-color:#7f1d1d; color:#fecaca }
-  html.dark .alert-info{ background:#1e1b4b; border-color:#3730a3; color:#c7d2fe }
+    /* ===== Alerts (inline attempts/info) ===== */
+    .alert{ border-radius:12px; padding:.65rem .8rem; font-size:.9rem }
+    .alert-error{ border:1px solid #fecaca; background:#fef2f2; color:#b91c1c }
+    .alert-info{ border:1px solid #c7d2fe; background:#eef2ff; color:#3730a3 }
+    html.dark .alert-error{ background:#3f1b1b; border-color:#7f1d1d; color:#fecaca }
+    html.dark .alert-info{ background:#1e1b4b; border-color:#3730a3; color:#c7d2fe }
 
-  /* ===== Popup animations (slow) ===== */
-  @keyframes popSpring { 0%{transform:scale(.92);opacity:0} 60%{transform:scale(1.04);opacity:1} 85%{transform:scale(.98)} 100%{transform:scale(1)} }
-  @keyframes fadeBackdrop { from{opacity:0} to{opacity:1} }
-  @keyframes ripple { 0%{transform:scale(.6);opacity:.35} 70%{transform:scale(1.4);opacity:.18} 100%{transform:scale(1.8);opacity:0} }
-  @keyframes slideUp { from { transform: translateY(6px) } to { transform: translateY(0) } }
-  @keyframes shakeX { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(2px)} }
-  @media (prefers-reduced-motion: reduce){
-    #popupCard, #popupBackdrop, #popupTitle, #popupMsg { animation: none !important }
-  }
-  .popup-success #popupIconWrap{ background:linear-gradient(180deg,#16a34a,#15803d) }
-  .popup-info    #popupIconWrap{ background:linear-gradient(180deg,#2563eb,#1d4ed8) }
-  .popup-error   #popupIconWrap{ background:linear-gradient(180deg,#ef4444,#b91c1c) }
-  .popup-goodbye #popupIconWrap{ background:linear-gradient(180deg,var(--blue-600),var(--blue-800)) }
+    /* ===== Popup animations (slow) ===== */
+    @keyframes popSpring { 0%{transform:scale(.92);opacity:0} 60%{transform:scale(1.04);opacity:1} 85%{transform:scale(.98)} 100%{transform:scale(1)} }
+    @keyframes fadeBackdrop { from{opacity:0} to{opacity:1} }
+    @keyframes ripple { 0%{transform:scale(.6);opacity:.35} 70%{transform:scale(1.4);opacity:.18} 100%{transform:scale(1.8);opacity:0} }
+    @keyframes slideUp { from { transform: translateY(6px) } to { transform: translateY(0) } }
+    @keyframes shakeX { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(2px)} }
+    @media (prefers-reduced-motion: reduce){
+      #popupCard, #popupBackdrop, #popupTitle, #popupMsg { animation: none !important }
+    }
+    .popup-success #popupIconWrap{ background:linear-gradient(180deg,#16a34a,#15803d) }
+    .popup-info    #popupIconWrap{ background:linear-gradient(180deg,#2563eb,#1d4ed8) }
+    .popup-error   #popupIconWrap{ background:linear-gradient(180deg,#ef4444,#b91c1c) }
+    .popup-goodbye #popupIconWrap{ background:linear-gradient(180deg,var(--blue-600),var(--blue-800)) }
 
-  .typing::after{ content:'|'; margin-left:2px; opacity:.6; animation: blink 1s steps(1) infinite; }
-  @keyframes blink { 50%{opacity:0} }
-</style>
+    .typing::after{ content:'|'; margin-left:2px; opacity:.6; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50%{opacity:0} }
+  </style>
 </head>
-
 <body class="grid md:grid-cols-2 gap-0 place-items-center p-6 md:p-10">
-
-
 
   <!-- Watermark -->
   <div class="bg-watermark" aria-hidden="true">
-    <img src="../assets/image/logo.png" " alt="ATIERA watermark" id="wm">
+    <img src="../assets/image/logo.png" alt="ATIERA watermark" id="wm">
   </div>
 
   <!-- Left panel -->
   <section class="hidden md:flex w-full h-full items-center justify-center">
     <div class="max-w-lg text-white px-6 reveal">
-      <img src="../assets/image/logo.png"  alt="ATIERA" class="w-56 mb-6 drop-shadow-xl select-none" draggable="false">
+      <img src="../assets/image/logo.png" alt="ATIERA" class="w-56 mb-6 drop-shadow-xl select-none" draggable="false">
       <h1 class="text-4xl font-extrabold leading-tight tracking-tight">
         ATIERA <span style="color:var(--gold)">HOTEL & RESTAURANT</span> Management
       </h1>
@@ -240,7 +230,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <img src="logo.png" alt="ATIERA" class="h-10 w-auto">
           <div>
             <div class="text-sm font-semibold leading-4">ATIERA Finance Suite</div>
-            <div class="text-[10px] text-[color:var(--muted)]">Blue • White • <span class="font-medium" style="color:var(--gold)">Gold</span></div>
+            <div class="text-[10px] text-[color:var(--muted)]">
+              Blue • White • <span class="font-medium" style="color:var(--gold)">Gold</span>
+            </div>
           </div>
         </div>
         <button id="modeBtn" class="px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-white/60 dark:hover:bg-slate-800" aria-pressed="false" title="Toggle dark mode">🌓</button>
@@ -251,21 +243,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <!-- Inline attempt + info banners -->
       <div id="alert" class="alert alert-error hidden mb-2" role="alert"></div>
-      <div id="info"  class="alert alert-info  hidden mb-4" role="status"></div>
+      <div id="info" class="alert alert-info hidden mb-4" role="status"></div>
 
       <form id="loginForm" class="space-y-4" method="POST" action="" novalidate>
-
-        <!-- Username -->
+        <input type="hidden" name="login_type" value="admin">
         <div class="field">
           <input id="username" name="username" type="text" autocomplete="username" class="input peer" placeholder=" " required aria-describedby="userHelp">
           <label for="username" class="float-label">Username or Email</label>
           <span class="icon-right" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5Z" fill="currentColor"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5Z" fill="currentColor"/>
+            </svg>
           </span>
           <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">admin</span> or <span class="font-mono">admin@example.com</span></p>
         </div>
-
-        <!-- Password -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
@@ -276,13 +267,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="password" class="float-label">••••••••</label>
             <div class="icon-right flex items-center gap-1">
               <button type="button" id="togglePw" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center" aria-label="Show password" aria-pressed="false" title="Show/Hide password">
-                <svg id="eyeOn" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 11a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z" fill="currentColor"/></svg>
-                <svg id="eyeOff" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 4.27 4.28 3 21 19.72 19.73 21l-2.2-2.2A11.73 11.73 0 0 1 12 19c-5 0-9.27-3.11-11-7a12.71 12.71 0 0 1 4.1-4.73L3 4.27ZM12 7a5 5 0 0 1 5 5 5 5 0 0 1-.46 2.11L14.6 12.17A2.5 2.5 0 0 0 11.83 9.4L9.9 7.46A4.84 4.84 0 0 1 12 7Z" fill="currentColor"/></svg>
+                <svg id="eyeOn" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 11a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z" fill="currentColor"/>
+                </svg>
+                <svg id="eyeOff" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 4.27 4.28 3 21 19.72 19.73 21l-2.2-2.2A11.73 11.73 0 0 1 12 19c-5 0-9.27-3.11-11-7a12.71 12.71 0 0 1 4.1-4.73L3 4.27ZM12 7a5 5 0 0 1 5 5 5 5 0 0 1-.46 2.11L14.6 12.17A2.5 2.5 0 0 0 11.83 9.4L9.9 7.46A4.84 4.84 0 0 1 12 7Z" fill="currentColor"/>
+                </svg>
               </button>
             </div>
           </div>
-
-          <!-- Strength meter -->
           <div class="mt-2 flex items-center gap-2">
             <div class="h-1.5 flex-1 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden" aria-hidden="true">
               <div id="pwBar" class="h-full w-1/12 bg-blue-600 dark:bg-blue-500"></div>
@@ -290,14 +283,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <span id="pwLabel" class="text-xs text-slate-500 dark:text-slate-400 w-14 text-right">weak</span>
           </div>
         </div>
-
-        <!-- Submit -->
         <button id="submitBtn" type="submit" class="btn" aria-live="polite">
           <span id="btnText">Sign In</span>
         </button>
-
-        <a href="../auth/Register.php" class="text-black" >Create a account</a>
-
+        <a href="../auth/Register.php" class="text-black">Create an account</a>
         <p class="text-xs text-center text-slate-500 dark:text-slate-400">© 2025 ATIERA BSIT 4101 CLUSTER 1</p>
       </form>
     </div>
@@ -322,6 +311,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
   </div>
+</body>
+
 
 <script>
   const $ = (s, r=document)=>r.querySelector(s);
@@ -534,31 +525,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     setTimeout(()=> card.style.animation = '', 360);
   }
 
-  /* ---------- LOGIN SUBMIT ---------- */
+  /* ---------- LOGIN SUBMIT (API version) ---------- */
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError(); hideInfo();
     if (checkLock()) return;
 
-    const u = userEl.value.trim().toLowerCase();
+    const u = userEl.value.trim();
     const p = pwEl.value;
     if (!u || !p) { showError('Please enter username/email and password.'); return; }
 
     startLoading();
 
-    // DEMO AUTH
-    setTimeout(() => {
-      const ok = ((u === 'admin' || u === 'admin@example.com') && p === '123');
+    try {
+      const response = await fetch('login_api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`
+      });
+      const data = await response.json();
 
-      if (ok) {
+      if (data.success) {
         sessionStorage.setItem('atiera_logged_in','1');
         stopLoading(true);
         showPopup({
-          title: 'Hello, ADMIN 👋',
-          message: 'Welcome Admin — Redirecting to dashboard…',
+          title: data.greeting + " 👋",
+          message: `Welcome ${data.name} — Redirecting…`,
           variant: 'success',
           autocloseMs: 4200,
-          onClose: () => { window.location.href = '../Main/Dashboard.php'; }
+          onClose: () => { window.location.href = data.redirectUrl; }
         });
         return;
       }
@@ -572,11 +567,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         startLockCountdown(until);
       } else {
         stopLoading(false);
-        showError(`Invalid credentials. Attempt ${tries}/${MAX_TRIES}.`);
+        showError((data.message || `Invalid credentials. Attempt ${tries}/${MAX_TRIES}.`));
         shakeCard();
         pwEl.focus(); pwEl.select();
       }
-    }, 220);
+    } catch (err) {
+      stopLoading(false);
+      showError('An error occurred. Please try again later.');
+    }
   });
 
   // Resume countdown if locked

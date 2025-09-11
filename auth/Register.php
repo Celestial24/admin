@@ -138,7 +138,7 @@ Your Website Team";
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Create Admin Account</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Create user Account</h2>
 
     <?php if (!empty($errors)): ?>
       <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
@@ -205,7 +205,7 @@ Your Website Team";
       </div>
 
       <p class="text-center text-sm text-gray-600">
-        Already have an admin account? <a href="login.php" class="text-blue-600 hover:underline">Login</a>
+        Already have an admin account? <a href="/admin/auth/login.php" class="text-blue-600 hover:underline">Login</a>
       </p>
     </form>
   </div>

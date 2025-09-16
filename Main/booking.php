@@ -1,9 +1,7 @@
 <?php
-$servername = "localhost";
-$username = "admin_booking";
-$password = "123";
-$database = "admin_booking";
-
+session_start();
+// Database configuration
+include_once __DIR__ . '/../backend/sql/config.php';
 // Create connection
 $conn = new mysqli($servername, $username, $password, $database);
 

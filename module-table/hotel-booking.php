@@ -7,7 +7,7 @@ include_once __DIR__ . '/../backend/sql/db.php';
 // --- FIX: Create the connection object FIRST ---
 // Create connection using the variables from config.php
 $conn = new mysqli($servername, $username, $password, $database);
-// --- END FIX ---
+
 
 // Check connection
 // Now $conn exists and can be checked

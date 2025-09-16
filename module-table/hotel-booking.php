@@ -1,14 +1,16 @@
 <?php
-$host = "localhost";
-$dbname = "admin_administrative";
+// ======= DATABASE CONFIGURATION =======
+$host     = "localhost";
+$dbname   = "admin_admin";
 $username = "admin_admin";
-$password = "admin@123";
+$password = "123";
 
+// ======= CONNECT TO MYSQL =======
 $conn = new mysqli($host, $username, $password, $dbname);
-
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die("❌ Connection failed: " . $conn->connect_error);
 }
+$conn->set_charset("utf8mb4");
 
 // ======= FETCH RESERVATIONS =======
 $reservations = [];
@@ -20,7 +22,7 @@ if ($result = $conn->query($resSql)) {
     $result->free();
 }
 
-// ======= FETCH VISITORS (Optional: not used in UI) =======
+// ======= FETCH VISITORS (Optional) =======
 $visitors = [];
 $visSql = "SELECT name, idNo, purpose, checkIn, checkedOut FROM visitors ORDER BY checkIn DESC";
 if ($result = $conn->query($visSql)) {
@@ -32,14 +34,13 @@ if ($result = $conn->query($visSql)) {
 
 $conn->close();
 
-// ======= CALCULATE TOTAL REVENUE & OCCUPANCY =======
+// ======= CALCULATE REVENUE & OCCUPANCY =======
 $totalRevenue = 0;
 foreach ($reservations as $res) {
     $checkIn  = new DateTime($res['checkIn']);
     $checkOut = new DateTime($res['checkOut']);
     $nights   = max(1, $checkOut->diff($checkIn)->days);
 
-    // Default room rates if not specified
     $rate = $res['rate'] ?: match ($res['roomType']) {
         'Suite'  => 8000,
         'Double' => 4000,
@@ -49,12 +50,12 @@ foreach ($reservations as $res) {
     $totalRevenue += $rate * $nights;
 }
 
-// Assume 20 total rooms for occupancy calculation
+// Assume 20 rooms
 $occupancyPercent = min(100, round((count($reservations) / 20) * 100));
 
-// Dummy values for dashboard
+// Dummy dashboard values
 $department_h1 = "Admin";
-$total_users = 123;
+$total_users   = 123;
 ?>
 
 <!doctype html>
@@ -101,9 +102,9 @@ $total_users = 123;
           <tbody>
             <?php foreach ($reservations as $res): 
               $rate = $res['rate'] ?: match ($res['roomType']) {
-                  'Suite'  => 8000,
-                  'Double' => 4000,
-                  default  => 2000,
+                'Suite'  => 8000,
+                'Double' => 4000,
+                default  => 2000,
               };
             ?>
             <tr>

@@ -1,129 +1,98 @@
-
 <?php
-
 $host = "localhost";
 $user = "root";
-$password = ""; // Change if your MySQL password is not empty
-$database = "document"; // Change to your actual database name
+$pass = "";
+$db   = "document";
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) die("Connection failed");
 
-$conn = new mysqli($host, $user, $password, $database);
+$name = $_POST['docName'] ?? '';
+$dept = $_POST['docDepartment'] ?? '';
+$claimedBy = $_POST['claimedBy'] ?? '';
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$uploadDir = "../uploads/";
+if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+if (isset($_FILES['docFile']) && $_FILES['docFile']['error'] === UPLOAD_ERR_OK) {
+    $file = $_FILES['docFile'];
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $safeName = uniqid('doc_', true) . '.' . $ext;
+    $target = $uploadDir . $safeName;
+
+    if (move_uploaded_file($file['tmp_name'], $target)) {
+        $size = filesize($target);
+        $stmt = $conn->prepare("INSERT INTO documents (name, department, claimed_by, file_path, file_size) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $name, $dept, $claimedBy, $safeName, $size);
+        $stmt->execute();
+        echo "✅ File uploaded successfully.";
+    } else {
+        echo "❌ Failed to move file.";
+    }
+} else {
+    echo "❌ File upload error.";
 }
+
+// ✅ Only query after file processing
+$result = $conn->query("SELECT * FROM documents ORDER BY uploaded_at DESC");
+
+// ✅ Then close the connection
+$conn->close();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Document Management & Archiving</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-white shadow">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-gray-800">📁 Document Archive Center</h1>
-      <span class="text-sm text-gray-500">Hotel & Restaurant Management</span>
-    </div>
-  </header>
+<section class="bg-white p-6 rounded-lg shadow mt-6">
+  <h2 class="text-lg font-semibold text-gray-800 mb-4">📚 Uploaded Files</h2>
+  <table class="min-w-full table-auto border border-gray-300">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-4 py-2 text-left">Name</th>
+        <th class="px-4 py-2 text-left">Department</th>
+        <th class="px-4 py-2 text-left">Claimed By</th>
+        <th class="px-4 py-2 text-left">Size</th>
+        <th class="px-4 py-2 text-left">Uploaded</th>
+        <th class="px-4 py-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while($row = $result->fetch_assoc()): ?>
+        <tr class="border-t">
+          <td class="px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
+          <td class="px-4 py-2"><?= htmlspecialchars($row['department']) ?></td>
+          <td class="px-4 py-2"><?= htmlspecialchars($row['claimed_by']) ?></td>
+          <td class="px-4 py-2"><?= round($row['file_size'] / 1024, 2) ?> KB</td>
+          <td class="px-4 py-2"><?= $row['uploaded_at'] ?></td>
+          <td class="px-4 py-2">
+            <a href="/admin/uploads/<?= urlencode($row['file_path']) ?>" target="_blank" class="text-blue-600 underline">View</a>
+            |
+            <a href="/admin/uploads/<?= urlencode($row['file_path']) ?>" download class="text-green-600 underline">Download</a>
+          </td>
+        </tr>
+      <?php endwhile; ?>
+    </tbody>
+  </table>
+</section>
 
-  <!-- Main Content -->
-  <main class="max-w-6xl mx-auto px-4 mt-8 space-y-8">
+?>
 
-    <!-- Upload Section -->
-    <section class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-lg font-semibold mb-4 text-gray-800">Upload Document</h2>
-      <form id="uploadForm" class="space-y-4">
-        <input type="text" id="docName" placeholder="Document Name" class="border px-4 py-2 w-full rounded" required />
-        <select id="docDepartment" class="border px-4 py-2 w-full rounded" required>
-          <option value="">Select Department</option>
-          <option value="Front Desk">Front Desk</option>
-          <option value="Kitchen">Kitchen</option>
-          <option value="HR">HR</option>
-          <option value="Housekeeping">Housekeeping</option>
-        </select>
-        <input type="text" id="claimedBy" placeholder="Claimed By" class="border px-4 py-2 w-full rounded" />
-        <textarea id="docContent" placeholder="Paste contract or content here..." class="border px-4 py-2 w-full rounded h-24"></textarea>
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Upload</button>
-      </form>
-    </section>
 
-    <!-- Retrieval Section -->
-    <section class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-lg font-semibold mb-4 text-gray-800">🔍 Retrieve Document</h2>
-      <div class="space-y-4">
-        <input type="text" id="retrieveInput" placeholder="Enter document name..." class="border px-4 py-2 w-full rounded" />
-        <button id="retrieveBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Retrieve</button>
-
-        <div id="retrieveResult" class="border p-4 rounded bg-gray-50 text-sm text-gray-700 hidden">
-          <p><strong>Document:</strong> <span id="rName"></span></p>
-          <p><strong>Department:</strong> <span id="rDept"></span></p>
-          <p><strong>Claimed By:</strong> <span id="rClaimed"></span></p>
-          <p><strong>Version:</strong> <span id="rVersion"></span></p>
-          <p><strong>Date:</strong> <span id="rDate"></span></p>
-          <p><strong>Compliance Markers:</strong> <span id="rAnalysis"></span></p>
-          <div class="mt-4">
-            <p class="font-semibold">📄 Document Content:</p>
-            <pre id="rContent" class="bg-white p-2 rounded border text-gray-800 mt-2 whitespace-pre-wrap"></pre>
-          </div>
-        </div>
-        <p id="retrieveNotFound" class="text-red-600 hidden">❌ Document not found.</p>
-      </div>
-    </section>
-
-    <!-- Filters -->
-    <section class="bg-white p-6 rounded-lg shadow flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-gray-800">Archived Documents</h2>
-      <select id="departmentFilter" class="border rounded px-4 py-2 text-sm">
-        <option value="all">All Departments</option>
-        <option value="Front Desk">Front Desk</option>
-        <option value="Kitchen">Kitchen</option>
-        <option value="HR">HR</option>
-        <option value="Housekeeping">Housekeeping</option>
-      </select>
-    </section>
-
-    <!-- Table Section -->
-    <section class="bg-white p-6 rounded-lg shadow">
-      <div class="overflow-x-auto">
-        <table class="min-w-full table-auto border border-gray-300">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Document</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Dept</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Claimed By</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Version</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Date</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Analysis</th>
-            </tr>
-          </thead>
-          <tbody id="archiveTableBody" class="divide-y divide-gray-200">
-            <!-- Dynamic rows -->
-          </tbody>
-        </table>
-        <p id="emptyMessage" class="text-gray-500 mt-4">No archived documents found.</p>
-      </div>
-    </section>
-
-    <!-- Audit Trail -->
-    <section class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-lg font-semibold mb-2 text-gray-800">🕵️ Audit Trail</h2>
-      <ul id="auditTrail" class="list-disc ml-5 text-sm text-gray-600 space-y-1"></ul>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="text-center text-gray-500 text-sm py-6">
-    &copy; 2025 Hotel & Restaurant Management System
-  </footer>
+<form id="uploadForm" action="upload.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+  <input type="text" name="docName" placeholder="Document Name" required class="border px-4 py-2 w-full rounded" />
+  <select name="docDepartment" class="border px-4 py-2 w-full rounded" required>
+    <option value="">Select Department</option>
+    <option value="Front Desk">Front Desk</option>
+    <option value="Kitchen">Kitchen</option>
+    <option value="HR">HR</option>
+    <option value="Housekeeping">Housekeeping</option>
+  </select>
+  <input type="text" name="claimedBy" placeholder="Claimed By" class="border px-4 py-2 w-full rounded" />
+  <input type="file" name="docFile" accept=".pdf,.doc,.docx,.txt" required class="border px-4 py-2 w-full rounded" />
+  <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Upload</button>
+</form>
 
   <!-- Script -->
   <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
     const ARCHIVE_KEY = "archivedDocuments";
     const AUDIT_KEY = "auditTrail";
 

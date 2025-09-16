@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php if ($success): ?>
         <div class="mb-4 p-4 bg-green-100 text-green-700 rounded text-center">
             ✅ Your email <strong><?= htmlspecialchars($email) ?></strong> has been successfully verified!<br />
-            <a href="../main/accounttable.php" class="mt-3 inline-block text-blue-600 hover:underline">Go to Login</a>
+            <a href="../auth/login.php" class="mt-3 inline-block text-blue-600 hover:underline">Go to Login</a>
         </div>
     <?php else: ?>
         <?php if (!empty($errors)): ?>

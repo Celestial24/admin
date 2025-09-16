@@ -1,109 +1,207 @@
 <?php
 session_start();
-
-if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
-    header("Location: ../login.php");
-    exit();
-}
-
 include '../backend/sql/db.php';
 
-$userId = $_SESSION['user']['id'];
-
-// Fetch user info
-$stmt = $conn->prepare("SELECT name, email, created_at FROM users WHERE id = ?");
-if (!$stmt) {
-    die("Prepare failed: " . $conn->error);
-}
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$stmt->close();
-
-if (!$user) {
-    echo "<div style='color:red; padding:2em;'>User not found. Please <a href='../login.php'>login again</a>.</div>";
+// Redirect if not authenticated
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['id'])) {
+    header('Location: ../auth/login.php');
     exit();
 }
 
-// Set department name (or any label you want)
-$department_h1 = "User";
+$userId = $_SESSION['user_id'] ?? $_SESSION['id'];
 
-// Get total users
-$total_users = 0;
-$res = $conn->query("SELECT COUNT(*) as cnt FROM users");
-if ($res) {
-    $row = $res->fetch_assoc();
-    $total_users = $row['cnt'];
+// Fetch user info
+$user = null;
+if ($stmt = $conn->prepare("SELECT id, name, email, department, role, created_at FROM users WHERE id = ?")) {
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+}
+
+$userName = $user['name'] ?? 'User';
+$department = $user['department'] ?? 'Unknown';
+
+// Fetch counts securely
+function fetchCount(mysqli $conn, string $table, string $idCol, string $nameCol, int $userId, string $userName): int {
+    $allowedTables = ['weka_contracts', 'visitors'];
+    if (!in_array($table, $allowedTables, true)) return 0;
+
+    $tableEscaped = $conn->real_escape_string($table);
+    $result = $conn->query("SHOW TABLES LIKE '$tableEscaped'");
+    if (!$result || $result->num_rows === 0) return 0;
+
+    $count = 0;
+    $sql = "SELECT COUNT(*) AS count FROM `$tableEscaped` WHERE `$idCol` = ? OR `$nameCol` = ?";
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("is", $userId, $userName);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $count = (int)($res['count'] ?? 0);
+        $stmt->close();
+    }
+    return $count;
+}
+
+$contractCount = fetchCount($conn, 'weka_contracts', 'employee_id', 'employee_name', $userId, $userName);
+$visitorCount = fetchCount($conn, 'visitors', 'user_id', 'checked_in_by', $userId, $userName);
+$recentActivity = $contractCount;
+
+// Count users in the same department
+$deptUsers = 0;
+if ($stmt = $conn->prepare("SELECT COUNT(*) AS count FROM users WHERE department = ?")) {
+    $stmt->bind_param("s", $department);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    $deptUsers = (int)($res['count'] ?? 0);
+    $stmt->close();
+}
+
+// Fetch recent contracts
+$recentContracts = [];
+if ($conn->query("SHOW TABLES LIKE 'weka_contracts'")->num_rows > 0) {
+    $sql = "SELECT id, employee_name, created_at FROM weka_contracts WHERE employee_id = ? OR employee_name = ? ORDER BY created_at DESC LIMIT 5";
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("is", $userId, $userName);
+        $stmt->execute();
+        $recentContracts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+    }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>User Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
+  <link rel="icon" type="image/png" href="../assets/image/logo2.png">
+  <style>
+    html, body { height: 100%; overflow-x: hidden; }
+    .card-hover { transition: all 0.3s ease; cursor: default; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); cursor: pointer; }
+    .pulse-animation { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+  </style>
 </head>
-<body class="flex h-screen bg-gray-100">
+<body class="bg-gray-50 h-screen overflow-hidden">
+  <div class="flex h-full">
+    <aside class="w-64 bg-white shadow-lg flex-shrink-0">
+      <?php include '../Components/sidebar/sidebar_user.php'; ?>
+    </aside>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <section class="flex-1 overflow-y-auto w-full py-4 px-6 space-y-6">
+        <header class="flex items-center justify-between border-b pb-4">
+          <h2 class="text-xl font-semibold text-gray-800">User Dashboard</h2>
+          <?php include '../profile.php'; ?>
+        </header>
 
-  <!-- Sidebar -->
-  <aside class="fixed left-0 top-0 text-white">
-    <?php include '../Components/sidebar/sidebar_user.php'; ?>
-  </aside>
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+            <p class="text-sm font-medium text-gray-600">My Contracts</p>
+            <p class="text-2xl font-bold text-gray-900"><?= (int)$contractCount ?></p>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+            <p class="text-sm font-medium text-gray-600">Visitor Logs</p>
+            <p class="text-2xl font-bold text-gray-900"><?= (int)$visitorCount ?></p>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+            <p class="text-sm font-medium text-gray-600">Recent Activity</p>
+            <p class="text-2xl font-bold text-gray-900"><?= (int)$recentActivity ?></p>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+            <p class="text-sm font-medium text-gray-600">Department</p>
+            <p class="text-2xl font-bold text-gray-900"><?= htmlspecialchars($department) ?></p>
+          </div>
+        </div>
 
-  <!-- Main Content -->
-  <main class="flex-1 ml-64 flex flex-col overflow-hidden">
+        <!-- Date & Time -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 flex justify-between items-center">
+          <p class="text-gray-600 font-medium">Current Date:</p>
+          <p id="currentDate" class="text-gray-900 font-bold"></p>
+          <p class="text-gray-600 font-medium">Current Time:</p>
+          <p id="currentTime" class="text-gray-900 font-bold"></p>
+        </div>
 
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b pb-4">
-      <h2 class="text-xl font-semibold text-gray-800">
-        <?= htmlspecialchars($department_h1) ?> Dashboard
-        <span class="ml-4 text-base text-gray-500 font-normal">(Total Users: <?= $total_users ?>)</span>
-      </h2>
-      <?php include __DIR__ . '/../profile.php'; ?>
+        <!-- Recent Contracts -->
+        <?php if (!empty($recentContracts)): ?>
+          <section>
+            <h3 class="text-lg font-semibold mb-3">Recent Contracts</h3>
+            <ul class="space-y-2">
+              <?php foreach ($recentContracts as $contract): ?>
+                <li class="bg-white p-4 rounded shadow-md" tabindex="0">
+                  <p><strong>Contract ID:</strong> <?= htmlspecialchars($contract['id']) ?></p>
+                  <p><strong>Employee:</strong> <?= htmlspecialchars($contract['employee_name']) ?></p>
+                  <p><strong>Created:</strong> <?= htmlspecialchars($contract['created_at']) ?></p>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </section>
+        <?php endif; ?>
+      </section>
+    </main>
+  </div>
+
+<!-- Chatbot -->
+<div class="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end space-y-2 space-y-reverse">
+  <button id="chatbotToggle" class="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg" aria-label="Toggle chatbot">
+    <img src="../assets/image/logo2.png" alt="Assistant" class="w-10 h-10">
+  </button>
+  <div id="chatbotBox" class="hidden w-80 bg-white border border-gray-200 rounded-xl shadow-xl flex flex-col overflow-hidden" role="region" aria-live="polite" aria-atomic="true">
+    <div class="bg-blue-600 text-white px-4 py-2 rounded-t-xl font-semibold">Admin Assistant</div>
+    <div id="chatContent" class="p-4 flex-grow overflow-y-auto text-sm bg-gray-50 flex flex-col space-y-3" style="max-height: 300px;"></div>
+    <div class="p-3 border-t border-gray-200 bg-white flex gap-2 flex-shrink-0">
+      <input id="userInput" type="text" placeholder="Ask me anything..." class="flex-1 rounded-lg px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-600">
+      <button id="sendBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Send</button>
     </div>
+  </div>
+</div>
 
-    <!-- Content -->
-    <section class="flex-1 overflow-y-auto p-6 bg-gray-50">
-      <div class="bg-white p-6 rounded shadow text-gray-800">
-        <h2 class="text-2xl font-semibold mb-4">
-          Welcome, <?= htmlspecialchars($user['name'] ?? 'User') ?>!
-        </h2>
-        <p><strong>Email:</strong> <?= htmlspecialchars($user['email'] ?? '-') ?></p>
-        <p><strong>Joined:</strong>
-          <?= isset($user['created_at']) && $user['created_at'] !== null && $user['created_at'] !== '0000-00-00 00:00:00'
-            ? htmlspecialchars(date("F j, Y, g:i a", strtotime($user['created_at'])))
-            : '-' ?>
-        </p>
-      </div>
-    </section>
+<script>
+  // Chatbot
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('chatbotToggle');
+    const chatBox = document.getElementById('chatbotBox');
+    const sendBtn = document.getElementById('sendBtn');
+    const userInput = document.getElementById('userInput');
+    const chatContent = document.getElementById('chatContent');
 
-    <!-- Footer -->
-    <?php include '../Components/Footer/footer_admin.php'; ?>
-
-  </main>
-
-  <!-- User Dropdown Script -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const userDropdownToggle = document.getElementById("userDropdownToggle");
-      const userDropdown = document.getElementById("userDropdown");
-
-      userDropdownToggle?.addEventListener("click", function () {
-        userDropdown.classList.toggle("hidden");
-      });
-
-      document.addEventListener("click", function (event) {
-        if (!userDropdown?.contains(event.target) && !userDropdownToggle?.contains(event.target)) {
-          userDropdown.classList.add("hidden");
-        }
-      });
+    toggleBtn.addEventListener('click', () => {
+      chatBox.classList.toggle('hidden');
+      if (!chatBox.classList.contains('hidden')) userInput.focus();
     });
-  </script>
 
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
+
+    function addMessage(message, isUser=false) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `p-3 rounded-lg shadow max-w-xs ${isUser?'bg-blue-600 text-white self-end':'bg-white text-gray-900 self-start'}`;
+      if(typeof message==='object') message = JSON.stringify(message,null,2);
+      msgDiv.textContent = message;
+      chatContent.appendChild(msgDiv);
+      chatContent.scrollTop = chatContent.scrollHeight;
+    }
+
+    function sendMessage() {
+      const msg = userInput.value.trim();
+      if(!msg) return;
+      addMessage(`You: ${msg}`, true);
+      userInput.value = '';
+      setTimeout(()=>{ addMessage("I'm your assistant. How can I help?"); }, 500);
+    }
+  });
+
+  // Date & Time
+  function updateDateTime() {
+    const now = new Date();
+    document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+</script>
 </body>
 </html>

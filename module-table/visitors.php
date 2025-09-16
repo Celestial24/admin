@@ -1,177 +1,332 @@
 <?php
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db   = 'visitor';
+session_start();
 
-$conn = new mysqli($host, $user, $pass, $db);
+// -- DATABASE CONNECTION --
+$host = "localhost";
+$user = "root";
+$pass = "";
+$dbname = "visitor";
+$conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
-    die("Connection failed: " . htmlspecialchars($conn->connect_error));
+    die("Connection failed: " . $conn->connect_error);
 }
 
-$sql = "SELECT * FROM guest_submissions ORDER BY submitted_at DESC";
-$result = $conn->query($sql);
-?>
+// -- HANDLE CHECK-IN FORM SUBMISSION --
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_checkin'])) {
+    if (!empty($_POST['fullName']) && !empty($_POST['email']) && isset($_POST['agreement'])) {
+        
+        $fullName = $_POST['fullName'];
+        $email = $_POST['email'];
+        $phone = $_POST['phone'] ?? null;
+        $notes = $_POST['notes'] ?? null;
+        $agreement = 1;
 
+        $stmt = $conn->prepare(
+            "INSERT INTO guest_submissions (full_name, email, phone, notes, agreement, submitted_at) VALUES (?, ?, ?, ?, ?, NOW())"
+        );
+        $stmt->bind_param("ssssi", $fullName, $email, $phone, $notes, $agreement);
+        $stmt->execute();
+        $stmt->close();
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+}
+
+// -- HANDLE CHECK-OUT ACTION --
+if (isset($_GET['action']) && $_GET['action'] == 'checkout' && isset($_GET['id'])) {
+    $visitorId = (int)$_GET['id'];
+    
+    $stmt = $conn->prepare("UPDATE guest_submissions SET checked_out = 1, checked_out_at = NOW() WHERE id = ? AND checked_out = 0");
+    $stmt->bind_param("i", $visitorId);
+    $stmt->execute();
+    $stmt->close();
+    
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+// -- FETCH VISITOR LOGS FOR DISPLAY --
+$visitorLogsResult = $conn->query("SELECT * FROM guest_submissions ORDER BY submitted_at DESC");
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visitor Logs - Admin</title>
   <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
-  <title>Visitors - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
- <style>
-
-html, body {
-  overflow-y: hidden; 
-  height: 100%;     
-  margin: 0;         
-  padding: 0;         
-}
-
-
-html::-webkit-scrollbar, body::-webkit-scrollbar {
-  display: none;
-}
-</style>
 </head>
-<body class="bg-gray-100">
-  <div class="flex h-screen">
-    <aside class="w-64 text-white">
-      <?php include '../Components/sidebar/sidebar_admin.php'; ?>
-    </aside>
+<body class="bg-gray-100 flex h-screen">
 
-    <main class="flex-1 rounded shadow-md p-6 min-h-screen main-content-scroll">
-      <h1 class="p-6 font-bold text-3xl">Dashboard</h1>
+  <!-- Sidebar -->
+  <aside class="w-64 fixed left-0 top-0 h-full bg-white shadow-md z-10">
+    <?php include '../Components/sidebar/sidebar_admin.php'; ?>
+  </aside>
 
-      <!-- Terms Section -->
-      <div class="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 class="text-xl font-bold mb-2">Terms & Conditions</h2>
-        <p class="mb-4 font-semibold">Welcome to our Hotel & Restaurant!</p>
-        <p class="mb-4">By checking in or dining with us, you agree to the following policies:</p>
-        <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
-          <li><strong>Check-In & Check-Out:</strong> Valid ID required. Standard check-in 2:00 PM, check-out 12:00 PM.</li>
-          <li><strong>Room & Facility Use:</strong> Guests are responsible for property. Damages will be charged.</li>
-          <li><strong>Restaurant Policies:</strong> Reservations held for 15 minutes. No outside food/drinks.</li>
-          <li><strong>Safety & Security:</strong> No smoking in restricted areas. No illegal items.</li>
-          <li><strong>Payments & Cancellations:</strong> All payments on check-out. Late cancellations may incur charges.</li>
-          <li><strong>Conduct:</strong> Respect staff & guests. Misconduct may lead to eviction.</li>
-        </ul>
+  <!-- Main Content -->
+  <main class="ml-64 flex-1 flex flex-col">
+    <header class="px-6 py-4 bg-white border-b shadow-sm">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Visitor Logs</h1>
+          <p class="text-sm text-gray-500 mt-1">Guest Check-in & Check-out Records</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="openCheckinModalBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center gap-2">
+                ➕ New Check-in
+            </button>
+            <?php include '../profile.php'; ?>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 p-6 overflow-y-auto">
+      <!-- Terms & Conditions -->
+      <div class="mb-8 p-6 bg-white rounded-lg shadow">
+          <h2 class="text-xl font-semibold text-gray-800 mb-3">Terms & Conditions</h2>
+          <ul class="space-y-2 text-sm text-gray-700 pl-5 list-disc">
+              <li><strong>Check-in & Check-Out:</strong> Valid ID required. Standard check-in 2:00 PM, check-out 12:00 PM.</li>
+              <li><strong>Room & Facility Use:</strong> Guests are responsible for property. Damages will be charged.</li>
+              <li><strong>Conduct:</strong> Respect staff & guests. Misconduct may lead to eviction.</li>
+          </ul>
       </div>
 
-      <h2 class="text-xl font-semibold p-6 bg-white">Recent Guests</h2>
-      <div class="overflow-x-auto bg-white">
-        <table class="min-w-full border-collapse border border-gray-200 text-sm">
-          <thead>
-            <tr class="bg-white-100 text-gray-700 font-semibold">
-              <th class="border border-gray-200 px-4 py-2 text-left">Employee ID</th>
-              <th class="border border-gray-200 px-4 py-2 text-left">Name</th>
-              <th class="border border-gray-200 px-4 py-2 text-left">Email</th>
-              <th class="border border-gray-200 px-4 py-2 text-left">Check-in</th>
-              <th class="border border-gray-200 px-4 py-2 text-left">Check-out</th>
-              <th class="border border-gray-200 px-4 py-2 text-left">Notes</th>
-              <th class="border border-gray-200 px-4 py-2 text-center">Agreement</th>
-              <th class="border border-gray-200 px-4 py-2 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if ($result->num_rows > 0): ?>
-              <?php 
-                $counter = 1;
-                while ($row = $result->fetch_assoc()): 
-              ?>
-                <tr class="hover:bg-gray-50 border border-gray-200">
-                  <td class="border border-gray-200 px-4 py-2 font-mono">
-                    <?php echo str_pad($counter++, 3, '0', STR_PAD_LEFT); ?>
-                  </td>
-                  <td class="border border-gray-200 px-4 py-2"><?php echo htmlspecialchars($row['full_name']); ?></td>
-                  <td class="border border-gray-200 px-4 py-2"><?php echo htmlspecialchars($row['email']); ?></td>
-                  <td class="border border-gray-200 px-4 py-2 text-green-600 font-semibold">
-                    <?php echo htmlspecialchars($row['submitted_at']); ?>
-                  </td>
-                  <td class="border border-gray-200 px-4 py-2 text-red-600 font-semibold">
-                    <?php
-                      if (!empty($row['checked_out_at'])) {
-                        echo htmlspecialchars($row['checked_out_at']);
-                      } else {
-                        echo "<span class='text-red-600 font-semibold'>Still here</span>";
-                      }
-                    ?>
-                  </td>
-                  <td class="border border-gray-200 px-4 py-2"><?php echo htmlspecialchars($row['notes']); ?></td>
-                  <td class="border border-gray-200 px-4 py-2 text-center text-lg">
-                    <?php if (!empty($row['checked_out_at'])): ?>
-                      <span class="text-green-600 font-bold" title="Agreed">&#10004;</span>
-                    <?php else: ?>
-                      <span class="text-red-600 font-bold" title="Not Agreed">&#10060;</span>
-                    <?php endif; ?>
-                  </td>
-                  <td class="border border-gray-200 px-4 py-2 text-center">
-                    <?php if (!empty($row['checked_out_at'])): ?>
-                      <span class="text-gray-400 cursor-default">Checked Out</span>
-                    <?php else: ?>
-                      <form method="POST" action="checkout.php" onsubmit="return confirm('Mark this guest as checked out?');" class="inline">
-                        <input type="hidden" name="guest_id" value="<?php echo (int)$row['id']; ?>">
-                        <button type="submit" class="text-blue-600 hover:underline">Check Out</button>
-                      </form>
-                    <?php endif; ?>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            <?php else: ?>
+      <!-- Visitor Logs -->
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold text-gray-800">Recent Guests</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm text-left">
+            <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
               <tr>
-                <td colspan="8" class="text-center p-4 text-gray-500">No visitors found.</td>
+                <th class="px-6 py-3">ID</th>
+                <th class="px-6 py-3">Full Name</th>
+                <th class="px-6 py-3">Email</th>
+                <th class="px-6 py-3">Check-in</th>
+                <th class="px-6 py-3">Check-out</th>
+                <th class="px-6 py-3">Notes</th>
+                <th class="px-6 py-3 text-center">Agreement</th>
+                <th class="px-6 py-3 text-center">Action</th>
               </tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <?php if ($visitorLogsResult && $visitorLogsResult->num_rows > 0) : ?>
+                <?php while ($row = $visitorLogsResult->fetch_assoc()) : ?>
+                  <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900"><?= sprintf('%03d', $row['id']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['full_name']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['email']) ?></td>
+                    <td class="px-6 py-4 text-green-600 font-medium"><?= date('Y-m-d H:i', strtotime($row['submitted_at'])) ?></td>
+                    <td class="px-6 py-4 <?= $row['checked_out_at'] ? 'text-red-500 font-medium' : 'text-gray-400' ?>"><?= $row['checked_out_at'] ? date('Y-m-d H:i', strtotime($row['checked_out_at'])) : 'N/A' ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['notes']) ?></td>
+                    <td class="px-6 py-4 text-center">
+                        <?= $row['agreement'] ? '<span class="text-xl">✅</span>' : '' ?>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                      <?php if (!$row['checked_out']) : ?>
+                        <a href="?action=checkout&id=<?= $row['id'] ?>" class="font-medium text-blue-600 hover:underline">Check Out</a>
+                      <?php else : ?>
+                        <span class="font-medium text-gray-400">Checked Out</span>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else : ?>
+                <tr><td colspan="8" class="text-center py-8 text-gray-500">No visitor logs found.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </main>
-  </div>
+    </div>
+  </main>
 
-  <!-- Ajax Submit Script -->
-  <script>
-    const agreementCheckbox = document.getElementById('agreement');
-    const submitBtn = document.getElementById('submitBtn');
-    const visitorForm = document.getElementById('visitorForm');
-    const responseDiv = document.getElementById('responseMessage');
+<!-- Check-in Modal -->
+<div id="checkinModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Visitor Check-in Form</h2>
+            <button id="closeCheckinModalBtn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+        </div>
+        <form method="POST" action="" class="space-y-4">
+            <input type="hidden" name="submit_checkin" value="1">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Full Name *</label>
+                <input type="text" name="fullName" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email Address *</label>
+                <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input type="text" name="phone" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Special Notes</label>
+                <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+            </div>
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div class="flex items-start">
+                    <input id="agreement" name="agreement" type="checkbox" required class="h-4 w-4 text-blue-600 border-gray-300 rounded mt-1">
+                    <label for="agreement" class="ml-3 text-sm text-gray-700">
+                        I agree to the Terms & Conditions <span class="text-red-500">*</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 pt-4">
+                <button type="button" id="clearFormBtn" class="bg-gray-200 px-4 py-2 rounded-lg">Clear</button>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg">→ Check In</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- ✅ Chatbot: Toggle Button + Chat Window -->
+<div class="fixed bottom-6 right-6 z-50">
+    <!-- ✅ Toggle Button -->
+    <button id="chatbotToggle"
+        class="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition-all duration-300 group relative">
+        <img src="/admin/assets/image/logo2.png" alt="Admin Assistant" class="w-12 h-12 object-contain">
+        <span class="absolute bottom-full mb-2 right-1/2 transform translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">
+            Admin Assistant
+        </span>
+    </button>
 
-    agreementCheckbox?.addEventListener('change', () => {
-      submitBtn.disabled = !agreementCheckbox.checked;
-      submitBtn.classList.toggle('cursor-not-allowed', !agreementCheckbox.checked);
-      submitBtn.classList.toggle('opacity-50', !agreementCheckbox.checked);
-    });
+    <!-- ✅ Chatbot Window -->
+    <div id="chatbotBox"
+        class="fixed bottom-24 right-6 w-[420px] bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 scale-95 pointer-events-none transition-all duration-300 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-blue-600 text-white">
+            <h3 class="font-semibold">Admin Assistant</h3>
+            <button id="chatbotClose" class="text-white hover:text-gray-200 text-xl leading-none">×</button>
+        </div>
 
-    visitorForm?.addEventListener('submit', function(e) {
-      e.preventDefault();
+        <!-- Chat Content -->
+        <div id="chatContent" class="p-4 h-64 overflow-y-auto text-sm bg-gray-50 space-y-4">
+            <!-- Messages will be added here -->
+        </div>
 
-      responseDiv.innerHTML = '';
+        <!-- Quick Action Buttons -->
+        <div class="p-3 border-t border-gray-200 bg-white">
+            <div class="flex flex-wrap gap-2 mb-3">
+                <button class="quickBtn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded-lg text-xs" data-action="facilities">View Facilities</button>
+                <button class="quickBtn bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded-lg text-xs" data-action="reservations">Check Reservations</button>
+                <button class="quickBtn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1 rounded-lg text-xs" data-action="maintenance">Maintenance Log</button>
+            </div>
+        </div>
 
-      if (!confirm('Mark this guest as checked out?')) {
-        return;
-      }
+        <!-- Input Field -->
+        <div class="p-3 border-t border-gray-200 bg-white flex gap-2">
+            <input id="userInput" type="text" placeholder="Ask me anything..."
+                class="flex-1 rounded-lg px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="sendBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">Send</button>
+        </div>
+    </div>
+</div>
 
-      const formData = new FormData(visitorForm);
-
-      fetch('', {
-        method: 'POST',
-        body: formData,
-      })
-      .then(response => response.text())
-      .then(data => {
-        responseDiv.innerHTML = data;
-
-        if (data.toLowerCase().includes('thank you')) {
-          visitorForm.reset();
-          submitBtn.disabled = true;
-          submitBtn.classList.add('cursor-not-allowed', 'opacity-50');
+<!-- ✅ Chatbot Script -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    class VisitorChatbot {
+        constructor() {
+            this.elements = {
+                toggleBtn: document.getElementById('chatbotToggle'),
+                closeBtn: document.getElementById('chatbotClose'),
+                chatBox: document.getElementById('chatbotBox'),
+                chatContent: document.getElementById('chatContent'),
+                userInput: document.getElementById('userInput'),
+                sendBtn: document.getElementById('sendBtn'),
+            };
+            this.state = { isOpen: false };
+            this.responses = [
+                "👋 Welcome! You can check-in by filling up the visitor form.",
+                "📋 Don’t forget to provide your full name and purpose of visit.",
+                "🕒 Visiting hours are from 8 AM to 6 PM.",
+                "✅ Your visitor log will be saved in the system. Would you like me to guide you?"
+            ];
+            this.init();
         }
-      })
-      .catch(() => {
-        responseDiv.innerHTML = '<span style="color: red;">An error occurred. Please try again.</span>';
-      });
-    });
-  </script>
-</body>
-</html>
+
+        init() {
+            this.bindEvents();
+            this.addMessage("Hello! I'm your visitor assistant. How can I help you today?");
+        }
+
+        bindEvents() {
+            this.elements.toggleBtn.addEventListener('click', () => this.toggle());
+            this.elements.closeBtn.addEventListener('click', () => this.toggle(false));
+            this.elements.sendBtn.addEventListener('click', () => this.sendMessage());
+            this.elements.userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.sendMessage();
+            });
+
+            document.querySelectorAll('.quickBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.dataset.action;
+                    this.addMessage(`User clicked: ${action}`, true);
+                    this.addMessage(this.getAIResponse(action));
+                });
+            });
+        }
+
+        toggle(force = null) {
+            this.state.isOpen = force !== null ? force : !this.state.isOpen;
+            const box = this.elements.chatBox;
+            if (this.state.isOpen) {
+                box.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                box.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+                this.elements.userInput.focus();
+            } else {
+                box.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                box.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            }
+        }
+
+        addMessage(message, isUser = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`;
+            const avatar = `
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isUser ? 'bg-gray-600' : 'bg-blue-600'}">
+                    ${isUser ? 'U' : 'VA'}
+                </div>`;
+            const content = `
+                <div class="p-3 rounded-lg shadow-sm max-w-xs ${isUser ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}">
+                    <p class="text-sm">${message}</p>
+                </div>`;
+            wrapper.innerHTML = avatar + content;
+            this.elements.chatContent.appendChild(wrapper);
+            this.elements.chatContent.scrollTop = this.elements.chatContent.scrollHeight;
+        }
+
+        sendMessage() {
+            const msg = this.elements.userInput.value.trim();
+            if (!msg) return;
+            this.addMessage(msg, true);
+            this.elements.userInput.value = '';
+            setTimeout(() => {
+                this.addMessage(this.getAIResponse(msg));
+            }, 800);
+        }
+
+        getAIResponse(msg) {
+            const lower = msg.toLowerCase();
+            if (lower.includes('check in') || lower.includes('log')) return "📝 You can check-in at the front desk or online visitor form.";
+            if (lower.includes('hours') || lower.includes('time')) return "⏰ Visiting hours are from 8 AM to 6 PM.";
+            if (lower.includes('id') || lower.includes('requirement')) return "🪪 A valid ID is required for all visitors.";
+            if (lower.includes('facilities')) return "🏢 You can view the list of facilities in the Facilities section.";
+            if (lower.includes('reservations')) return "📅 You can view and manage reservations in the Reservation tab.";
+            if (lower.includes('maintenance')) return "🛠️ View logs and schedule maintenance for facilities.";
+            return this.responses[Math.floor(Math.random() * this.responses.length)];
+        }
+    }
+
+    new VisitorChatbot();
+});
+</script>
+

@@ -1,12 +1,14 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+session_start();
 
-// Database config
-$host = 'localhost';
-$dbname = 'contract_legal';
-$user = 'root';
-$pass = '';
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    header("Location: ../../../auth/login.php");
+    exit();
+}
+
+// Include database connection
+include '../../../backend/sql/db.php';
 
 // Get contract ID from URL
 $contractId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -16,11 +18,6 @@ if (!$contractId) {
 }
 
 try {
-    $conn = new mysqli($host, $user, $pass, $dbname);
-    if ($conn->connect_error) {
-        throw new Exception("DB connection failed: " . $conn->connect_error);
-    }
-
     $stmt = $conn->prepare("SELECT * FROM contracts WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $contractId);
     $stmt->execute();
@@ -32,12 +29,6 @@ try {
 
     $contract = $result->fetch_assoc();
     $stmt->close();
-    $conn->close();
-
-    $analysisData = json_decode($contract['analysis'], true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        $analysisData = null;
-    }
 
     $riskScore = isset($contract['probability_percent']) ? intval($contract['probability_percent']) : 0;
 
@@ -49,98 +40,155 @@ try {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Contract Analysis - <?= htmlspecialchars($contract['title']) ?></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Analysis - ATIERA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="icon" type="image/png" href="../../../assets/image/logo2.png">
 </head>
-<body class="bg-gray-100 min-h-screen font-sans p-8">
-  <div class="max-w-4xl bg-white shadow rounded p-6 mx-auto">
+<body class="bg-gray-100 min-h-screen">
 
-    <h1 class="text-3xl font-bold mb-4"><?= htmlspecialchars($contract['title']) ?></h1>
-    <p class="text-gray-600 mb-6"><?= nl2br(htmlspecialchars($contract['description'])) ?></p>
-    <p class="text-sm text-gray-400 mb-8">Uploaded: <?= htmlspecialchars($contract['created_at']) ?></p>
+    <!-- Sidebar -->
+    <aside class="fixed left-0 top-0 text-white">
+        <?php include '../../../Components/sidebar/sidebar_admin.php'; ?>
+    </aside>
 
-    <section>
-      <h2 class="text-xl font-semibold mb-2">📄 OCR Text</h2>
-      <textarea readonly rows="10" class="w-full p-4 border rounded bg-gray-50 text-sm font-mono text-gray-700"><?= 
-        htmlspecialchars($contract['ocr_text'] ?: 'No OCR text found.') 
-      ?></textarea>
-    </section>
-
-    <section class="mt-6">
-      <h2 class="text-xl font-semibold mb-2">🚨 Contract Analysis</h2>
-
-      <?php if ($analysisData): ?>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <?php
-            $fields = [
-              'Contract Type' => $analysisData['contractType'] ?? 'N/A',
-              'Effective Date' => $analysisData['effectiveDate'] ?? 'N/A',
-              'Expiration Date' => $analysisData['expirationDate'] ?? 'N/A',
-              'Risk Level' => $analysisData['riskLevel'] ?? 'N/A',
-            ];
-            foreach ($fields as $label => $value):
-          ?>
-            <div class="bg-gray-100 rounded p-4">
-              <p class="text-xs font-bold uppercase text-gray-600"><?= htmlspecialchars($label) ?></p>
-              <p class="text-lg font-semibold <?= $label === 'Risk Level' ? 'text-red-600' : '' ?>">
-                <?= htmlspecialchars($value) ?>
-              </p>
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b pb-4 bg-white shadow-sm">
+            <div class="p-6">
+                <h2 class="text-2xl font-semibold text-gray-800">Contract Analysis</h2>
+                <p class="text-gray-600 mt-1">Detailed analysis and risk assessment</p>
             </div>
-          <?php endforeach; ?>
+            <div class="flex items-center space-x-4 p-6">
+                <a href="../../../Main/contract.php" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <i data-lucide="arrow-left" class="w-4 h-4 inline mr-1"></i>Back to Upload
+                </a>
+            </div>
         </div>
 
-        <?php if (!empty($analysisData['issues'])): ?>
-          <div class="mb-6">
-            <h3 class="font-semibold text-sm uppercase text-gray-700">Issues</h3>
-            <ul class="list-disc list-inside text-sm text-red-600">
-              <?php foreach ($analysisData['issues'] as $issue): ?>
-                <li><?= htmlspecialchars($issue) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
+        <!-- Content -->
+        <section class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            
+            <!-- Contract Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                
+                <!-- Contract Details -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Contract Details</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Contract ID</label>
+                            <p class="mt-1 text-sm text-gray-900 font-mono"><?= htmlspecialchars($contract['id']) ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Employee Name</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= htmlspecialchars($contract['employee_name']) ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Employee ID</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= htmlspecialchars($contract['employee_id']) ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Contract Title</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= htmlspecialchars($contract['title']) ?></p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= htmlspecialchars($contract['description'] ?: 'No description provided') ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Uploaded Date</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= date('M j, Y g:i A', strtotime($contract['created_at'])) ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">File Name</label>
+                            <p class="mt-1 text-sm text-gray-900"><?= htmlspecialchars($contract['document_path']) ?></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Risk Assessment -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Risk Assessment</h3>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Risk Score</span>
+                            <span class="text-sm font-semibold <?= $riskScore <= 30 ? 'text-green-600' : ($riskScore <= 70 ? 'text-yellow-600' : 'text-red-600') ?>">
+                                <?= $riskScore ?>%
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="h-3 rounded-full <?= $riskScore <= 30 ? 'bg-green-500' : ($riskScore <= 70 ? 'bg-yellow-500' : 'bg-red-500') ?>" 
+                                 style="width: <?= $riskScore ?>%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Risk Level</h4>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $riskScore <= 30 ? 'bg-green-100 text-green-800' : ($riskScore <= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') ?>">
+                            <?= $riskScore <= 30 ? 'Low Risk' : ($riskScore <= 70 ? 'Medium Risk' : 'High Risk') ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- OCR Text -->
+            <?php if ($contract['ocr_text']): ?>
+                <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Extracted Text (OCR)</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <pre class="text-sm text-gray-800 whitespace-pre-wrap font-mono"><?= htmlspecialchars($contract['ocr_text']) ?></pre>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Actions -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Actions</h3>
+                <div class="flex space-x-4">
+                    <button onclick="downloadContract()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>Download Contract
+                    </button>
+                    <button onclick="printAnalysis()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                        <i data-lucide="printer" class="w-4 h-4 inline mr-1"></i>Print Analysis
+                    </button>
+                    <button onclick="shareAnalysis()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        <i data-lucide="share" class="w-4 h-4 inline mr-1"></i>Share Analysis
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
 
-        <?php if (!empty($analysisData['recommendedActions'])): ?>
-          <div class="mb-6">
-            <h3 class="font-semibold text-sm uppercase text-gray-700">Recommended Actions</h3>
-            <ul class="list-disc list-inside text-sm text-green-600">
-              <?php foreach ($analysisData['recommendedActions'] as $action): ?>
-                <li><?= htmlspecialchars($action) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-      <?php else: ?>
-        <p class="text-gray-500">No analysis data available.</p>
-      <?php endif; ?>
-    </section>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Action functions
+        function downloadContract() {
+            alert('Download functionality would be implemented here');
+        }
+        
+        function printAnalysis() {
+            window.print();
+        }
+        
+        function shareAnalysis() {
+            alert('Share functionality would be implemented here');
+        }
+    </script>
 
-    <section class="mt-6">
-      <h2 class="text-xl font-semibold mb-2 text-white bg-gray-900 p-3 rounded">🧠 Weka AI Score</h2>
-      <div class="p-4 bg-gray-900 text-white rounded shadow">
-        <p class="mb-2">
-          Dispute probability (12 months): 
-          <span class="text-yellow-400 font-bold"><?= $riskScore ?>%</span>
-        </p>
-
-        <?php
-          $barColor = 'bg-yellow-500';
-          if ($riskScore >= 80) $barColor = 'bg-red-500';
-          elseif ($riskScore < 50) $barColor = 'bg-green-500';
-        ?>
-
-        <div class="w-full h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
-          <div class="<?= $barColor ?> h-full" style="width: <?= $riskScore ?>%;"></div>
-        </div>
-      </div>
-    </section>
-
-    <div class="mt-6 flex justify-between text-sm">
-      <a href="/admin/main/contract.php" class="text-blue-600 hover:underline">← Back to Contracts</a>
-      <a href="/admin/main/random.php" class="text-blue-600 hover:underline">🎲 Random Contract</a>
-    </div>
-
-  </div>
 </body>
 </html>

@@ -1,120 +1,139 @@
 <?php
+// Use output buffering to prevent header errors
 ob_start();
+// Get the current page filename to highlight the active link
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sidebar</title>
-  <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
+    <meta charset="UTF-8" />
+    <title>Admin Sidebar</title>
+    <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <style>
-    /* Rotate icon smoothly */
-    .rotate-180 {
-      transform: rotate(180deg);
-      transition: transform 0.3s ease;
-    }
-    #sidebar {
-      transition-property: width;
-      transition-duration: 300ms;
-      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    }
-  </style>
+    <style>
+        /* Custom styles for smoother transitions */
+        #sidebar {
+            transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #sidebar-toggle i {
+            transition: transform 300ms ease-in-out;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
 <body class="min-h-screen flex bg-gray-50">
 
-  <div id="sidebar" class="bg-gray-800 text-white w-64 min-h-screen flex flex-col transition-width duration-300 ease-in-out overflow-hidden">
+    <!-- Sidebar Container -->
+    <div id="sidebar" class="bg-gray-800 text-white w-64 min-h-screen flex flex-col overflow-hidden">
 
-    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
-      <a href="http://localhost/admin/Main/Dashboard.php" class="flex items-center gap-2">
-        <img src="../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
-        <img src="../assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
-      </a>
-      <button id="sidebar-toggle" class="text-white focus:outline-none">
-        <i data-lucide="chevron-left" class="w-5 h-5 transition-transform duration-300"></i>
-      </button>
+        <!-- Logo and Toggle Button -->
+        <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
+            <a href="/admin/Main/Dashboard.php" class="flex items-center gap-2">
+                <img src="../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
+                <img src="../assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
+            </a>
+            <button id="sidebar-toggle" class="text-white focus:outline-none">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-2 py-4 space-y-2">
+            <!-- Facility List -->
+            <a href="/admin/module-table/facilities.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="building" class="w-5 h-5"></i>
+                <span class="sidebar-text">Facility List</span>
+            </a>
+
+            <!-- Navigation for hotel booking -->
+            <a href="/admin/module-table/hotel-booking.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Hotel-booking.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="blocks" class="w-5 h-5"></i>
+                <span class="sidebar-text">Hotel Booking</span>
+            </a>
+
+
+            <!-- Visitor Logs -->
+            <a href="/admin/module-table/visitors.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="sidebar-text">Visitor Logs</span>
+            </a>
+
+            <!-- Contract Weka -->
+            <a href="/admin/Main/contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span class="sidebar-text">Contract Weka</span>
+            </a>
+
+            <!-- Legal Management -->
+            <a href="/admin/Main/legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="gavel" class="w-5 h-5"></i>
+                <span class="sidebar-text">Legal Management</span>
+            </a>
+
+            <!-- Weka Dashboard -->
+            <a href="/admin/Main/weka_dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'weka_dashboard.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="brain" class="w-5 h-5"></i>
+                <span class="sidebar-text">Weka Dashboard</span>
+            </a>
+
+            <!-- Document Archiver -->
+            <a href="/admin/Main/document.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+                <span class="sidebar-text">Document Archiver</span>
+            </a>
+
+            <!-- Navigation -->
+            <a href="/admin/Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="blocks" class="w-5 h-5"></i>
+                <span class="sidebar-text">Account User</span>
+            </a>
+
+
+        </nav>
     </div>
 
-  <nav class="flex-1 px-2 py-4 space-y-2 overflow-y-auto text-gray-300">
-  <!-- Dashboard -->
-  <a href="/admin/Main/Dashboard.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'Dashboard.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="home" class="w-5 h-5"></i>
-    <span class="sidebar-text">Dashboard</span>
-  </a>
+    <!-- Main Content Area (for layout purposes) -->
+    <div class="flex-1 min-h-screen overflow-auto">
+        <!-- Your main content goes here -->
+    </div>
 
-  <!-- Facility Booking -->
-  <a href="/admin/module-table/facilities.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'facility.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="building" class="w-5 h-5"></i>
-    <span class="sidebar-text">Facility List</span>
-  </a>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById("sidebar-toggle");
+            const sidebar = document.getElementById("sidebar");
+            const logoExpanded = document.querySelector(".sidebar-logo-expanded");
+            const logoCollapsed = document.querySelector(".sidebar-logo-collapsed");
+            const sidebarTextElements = document.querySelectorAll(".sidebar-text");
+            const icon = toggleBtn.querySelector("i");
 
-  <!-- Visitor Logs -->
-  <a href="/admin/module-table/visitors.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="users" class="w-5 h-5"></i>
-    <span class="sidebar-text">Visitor Logs</span>
-  </a>
+            toggleBtn.addEventListener("click", () => {
+                // Toggle sidebar width
+                sidebar.classList.toggle("w-64");
+                sidebar.classList.toggle("w-20");
 
-  <!-- Contract & Legal -->
-  <a href="/admin/main/contract.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="file-text" class="w-5 h-5"></i>
-    <span class="sidebar-text">Contract & Legal</span>
-  </a>
+                // Toggle visibility of logos and text
+                logoExpanded.classList.toggle("hidden");
+                logoCollapsed.classList.toggle("hidden");
+                sidebarTextElements.forEach(el => el.classList.toggle("hidden"));
+                
+                // Rotate the toggle icon
+                icon.classList.toggle("rotate-180");
+            });
 
-
-   <a href="/admin/main/intergation.php"
-     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700 text-white' : '' ?>">
-    <i data-lucide="file-text" class="w-5 h-5"></i>
-    <span class="sidebar-text">intergation</span>
-  </a> 
-
-
- 
-
-
-
-  </div>
-
-  <div class="flex-1 min-h-screen overflow-auto">
-    <!-- Main content -->
-  </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const toggleBtn = document.getElementById("sidebar-toggle");
-      const sidebar = document.getElementById("sidebar");
-      const logoExpanded = document.querySelector(".sidebar-logo-expanded");
-      const logoCollapsed = document.querySelector(".sidebar-logo-collapsed");
-      const sidebarText = document.querySelectorAll(".sidebar-text");
-      const icon = toggleBtn.querySelector("i");
-
-      toggleBtn.addEventListener("click", () => {
-        // Toggle width classes
-        sidebar.classList.toggle("w-64");
-        sidebar.classList.toggle("w-20");
-        sidebar.classList.toggle("overflow-hidden");
-
-        logoExpanded.classList.toggle("hidden");
-        logoCollapsed.classList.toggle("hidden");
-
-        sidebarText.forEach(el => el.classList.toggle("hidden"));
-
-        if (icon) icon.classList.toggle("rotate-180");
-      });
-
-      if (typeof lucide !== "undefined" && lucide.createIcons) {
-        lucide.createIcons();
-      }
-    });
-  </script>
+            // Initialize Lucide icons
+            if (typeof lucide !== "undefined") {
+                lucide.createIcons();
+            }
+        });
+    </script>
 
 </body>
 </html>

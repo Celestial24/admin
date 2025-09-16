@@ -1,17 +1,11 @@
 <?php
 header('Content-Type: application/json');
 
-$host = 'localhost';
-$dbname = 'contract_legal';
-$username = 'root';
-$password = '';
+// Include the main database connection
+include '../../../backend/sql/db.php';
 
-$mysqli = new mysqli($host, $username, $password, $dbname);
-if ($mysqli->connect_errno) {
-    echo json_encode(['success' => false, 'message' => 'MySQL connection failed: ' . $mysqli->connect_error]);
-    exit;
-}
-$mysqli->set_charset("utf8mb4");
+// Use the existing connection
+$mysqli = $conn;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method. Use POST.']);
@@ -89,14 +83,29 @@ $riskScore = min($score, 100);  // Cap score at 100%
 // Generate a random number for probability to send to frontend UI
 $probabilityPercent = rand(0, 100);
 
-$stmt = $mysqli->prepare("INSERT INTO contracts (employee_name, employee_id, title, description, document_path, ocr_text, risk_score) VALUES (?, ?, ?, ?, ?, ?, ?)");
+// Create contracts table if it doesn't exist
+$createTable = "CREATE TABLE IF NOT EXISTS contracts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_name VARCHAR(255) NOT NULL,
+    employee_id VARCHAR(100) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    document_path VARCHAR(500) NOT NULL,
+    ocr_text LONGTEXT,
+    risk_score INT DEFAULT 0,
+    probability_percent INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)";
+$mysqli->query($createTable);
+
+$stmt = $mysqli->prepare("INSERT INTO contracts (employee_name, employee_id, title, description, document_path, ocr_text, risk_score, probability_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 if (!$stmt) {
     unlink($path);
     echo json_encode(['success' => false, 'message' => 'DB prepare error: ' . $mysqli->error]);
     exit;
 }
 
-$stmt->bind_param('ssssssi', $employeeName, $employeeId, $title, $description, $filename, $ocrText, $riskScore);
+$stmt->bind_param('ssssssii', $employeeName, $employeeId, $title, $description, $filename, $ocrText, $riskScore, $probabilityPercent);
 
 if ($stmt->execute()) {
     // Set color based on random probability

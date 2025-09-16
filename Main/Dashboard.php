@@ -1,39 +1,62 @@
 <?php
-include '../backend/sql/db.php';
+// ==========================
+// Session & Authentication
+// ==========================
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// 1. Get latest department or default to HR1
-$department_h1 = "HR1";
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
+
+// ==========================
+// Error Reporting (Development Only)
+// ==========================
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// ==========================
+// Database Connection
+// ==========================
+require_once '../backend/sql/db.php';
+
+// ==========================
+// Fetch Latest Department
+// ==========================
+$department_h1 = 'HR1'; // Default fallback
+
 $dept_result = $conn->query("SELECT department FROM users ORDER BY id DESC LIMIT 1");
 if ($dept_result && $dept_row = $dept_result->fetch_assoc()) {
     $department_h1 = trim($dept_row['department']);
 }
 
-// 2. Prepare statement to fetch users by department
-$sql = "SELECT name, email, department FROM users WHERE department = ?";
-$stmt = $conn->prepare($sql);
-
+// ==========================
+// Fetch Users by Department
+// ==========================
 $users = [];
-if ($stmt) {
+$sql = "SELECT name, email, department FROM users WHERE department = ?";
+if ($stmt = $conn->prepare($sql)) {
     $stmt->bind_param("s", $department_h1);
     $stmt->execute();
     $result = $stmt->get_result();
-    // Fetch all users into array to avoid pointer issues
     $users = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 } else {
-    die("SQL prepare failed: " . $conn->error);
+    die("Query preparation failed: " . $conn->error);
 }
 
-// 3. Count total users in this department
 $total_users = count($users);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dashboard - Admin</title>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
+  <link rel="icon" href="../assets/image/logo2.png" type="image/png">
   <style>
     html, body {
       overflow-y: hidden;
@@ -50,9 +73,9 @@ $total_users = count($users);
   <div class="flex flex-1 w-full">
 
     <!-- Sidebar -->
-    <div id="sidebar">
+    <aside id="sidebar">
       <?php include '../Components/sidebar/sidebar_admin.php'; ?>
-    </div>
+    </aside>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -62,12 +85,16 @@ $total_users = count($users);
         <div class="flex items-center justify-between border-b pb-4">
           <h2 class="text-xl font-semibold text-gray-800">
             <?= htmlspecialchars($department_h1) ?> Dashboard
-            <span class="ml-4 text-base text-gray-500 font-normal">(Total Users: <?= $total_users ?>)</span>
+            <span class="ml-4 text-base text-gray-500 font-normal">
+              (Total Users: <?= $total_users ?>)
+            </span>
           </h2>
-          <?php include __DIR__ . '../../profile.php'; ?>
+
+          <!-- User Profile -->
+          <?php include __DIR__ . '/../profile.php'; ?>
         </div>
 
-        <!-- Accounts Table -->
+        <!-- Users Table -->
         <div class="overflow-x-auto">
           <table class="min-w-full bg-white border border-gray-200 rounded-md">
             <thead>
@@ -80,15 +107,17 @@ $total_users = count($users);
             </thead>
             <tbody>
               <?php if (!empty($users)): ?>
-                <?php foreach ($users as $row): ?>
+                <?php foreach ($users as $user): ?>
                   <tr>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($row['name']) ?></td>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($row['email']) ?></td>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($row['department'] ?? 'N/A') ?></td>
+                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['name']) ?></td>
+                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['email']) ?></td>
+                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['department'] ?? 'N/A') ?></td>
                     <td class="py-2 px-4 border-b">
                       <form method="POST" onsubmit="return confirm('Are you sure you want to delete this account?');" style="display:inline;">
-                        <input type="hidden" name="delete_email" value="<?= htmlspecialchars($row['email']) ?>">
-                        <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+                        <input type="hidden" name="delete_email" value="<?= htmlspecialchars($user['email']) ?>">
+                        <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                          Delete
+                        </button>
                       </form>
                     </td>
                   </tr>
@@ -108,5 +137,15 @@ $total_users = count($users);
       <?php include '../Components/Footer/footer_admin.php'; ?>
     </div>
   </div>
+
+  <!-- Chatbot -->
+  <?php include __DIR__ . '/../chatbot.php'; ?>
+
+  <?php
+    // Gracefully close DB connection
+    if (isset($conn)) {
+        $conn->close();
+    }
+  ?>
 </body>
 </html>

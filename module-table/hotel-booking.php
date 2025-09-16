@@ -1,12 +1,11 @@
 <?php
-// ======= DATABASE CONFIGURATION =======
-$host     = "localhost";
-$dbname   = "admin_booking";
-$username = "admin_adminhotel";
-$password = "123";
+// ======= ENVIRONMENT SETUP =======
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+require_once __DIR__ . '/../config.php';
 
 // ======= CONNECT TO MYSQL =======
-$conn = new mysqli($host, $username, $password, $dbname);
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($conn->connect_error) {
     die("❌ Connection failed: " . $conn->connect_error);
 }
@@ -22,7 +21,7 @@ if ($result = $conn->query($resSql)) {
     $result->free();
 }
 
-// ======= FETCH VISITORS (Optional) =======
+// ======= FETCH VISITORS (optional) =======
 $visitors = [];
 $visSql = "SELECT name, idNo, purpose, checkIn, checkedOut FROM visitors ORDER BY checkIn DESC";
 if ($result = $conn->query($visSql)) {
@@ -50,12 +49,9 @@ foreach ($reservations as $res) {
     $totalRevenue += $rate * $nights;
 }
 
-// Assume 20 rooms
-$occupancyPercent = min(100, round((count($reservations) / 20) * 100));
-
-// Dummy dashboard values
+$occupancyPercent = min(100, round((count($reservations) / 20) * 100)); // Assuming 20 rooms
 $department_h1 = "Admin";
-$total_users   = 123;
+$total_users = 123; // Dummy value
 ?>
 
 <!doctype html>
@@ -72,9 +68,8 @@ $total_users   = 123;
     <?php include '../Components/sidebar/sidebar_admin.php'; ?>
   </aside>
 
-  <!-- Main content wrapper -->
+  <!-- Main content -->
   <div class="flex-1 flex flex-col overflow-hidden">
-
     <!-- Header -->
     <header class="flex items-center justify-between border-b bg-white px-6 py-4 sticky top-0 z-10">
       <h2 class="text-xl font-semibold text-gray-800">
@@ -84,7 +79,7 @@ $total_users   = 123;
       <?php include __DIR__ . '/../profile.php'; ?>
     </header>
 
-    <!-- Main content -->
+    <!-- Dashboard Content -->
     <main class="flex-1 overflow-y-auto p-6">
       <div class="bg-white shadow rounded p-6">
         <h2 class="text-xl font-semibold mb-4">All Bookings</h2>
@@ -124,8 +119,6 @@ $total_users   = 123;
         </div>
       </div>
     </main>
-
   </div>
-
 </body>
 </html>

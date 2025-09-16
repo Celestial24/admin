@@ -1,0 +1,275 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to top right, #14214D 49.5%, #ffffff 50.5%);
+  font-family: Arial, sans-serif;
+}
+/* Black overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  
+    z-index: -1;
+}
+
+.title-admin {
+    text-align: center;
+    color: #111010;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.logo-text {
+    position: absolute;
+    left: 260px;
+    top: 300px;
+    font-size: 50px;
+    font-weight: bold;
+    display: inline-block;
+    background: linear-gradient(to right, #D59821, #D59821);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+}
+
+.container {
+    position: fixed;
+    left: 70%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: 500px;
+    padding: 20px;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.card {
+    width: 650px;
+    padding: 40px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+.card h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.card form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Wrapper for input + icon */
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 10px 40px 10px 35px; /* space for both left & right icons */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    display: block;
+}
+
+/* Left icons: user, email */
+.input-wrapper i.fas.fa-user,
+.input-wrapper i.fas.fa-envelope {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+    font-size: 16px;
+}
+
+/* Right icons: password eye toggle */
+.input-wrapper i.fas.fa-eye,
+.input-wrapper i.fas.fa-eye-slash {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    cursor: pointer;
+    user-select: none;
+    font-size: 16px;
+}
+
+/* Labels */
+.input-group label {
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    display: block;
+}
+
+/* Button */
+.card form button {
+    padding: 10px;
+    background: #001F55;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 16px;
+    text-transform: uppercase;
+}
+
+.card form button:hover {
+    background: #059595;
+}
+
+/* Links */
+.links {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #333;
+}
+
+.links a {
+    text-decoration: none;
+    color: #007BFF;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+/* Error message */
+.error-message {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Success message (optional if not in HTML) */
+.success-message {
+    color: green;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Footer text inside login card */
+.footer-text {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.image-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    position: absolute;
+    left: 80px;
+    top: 10px;
+}
+
+.input-wrapper i.fas.fa-eye,
+.input-wrapper i.fas.fa-eye-slash {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555; /* darker color */
+    cursor: pointer;
+    user-select: none;
+    font-size: 18px; /* bigger */
+    z-index: 10; /* make sure it’s above inputs */
+    opacity: 1; /* fully visible */
+}
+
+.otp-form {
+    display: inline-flex;
+    flex-direction: row; /* gawin row para horizontal */
+    justify-content: center;
+    align-items: center;
+}
+
+.otp-form input {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    text-align: center;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    gap: 10px;
+    margin-bottom: 20px; /* spacing sa baba */
+}
+
+.otp-form label {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.extra-links {
+  margin-top: 15px;      /* pagitan sa button */
+  font-size: 14px;
+}
+
+.extra-links span {
+    text-decoration: none; /* walang underline */
+  cursor: pointer;
+  color: #007bff;        /* blue link style */
+  padding: 5px 10px;     /* parang may spacing sa paligid */
+}
+
+.extra-links span:hover {
+  text-decoration: underline; /* effect kapag hover */
+}
+
+.extra-links a{
+    text-decoration: none; /* walang underline */
+    color: #007bff;        /* blue link style */
+    padding: 5px 10px;     /* parang may spacing sa paligid */
+}
+
+.error-message{
+    position: absolute;
+    top: 33%;
+    left: 65%;
+    color: red;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 15px;
+}

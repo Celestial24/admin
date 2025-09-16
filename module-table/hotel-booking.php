@@ -1,18 +1,26 @@
 <?php
-// ======= CONFIGURATION & SETUP =======
-// Define a constant for the total number of rooms. Easier to update later.
-define('TOTAL_ROOMS', 20);
+session_start();
 
-// Set error reporting for development (optional but recommended)
-// ini_set('display_errors', 1);
-// error_reporting(E_ALL);
+// ======= DATABASE CONFIGURATION =======
+$host = "localhost";
+$dbname = "admin_admin";
+$username = "admin_admin";
+$password = "123";
 
-// Start a session if your included files need it (good practice)
-// session_start(); 
+// ✅ Establish database connection
+$conn = new mysqli($host, $username, $password, $dbname);
 
-// ======= DATABASE CONNECTION =======
-// Require the database connection file. Script will stop if it's not found.
-require_once '../backend/sql/db.php';
+// ✅ Check for connection errors
+if ($conn->connect_error) {
+    error_log("Database connection failed: " . $conn->connect_error);
+    echo "🚫 Sorry, we're having technical difficulties.";
+    exit;
+}
+
+// ✅ Set charset
+if (!$conn->set_charset("utf8")) {
+    die("❌ Error setting charset: " . $conn->error);
+}
 
 
 // ======= DATA FETCHING & PROCESSING =======

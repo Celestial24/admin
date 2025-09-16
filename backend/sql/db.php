@@ -1,16 +1,15 @@
 <?php
-$host = "localhost";
-$dbname = "admin_admin";
-$username = "admin_admin";
-$password = "123";
+$servername = "localhost";
+$username = "your_db_username";
+$password = "your_db_password";
+$database = "your_db_name";
 
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    // Set error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // Optional: use associative arrays by default
-    $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+// Create connection
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
-?>
+
+$conn->set_charset("utf8");

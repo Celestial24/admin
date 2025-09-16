@@ -3,8 +3,8 @@ session_start();
 
 // ======= DATABASE CONFIGURATION =======
 $host = "localhost";
-$dbname = "admin_admin";
-$username = "admin_admin";
+$dbname = "admin_booking";
+$username = "admin_adminhotel";
 $password = "123";
 
 // ✅ Establish database connection

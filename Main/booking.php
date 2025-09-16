@@ -1,28 +1,56 @@
 <?php
 session_start();
-// Database configuration
-include_once __DIR__ . '/../backend/sql/config.php';
-// Create connection
-$conn = new mysqli($servername, $username, $password, $database);
 
-// Check connection
+// --- Database Connection Section ---
+// 1. Check if config file exists and is readable
+$config_path = __DIR__ . '/../backend/sql/config.php';
+if (!file_exists($config_path) || !is_readable($config_path)) {
+    die("Error: Configuration file '$config_path' not found or not readable.");
+}
+
+// 2. Include the configuration file
+include_once $config_path;
+
+// Check if required variables are defined (basic check)
+if (!isset($servername) || !isset($username) || !isset($password) || !isset($database)) {
+     die("Error: Database configuration variables (\$servername, \$username, \$password, \$database) are missing in '$config_path'.");
+}
+
+// 3. Create connection using error suppression (@) to handle potential issues gracefully before our check
+$conn = @new mysqli($servername, $username, $password, $database);
+
+// 4. Check if the connection object was created successfully
+if (!$conn) {
+    die("Connection Error: Unable to create database connection object.");
+}
+
+// 5. Check for connection errors
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Set charset
-$conn->set_charset("utf8");
-?>
+// 6. Set charset
+if (!$conn->set_charset("utf8")) {
+    die("Error setting charset: " . $conn->error);
+}
 
+// If connection is successful, $conn is now a valid mysqli object.
+// You can use $conn for database operations later if needed.
+// For now, since the rest is HTML/JS, we just needed to ensure the connection setup worked.
+// We don't strictly need to keep $conn alive if not used further down, but good practice to confirm it works.
+// Let's close it explicitly as it's not used beyond this point in the current script.
+$conn->close();
+?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hotel & Booking</title>
+  <!-- Removed extra space at the end of the CDN URL -->
   <script src="https://cdn.tailwindcss.com"></script>
-</head>
- <style>
+  <style>
+    /* Moved style tag inside head */
     html, body {
       overflow-y: hidden;
       height: 100%;
@@ -33,11 +61,20 @@ $conn->set_charset("utf8");
       display: none;
     }
   </style>
+</head>
 <body class="bg-gray-100 text-gray-800 flex">
 
   <!-- Sidebar -->
   <div class="shadow-lg h-screen fixed top-0 left-0 w-64 z-20">
-    <?php include '../Components/sidebar/sidebar_user.php'; ?>
+    <?php
+       // Also add checks for the sidebar include if necessary
+       $sidebar_path = '../Components/sidebar/sidebar_user.php';
+       if (file_exists($sidebar_path) && is_readable($sidebar_path)) {
+           include $sidebar_path;
+       } else {
+           echo "<p class='p-4 text-red-500'>Sidebar not found.</p>";
+       }
+    ?>
   </div>
 
   <!-- Main Content -->
@@ -45,7 +82,16 @@ $conn->set_charset("utf8");
     <!-- Header -->
     <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
       <h2 class="text-xl font-semibold text-gray-800">Visitor Check-in</h2>
-      <?php include __DIR__ . '/../profile.php'; ?>
+      <?php
+        // Check for profile include
+        $profile_path = __DIR__ . '/../profile.php';
+         if (file_exists($profile_path) && is_readable($profile_path)) {
+             include $profile_path;
+         } else {
+             // Optionally render a placeholder or nothing
+             // echo "<div class='bg-gray-200 rounded-full w-8 h-8'></div>";
+         }
+       ?>
     </div>
 
     <div class="max-w-6xl mx-auto p-6">
@@ -187,7 +233,7 @@ $conn->set_charset("utf8");
         return s+nights*rate;
       },0);
       qs('#revenue').textContent = `Total Revenue (booked): ₱${Math.round(revenue)}`;
-      const occ = Math.min(100, Math.round((res.length/20)*100));
+      const occ = Math.min(100, Math.round((res.length/20)*100)); // Assuming 20 rooms max
       qs('#occupancy').textContent = `Occupancy (approx): ${occ}%`;
     }
 
@@ -210,6 +256,25 @@ $conn->set_charset("utf8");
       }
     });
 
+    // Check-in (Placeholder functionality - just removes from list or marks as checked in)
+     qs('#reservationsList').addEventListener('click', e=>{
+      if(e.target.classList.contains('checkinBtn')){
+        const i = Number(e.target.dataset.i);
+        const res = load(KEYS.RES);
+        // Example: Remove reservation on check-in
+        if (confirm(`Check-in ${res[i].guest}? This will remove the reservation.`)) {
+             res.splice(i, 1);
+             save(KEYS.RES, res);
+             renderReservations(); // Re-render the list
+        }
+        // Alternatively, mark as checked in without removing:
+        // res[i].checkedIn = true;
+        // save(KEYS.RES, res);
+        // renderReservations();
+      }
+    });
+
+
     // === Visitors ===
     const visitorForm = qs('#visitorForm');
     function renderVisitors() {
@@ -218,15 +283,18 @@ $conn->set_charset("utf8");
       arr.forEach((v,i)=>{
         const div=document.createElement('div');
         div.className='p-3 border rounded flex justify-between items-start';
+        // Add strikethrough or different style if checked out
+        const nameClass = v.checkedOut ? 'font-medium line-through text-gray-500' : 'font-medium';
         div.innerHTML=`
           <div>
-            <div class="font-medium">${v.name} ${v.checkedOut?'<span class="text-xs text-red-600">(Left)</span>':''}</div>
+            <div class="${nameClass}">${v.name} ${v.checkedOut?'<span class="text-xs text-red-600">(Left)</span>':''}</div>
             <div class="text-sm text-gray-600">ID: ${v.idNo||'—'} • Purpose: ${v.purpose||'—'}</div>
             <div class="text-xs text-gray-500">In: ${v.checkIn}</div>
+            ${v.checkOut ? `<div class="text-xs text-gray-500">Out: ${v.checkOut}</div>` : ''}
           </div>
           <div class="flex flex-col items-end gap-2">
             <button data-i="${i}" class="badgeBtn px-2 py-1 rounded border text-sm">Badge</button>
-            <button data-i="${i}" class="checkoutBtn px-2 py-1 rounded bg-red-600 text-white text-sm">Check-out</button>
+            ${!v.checkedOut ? `<button data-i="${i}" class="checkoutBtn px-2 py-1 rounded bg-red-600 text-white text-sm">Check-out</button>` : `<span class="text-xs text-gray-500 px-2 py-1">Checked Out</span>`}
           </div>`;
         list.appendChild(div);
       });
@@ -235,44 +303,85 @@ $conn->set_charset("utf8");
     visitorForm.addEventListener('submit', e=>{
       e.preventDefault();
       const f=e.target;
-      const data={ name:f.name.value.trim(), idNo:f.idNo.value.trim(), purpose:f.purpose.value.trim(), checkIn:new Date().toLocaleString(), checkedOut:false };
+      const data={ name:f.name.value.trim(), idNo:f.idNo.value.trim(), purpose:f.purpose.value.trim(), checkIn:new Date().toLocaleString(), checkedOut:false, checkOut: null }; // Initialize checkOut
       const arr=load(KEYS.VIS); arr.push(data); save(KEYS.VIS,arr); renderVisitors(); f.reset();
     });
 
     qs('#visitorsList').addEventListener('click', e=>{
       const i = e.target.dataset.i ? Number(e.target.dataset.i) : null;
-      if(e.target.classList.contains('badgeBtn')){
+      if(i !== null && e.target.classList.contains('badgeBtn')){
         const v = load(KEYS.VIS)[i];
-        qs('#badgePreview').innerHTML = `
-          <div class="p-4 w-64 border rounded">
-            <h3 class="font-bold">${v.name}</h3>
-            <div>Purpose: ${v.purpose}</div>
-            <div>ID: ${v.idNo||'—'}</div>
-            <div class="text-xs text-gray-500 mt-2">Checked in: ${v.checkIn}</div>
-          </div>`;
+        if (v) { // Check if visitor exists
+            qs('#badgePreview').innerHTML = `
+              <div class="p-4 w-64 border rounded">
+                <h3 class="font-bold">${v.name}</h3>
+                <div>Purpose: ${v.purpose || 'N/A'}</div>
+                <div>ID: ${v.idNo || 'N/A'}</div>
+                <div class="text-xs text-gray-500 mt-2">Checked in: ${v.checkIn}</div>
+              </div>`;
+        }
       }
-      if(e.target.classList.contains('checkoutBtn')){
-        const arr = load(KEYS.VIS); arr[i].checkedOut=true; arr[i].checkOut=new Date().toLocaleString();
-        save(KEYS.VIS,arr); renderVisitors();
+      if(i !== null && e.target.classList.contains('checkoutBtn')){
+        const arr = load(KEYS.VIS);
+        if (arr[i]) { // Check if visitor exists
+            arr[i].checkedOut=true;
+            arr[i].checkOut=new Date().toLocaleString();
+            save(KEYS.VIS,arr);
+            renderVisitors();
+        }
       }
     });
 
     // Badge Print
     qs('#badgePreview').addEventListener('click', ()=>{
-      if(qs('#badgePreview').innerHTML.trim()==='No badge selected') return alert('Select a visitor and click Badge first.');
-      const w = window.open('', '_blank');
-      w.document.write('<html><head><title>Badge</title></head><body>'+qs('#badgePreview').innerHTML+'</body></html>');
-      w.print();
+      const content = qs('#badgePreview').innerHTML.trim();
+      if(content === 'No badge selected' || content === '') {
+           alert('Select a visitor and click Badge first.');
+           return;
+       }
+      // Basic print - consider opening in new window/tab for better control
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Visitor Badge</title>
+            <style>
+               body { font-family: sans-serif; text-align: center; margin: 20px; }
+               .badge { border: 1px solid #ccc; padding: 15px; width: 200px; margin: 0 auto; }
+               h3 { margin-top: 0; }
+            </style>
+          </head>
+          <body>
+            <div class="badge">
+              ${content}
+            </div>
+            <script>
+              window.onload = function() {
+                window.print();
+                // Optional: window.close(); // Close after print, might be blocked by browser
+              }
+            <\/script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close(); // Necessary for some browsers
+      // printWindow.print(); // Alternative, might print blank if content not loaded yet
     });
 
     // Reset All
     qs('#resetData').addEventListener('click', ()=>{
       if(!confirm('⚠️ Are you sure you want to delete ALL saved data?')) return;
-      localStorage.clear(); alert('✅ All data has been cleared.'); location.reload();
+      localStorage.removeItem(KEYS.RES); // More specific than clear
+      localStorage.removeItem(KEYS.VIS);
+      alert('✅ All data has been cleared.');
+      renderReservations();
+      renderVisitors();
+      qs('#badgePreview').innerHTML = 'No badge selected'; // Reset badge preview
     });
 
     // Initial load
-    renderReservations(); renderVisitors();
+    renderReservations();
+    renderVisitors();
   </script>
 </body>
 </html>

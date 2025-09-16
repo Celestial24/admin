@@ -1,16 +1,6 @@
 <?php
 // ======= DATABASE CONFIGURATION =======
-$host     = "localhost";
-$dbname   = "admin_admin";
-$username = "admin_admin";
-$password = "123";
-
-// ======= CONNECT TO MYSQL =======
-$conn = new mysqli($host, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("❌ Connection failed: " . $conn->connect_error);
-}
-$conn->set_charset("utf8mb4");
+require '../backend/sql/db.php';
 
 // ======= FETCH RESERVATIONS =======
 $reservations = [];

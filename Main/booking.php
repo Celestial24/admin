@@ -1,9 +1,9 @@
 <?php 
 // ======= DATABASE CONFIGURATION =======
 $host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "booking";
+$user = "admin_booking";
+$pass = "123";
+$db   = "admin_booking";
 
 // ======= CONNECT TO MYSQL =======
 $conn = new mysqli($host, $user, $pass, $db);

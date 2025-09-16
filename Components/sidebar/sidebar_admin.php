@@ -67,19 +67,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
 
             <!-- Contract Weka -->
-            <a href="./Main/contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+            <a href="../Main/contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="file-text" class="w-5 h-5"></i>
                 <span class="sidebar-text">Contract Weka</span>
             </a>
 
             <!-- Legal Management -->
-            <a href="./Main/legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+            <a href="../Main/legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="gavel" class="w-5 h-5"></i>
                 <span class="sidebar-text">Legal Management</span>
             </a>
 
             <!-- Weka Dashboard -->
-            <a href="./Main/weka_dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'weka_dashboard.php' ? 'bg-gray-700' : '' ?>">
+            <a href="../Main/weka_dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'weka_dashboard.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="brain" class="w-5 h-5"></i>
                 <span class="sidebar-text">Weka Dashboard</span>
             </a>
@@ -91,7 +91,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
 
             <!-- Navigation -->
-            <a href="./Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">
+            <a href="../Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="blocks" class="w-5 h-5"></i>
                 <span class="sidebar-text">Account User</span>
             </a>

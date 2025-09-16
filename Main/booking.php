@@ -7,16 +7,20 @@ session_start(); // Add session_start if you need sessions (e.g., for login chec
 $host = "localhost";
 $dbname = "admin_admin";
 $username = "admin_admin";
-$password = "123"; // Consider using stronger passwords and potentially environment variables
+$password = "123";
 
-// --- FIX: Create the database connection object FIRST ---
+// ✅ Create connection
 $conn = new mysqli($host, $username, $password, $dbname);
 
-// Check connection
-if ($conn->connect_error) {
-    die("❌ Connection failed: " . $conn->connect_error);
-}
+// ✅ Check connection
+if ($conn->connect_error) die("❌ Connection failed: " . $conn->connect_error);
 
+
+if ($conn->connect_error) {
+    error_log("Database connection failed: " . $conn->connect_error);
+    echo "🚫 Sorry, we're having technical difficulties.";
+    exit;
+}
 // Set charset
 if (!$conn->set_charset("utf8")) {
     die("❌ Error setting charset: " . $conn->error);

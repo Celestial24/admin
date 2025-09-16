@@ -1,74 +1,85 @@
 <?php
 session_start();
+// Database configuration
+// Make sure this path is correct and the file defines $servername, $username, $password, $database
+include_once __DIR__ . '/../backend/sql/db.php';
 
-// ======= DATABASE CONFIGURATION =======
-$host = "localhost";
-$dbname = "admin_admin";
-$username = "admin_admin";
-$password = "123";
+// --- FIX: Create the connection object FIRST ---
+// Create connection using the variables from config.php
+$conn = new mysqli($servername, $username, $password, $database);
+// --- END FIX ---
 
-// ✅ Establish database connection
-$conn = new mysqli($host, $username, $password, $dbname);
-
-// ✅ Check for connection errors
+// Check connection
+// Now $conn exists and can be checked
 if ($conn->connect_error) {
-    error_log("Database connection failed: " . $conn->connect_error);
-    echo "🚫 Sorry, we're having technical difficulties.";
-    exit;
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// ✅ Set charset
+// Set charset
+// Now $conn exists and the method can be called
 if (!$conn->set_charset("utf8")) {
-    die("❌ Error setting charset: " . $conn->error);
+    die("Error setting charset: " . $conn->error); // Use $conn->error for specific error
 }
 
-
-// ======= DATA FETCHING & PROCESSING =======
+// --- Your database queries should go here ---
+// Example (replace with your actual table/column names if different):
 $reservations = [];
-$totalRevenue = 0;
-$resSql = "SELECT guest, roomType, checkIn, checkOut, rate FROM reservations ORDER BY checkIn DESC";
+$sql = "SELECT guest, roomType, checkIn, checkOut, rate FROM reservations ORDER BY checkIn DESC";
+$result = $conn->query($sql);
 
-if ($result = $conn->query($resSql)) {
-    while ($row = $result->fetch_assoc()) {
-        // Calculate rate and nights here to avoid repeating logic later (DRY Principle)
-        $checkIn  = new DateTime($row['checkIn']);
-        $checkOut = new DateTime($row['checkOut']);
-        $nights   = max(1, $checkOut->diff($checkIn)->days); // Ensure at least 1 night is charged
-
-        // Use the rate from DB if available, otherwise calculate it based on room type
-        $computedRate = $row['rate'] ?: match ($row['roomType']) {
-            'Suite'  => 8000,
-            'Double' => 4000,
-            default  => 2000,
-        };
-        
-        // Add the calculated values to the row
-        $row['nights'] = $nights;
-        $row['computedRate'] = $computedRate;
-
-        // Add to the total revenue
-        $totalRevenue += $computedRate * $nights;
-        
-        // Add the fully processed row to our reservations array
+if ($result && $result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
         $reservations[] = $row;
     }
-    $result->free(); // Free the result set
-} else {
-    // Handle potential SQL query errors
-    die("Error fetching reservations: " . $conn->error);
+}
+// Add similar blocks for other data like visitors if needed
+
+// Close the connection when you're done fetching data
+$conn->close();
+// --- End Database Queries ---
+
+// --- Your existing calculations ---
+$totalRevenue = 0;
+foreach ($reservations as $res) {
+    try {
+        $checkIn = new DateTime($res['checkIn']);
+        $checkOut = new DateTime($res['checkOut']);
+        $interval = $checkOut->diff($checkIn);
+        $nights = max(1, (int)$interval->format('%a')); // Ensure at least 1 night
+    } catch (Exception $e) {
+        $nights = 1; // Default if date parsing fails
+    }
+
+    // Determine rate
+    if (isset($res['rate']) && is_numeric($res['rate']) && $res['rate'] > 0) {
+        $rate = (float)$res['rate'];
+    } else {
+        // Default rates based on room type
+        switch ($res['roomType']) {
+            case 'Suite':
+                $rate = 8000.0;
+                break;
+            case 'Double':
+                $rate = 4000.0;
+                break;
+            case 'Single':
+            default:
+                $rate = 2000.0;
+                break;
+        }
+    }
+    $totalRevenue += $rate * $nights;
 }
 
+// Assuming max 20 rooms for occupancy calculation (consider making this dynamic or configurable)
+$totalRooms = 20;
+$reservationCount = count($reservations);
+$occupancyPercent = $totalRooms > 0 ? min(100, round(($reservationCount / $totalRooms) * 100)) : 0;
 
-// ======= BUSINESS LOGIC & CALCULATIONS =======
-// Calculate occupancy percentage based on the number of fetched reservations
-$activeBookings = count($reservations);
-$occupancyPercent = min(100, round(($activeBookings / TOTAL_ROOMS) * 100));
-
-// Dummy dashboard values (can be replaced with real data)
-$department_h1 = "Admin";
-$total_users   = 123;
+// Demo values (replace with actual logic if needed)
+$department_h1 = "Hotel"; // Example
+$total_users = 50;       // Example
 ?>
-
 <!doctype html>
 <html lang="en" class="h-full bg-gray-100">
 <head>

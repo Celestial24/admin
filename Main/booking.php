@@ -1,15 +1,21 @@
-<?php 
-// ======= DATABASE CONFIGURATION =======
-$host = "localhost";
-$user = "admin_booking";
-$pass = "123";
-$db   = "admin_booking";
+<?php
+$servername = "localhost";
+$username = "admin_booking";
+$password = "123";
+$database = "admin_booking";
 
-// ======= CONNECT TO MYSQL =======
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) die("❌ Connection failed: " . $conn->connect_error);
+// Create connection
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Set charset
 $conn->set_charset("utf8");
 ?>
+
 <!doctype html>
 <html lang="en">
 <head>

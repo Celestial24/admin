@@ -54,7 +54,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
 
             <!-- Navigation for hotel booking -->
-            <a href="module-table/hotel-booking.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Hotel-booking.php' ? 'bg-gray-700' : '' ?>">
+            <a href="../module-table/hotel-booking.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Hotel-booking.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="blocks" class="w-5 h-5"></i>
                 <span class="sidebar-text">Hotel Booking</span>
             </a>

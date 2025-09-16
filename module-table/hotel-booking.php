@@ -1,16 +1,8 @@
-<?php 
-// ======= DATABASE CONFIGURATION =======
-$host = "localhost";
-$user = "admin_admin";
-$pass = "123";
-$db   = "admin_admin";
+<?php
+// Connect to database
+include_once __DIR__ . '../backend/sql/db.php';
 
-// ======= CONNECT TO MYSQL =======
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) die("❌ Connection failed: " . $conn->connect_error);
-$conn->set_charset("utf8");
-
-// Fetch Reservations
+// ======= Fetch Reservations =======
 $reservations = [];
 $resSql = "SELECT guest, roomType, checkIn, checkOut, rate FROM reservations ORDER BY checkIn DESC";
 if ($result = $conn->query($resSql)) {
@@ -20,7 +12,7 @@ if ($result = $conn->query($resSql)) {
     $result->free();
 }
 
-// Fetch Visitors (not used here, but fetched if needed)
+// ======= Fetch Visitors (optional, not used below) =======
 $visitors = [];
 $visSql = "SELECT name, idNo, purpose, checkIn, checkedOut FROM visitors ORDER BY checkIn DESC";
 if ($result = $conn->query($visSql)) {
@@ -30,23 +22,31 @@ if ($result = $conn->query($visSql)) {
     $result->free();
 }
 
+// ======= Close DB Connection =======
 $conn->close();
 
-// Calculate total revenue and occupancy
+// ======= Revenue & Occupancy Calculations =======
 $totalRevenue = 0;
 foreach ($reservations as $res) {
     $checkIn = new DateTime($res['checkIn']);
     $checkOut = new DateTime($res['checkOut']);
     $nights = max(1, $checkOut->diff($checkIn)->days);
-    $rate = $res['rate'] ?: ($res['roomType'] === 'Suite' ? 8000 : ($res['roomType'] === 'Double' ? 4000 : 2000));
+
+    // Default rates per room type
+    $rate = $res['rate'] ?: match ($res['roomType']) {
+        'Suite' => 8000,
+        'Double' => 4000,
+        default => 2000
+    };
+
     $totalRevenue += $rate * $nights;
 }
 
-// Assuming max 20 rooms for occupancy calculation
+// Assume max 20 rooms for occupancy calculation
 $occupancyPercent = min(100, round((count($reservations) / 20) * 100));
 
-// Just for demo, add department_h1 and total_users values:
-$department_h1 = "Admin"; 
+// ======= Demo Info (replace with real values) =======
+$department_h1 = "Admin";
 $total_users = 123;
 ?>
 
@@ -64,21 +64,21 @@ $total_users = 123;
     <?php include '../Components/sidebar/sidebar_admin.php'; ?>
   </aside>
 
-  <!-- Main content wrapper -->
+  <!-- Main Content Wrapper -->
   <div class="flex-1 flex flex-col overflow-hidden">
 
     <!-- Header -->
     <header class="flex items-center justify-between border-b bg-white px-6 py-4 sticky top-0 z-10">
       <h2 class="text-xl font-semibold text-gray-800">
         <?= htmlspecialchars($department_h1) ?> Dashboard
-        <span class="ml-4 text-base text-gray-500 font-normal">(Total Users: <?= $total_users ?>)</span>
+        <span class="ml-4 text-base text-gray-500 font-normal">(Total Users: <?= (int)$total_users ?>)</span>
       </h2>
 
       <!-- User Profile -->
       <?php include __DIR__ . '/../profile.php'; ?>
     </header>
 
-    <!-- Main content -->
+    <!-- Main Content -->
     <main class="flex-1 overflow-y-auto p-6">
       <div class="bg-white shadow rounded p-6">
 
@@ -96,9 +96,11 @@ $total_users = 123;
           </thead>
           <tbody>
             <?php foreach ($reservations as $res): 
-              $checkIn = new DateTime($res['checkIn']);
-              $checkOut = new DateTime($res['checkOut']);
-              $rate = $res['rate'] ?: ($res['roomType'] === 'Suite' ? 8000 : ($res['roomType'] === 'Double' ? 4000 : 2000));
+              $rate = $res['rate'] ?: match ($res['roomType']) {
+                'Suite' => 8000,
+                'Double' => 4000,
+                default => 2000
+              };
             ?>
             <tr>
               <td class="border px-4 py-2"><?= htmlspecialchars($res['guest']) ?></td>
@@ -112,8 +114,8 @@ $total_users = 123;
         </table>
 
         <div class="mt-6 text-sm text-gray-700">
-          <p>💰 Total Revenue: ₱<?= number_format($totalRevenue) ?></p>
-          <p>📈 Occupancy (approx): <?= $occupancyPercent ?>%</p>
+          <p>💰 <strong>Total Revenue:</strong> ₱<?= number_format($totalRevenue) ?></p>
+          <p>📈 <strong>Occupancy (approx):</strong> <?= $occupancyPercent ?>%</p>
         </div>
 
       </div>

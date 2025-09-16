@@ -49,21 +49,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <nav class="flex-1 px-2 py-4 space-y-2">
             <!-- Facility List -->
            <!-- Facility Reservation -->
-            <a href="/admin/Views/modules/facility.php" 
+            <a href="../Views/modules/facility.php" 
             class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="building" class="w-5 h-5"></i>
                 <span class="sidebar-text">Facility Reservation</span>
             </a>
 
             <!-- Hotel Booking (updated to correct file if needed) -->
-            <a href="/admin/Main/booking.php" 
+            <a href="../Main/booking.php" 
             class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'hotel.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="building" class="w-5 h-5"></i>
                 <span class="sidebar-text">Hotel Booking</span>
             </a>
 
             <!-- Visitor Logs -->
-            <a href="/admin/user/Visitors.php" 
+            <a href=../user/Visitors.php" 
             class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>

@@ -21,17 +21,15 @@ function sanitize($data) {
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Sanitize inputs
-    $name = sanitize($_POST['name'] ?? '');
-    $email = sanitize($_POST['email'] ?? '');
-    $receiver_email = sanitize($_POST['receiver_email'] ?? '');
-    $department = sanitize($_POST['department'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $name             = sanitize($_POST['name'] ?? '');
+    $email            = sanitize($_POST['email'] ?? '');
+    $receiver_email   = sanitize($_POST['receiver_email'] ?? '');
+    $department       = sanitize($_POST['department'] ?? '');
+    $password         = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
     // Validate inputs
-    if (!$name) {
-        $errors[] = "Full Name is required.";
-    }
+    if (!$name) $errors[] = "Full Name is required.";
 
     if (!$email) {
         $errors[] = "Admin Email is required.";
@@ -45,9 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $errors[] = "Invalid verification email format.";
     }
 
-    if (!$department) {
-        $errors[] = "Department is required.";
-    }
+    if (!$department) $errors[] = "Department is required.";
 
     if (!$password) {
         $errors[] = "Password is required.";
@@ -59,12 +55,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $errors[] = "Passwords do not match.";
     }
 
-    // Check if email already exists in DB
+    // Check if email already exists
     if (empty($errors)) {
         $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ?");
-        if (!$stmt) {
-            $errors[] = "Database error: " . mysqli_error($conn);
-        } else {
+        if ($stmt) {
             mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_store_result($stmt);
@@ -72,27 +66,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $errors[] = "Email is already registered.";
             }
             mysqli_stmt_close($stmt);
+        } else {
+            $errors[] = "Database error: " . mysqli_error($conn);
         }
     }
 
     // Proceed with registration if no errors
     if (empty($errors)) {
         $verification_code = random_int(100000, 999999);
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $password_hash     = password_hash($password, PASSWORD_DEFAULT);
 
-        $insert_stmt = mysqli_prepare($conn, "INSERT INTO users (name, email, password_hash, verification_code, is_verified, department) VALUES (?, ?, ?, ?, 0, ?)");
-        if (!$insert_stmt) {
-            $errors[] = "Database error: " . mysqli_error($conn);
-        } else {
-            mysqli_stmt_bind_param($insert_stmt, "sssss", $name, $email, $password_hash, $verification_code, $department);
+        $insert_stmt = mysqli_prepare(
+            $conn,
+            "INSERT INTO users 
+            (name, email, receiver_email, password_hash, verification_code, is_verified, created_at, role, department, last_resend) 
+            VALUES (?, ?, ?, ?, ?, 0, NOW(), 'user', ?, NULL)"
+        );
+
+        if ($insert_stmt) {
+            // ✅ 6 placeholders = 6 types = 6 variables
+            mysqli_stmt_bind_param(
+                $insert_stmt,
+                "ssssss",   // 6 "s" since all are strings
+                $name,
+                $email,
+                $receiver_email,
+                $password_hash,
+                $verification_code,
+                $department
+            );
+
             if (mysqli_stmt_execute($insert_stmt)) {
                 $mail = new PHPMailer(true);
                 try {
                     $mail->isSMTP();
                     $mail->Host = 'smtp.gmail.com';
                     $mail->SMTPAuth = true;
-                    $mail->Username = 'atiera41001@gmail.com'; // Your Gmail
-                    $mail->Password = 'potz sbxk unrz hdqc';    // Your Gmail app password
+                    $mail->Username = 'atiera41001@gmail.com'; // Gmail account
+                    $mail->Password = 'vzwt xech qbmc ejan';    // Gmail App Password
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port = 587;
 
@@ -114,8 +125,10 @@ Your Website Team";
 
                     $mail->send();
 
+                    // ✅ Redirect only if email sent successfully
                     header("Location: verify.php?email=" . urlencode($email));
                     exit;
+
                 } catch (Exception $e) {
                     $errors[] = "Failed to send verification email. Mailer Error: " . $mail->ErrorInfo;
                 }
@@ -123,10 +136,13 @@ Your Website Team";
                 $errors[] = "Database error: Could not register user.";
             }
             mysqli_stmt_close($insert_stmt);
+        } else {
+            $errors[] = "Database error: " . mysqli_error($conn);
         }
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -178,10 +194,9 @@ Your Website Team";
         <select id="department" name="department" required
                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Select Department</option>
-          <option value="HR1" <?= $department == "HR1" ? "selected" : "" ?>>HR1</option>
-          <option value="HR2" <?= $department == "HR2" ? "selected" : "" ?>>HR2</option>
+          <option value="HR1" <?= $department == "Core1" ? "selected" : "" ?>>Core1</option>
           <option value="HR3" <?= $department == "HR3" ? "selected" : "" ?>>HR3</option>
-          <option value="HR4" <?= $department == "HR4" ? "selected" : "" ?>>HR4</option>
+          <option value="HR4" <?= $department == "Logistic_1" ? "selected" : "" ?>>Logistic 1</option>
         </select>
       </div>
 

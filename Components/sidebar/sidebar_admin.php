@@ -39,19 +39,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <a href="../module-table/visitors.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='visitors.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i><span class="sidebar-text">Visitor Logs</span>
             </a>
-            <a href="../Main/contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='contract.php'?'bg-gray-700':'' ?>">
+            <a href="../../contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='contract.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="file-text" class="w-5 h-5"></i><span class="sidebar-text">Contract Weka</span>
             </a>
-            <a href="../Main/legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='legalmanagement.php'?'bg-gray-700':'' ?>">
+            <a href="../../legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='legalmanagement.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="gavel" class="w-5 h-5"></i><span class="sidebar-text">Legal Management</span>
             </a>
-            <a href="../Main/weka_dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='weka_dashboard.php'?'bg-gray-700':'' ?>">
+            <a href="../../weka_dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='weka_dashboard.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="brain" class="w-5 h-5"></i><span class="sidebar-text">Weka Dashboard</span>
             </a>
-            <a href="../Main/document.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='document.php'?'bg-gray-700':'' ?>">
+            <a href="../../document.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='document.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="folder-kanban" class="w-5 h-5"></i><span class="sidebar-text">Document Archiver</span>
             </a>
-            <a href="../Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='Accout-table.php'?'bg-gray-700':'' ?>">
+            <a href="../../Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage==='Accout-table.php'?'bg-gray-700':'' ?>">
                 <i data-lucide="blocks" class="w-5 h-5"></i><span class="sidebar-text">Account User</span>
             </a>
         </nav>

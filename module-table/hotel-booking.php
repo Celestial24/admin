@@ -1,11 +1,12 @@
 <?php
-// ======= ENVIRONMENT SETUP =======
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-require_once __DIR__ . '/../config.php';
+// ======= DATABASE CONFIGURATION =======
+$host     = "localhost";
+$dbname   = "admin_booking";
+$username = "admin_admin";
+$password = "123";
 
 // ======= CONNECT TO MYSQL =======
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+$conn = new mysqli($host, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("❌ Connection failed: " . $conn->connect_error);
 }
@@ -21,7 +22,7 @@ if ($result = $conn->query($resSql)) {
     $result->free();
 }
 
-// ======= FETCH VISITORS (optional) =======
+// ======= FETCH VISITORS (Optional) =======
 $visitors = [];
 $visSql = "SELECT name, idNo, purpose, checkIn, checkedOut FROM visitors ORDER BY checkIn DESC";
 if ($result = $conn->query($visSql)) {
@@ -49,9 +50,12 @@ foreach ($reservations as $res) {
     $totalRevenue += $rate * $nights;
 }
 
-$occupancyPercent = min(100, round((count($reservations) / 20) * 100)); // Assuming 20 rooms
+// Assume 20 rooms
+$occupancyPercent = min(100, round((count($reservations) / 20) * 100));
+
+// Dummy dashboard values
 $department_h1 = "Admin";
-$total_users = 123; // Dummy value
+$total_users   = 123;
 ?>
 
 <!doctype html>
@@ -68,8 +72,9 @@ $total_users = 123; // Dummy value
     <?php include '../Components/sidebar/sidebar_admin.php'; ?>
   </aside>
 
-  <!-- Main content -->
+  <!-- Main content wrapper -->
   <div class="flex-1 flex flex-col overflow-hidden">
+
     <!-- Header -->
     <header class="flex items-center justify-between border-b bg-white px-6 py-4 sticky top-0 z-10">
       <h2 class="text-xl font-semibold text-gray-800">
@@ -79,7 +84,7 @@ $total_users = 123; // Dummy value
       <?php include __DIR__ . '/../profile.php'; ?>
     </header>
 
-    <!-- Dashboard Content -->
+    <!-- Main content -->
     <main class="flex-1 overflow-y-auto p-6">
       <div class="bg-white shadow rounded p-6">
         <h2 class="text-xl font-semibold mb-4">All Bookings</h2>
@@ -119,6 +124,8 @@ $total_users = 123; // Dummy value
         </div>
       </div>
     </main>
+
   </div>
+
 </body>
 </html>

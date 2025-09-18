@@ -114,10 +114,10 @@ function getStatusBadge($status) {
                 <th class="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
               <?php if ($facilitiesResult->num_rows > 0): while ($row = $facilitiesResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4"><?= $row['id'] ?></td>
+                <td class="px-6 py-4 text-center"><?= $row['id'] ?></td>
                 <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
                 <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
                 <td class="px-6 py-4"><?= $row['capacity'] ?></td>

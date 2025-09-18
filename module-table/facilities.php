@@ -189,13 +189,13 @@ function getStatusBadge($status) {
             <tbody class="text-center">
               <?php if ($mainResult->num_rows > 0): while ($row = $mainResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['description']) ?></td>
-                <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
-                <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2">
+                <td class="px-6 py-4 text-center"><?= $row['id'] ?></td>
+                <td class="px-6 py-4 font-medium text-center"><?= htmlspecialchars($row['facility_name']) ?></td>
+                <td class="px-6 py-4 text-center"><?= htmlspecialchars($row['description']) ?></td>
+                <td class="px-6 py-4 text-center"><?= getStatusBadge($row['priority']) ?></td>
+                <td class="px-6 py-4 text-center "><?= htmlspecialchars($row['reported_by']) ?></td>
+                <td class="px-6 py-4 text-center"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                <td class="px-6 py-4 text-center flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>

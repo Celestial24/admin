@@ -118,11 +118,11 @@ function getStatusBadge($status) {
               <?php if ($facilitiesResult->num_rows > 0): while ($row = $facilitiesResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
                 <td class="px-6 py-4 text-center"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
-                <td class="px-6 py-4"><?= $row['capacity'] ?></td>
-                <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2">
+                <td class="px-6 py-4 text-center font-medium"><?= htmlspecialchars($row['name']) ?></td>
+                <td class="px-6 py-4 text-cente"><?= htmlspecialchars($row['type']) ?></td>
+                <td class="px-6 py-4 text-center"><?= $row['capacity'] ?></td>
+                <td class="px-6 py-4 text-center"><?= getStatusBadge($row['status']) ?></td>
+                <td class="px-6 py-4 flex justify-center gap-2 text-center">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>

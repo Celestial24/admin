@@ -186,7 +186,7 @@ function getStatusBadge($status) {
                 <th class="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
               <?php if ($mainResult->num_rows > 0): while ($row = $mainResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
                 <td class="px-6 py-4"><?= $row['id'] ?></td>

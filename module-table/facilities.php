@@ -176,8 +176,7 @@ function getStatusBadge($status) {
       <div id="maintenance" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow overflow-x-auto">
           <table class="min-w-full text-sm text-center">
-            <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
-              <tr>
+            <thead class="bg-gray-50 text-xs text-gray-700 uppercase text-center">
                 <th class="px-6 py-3">ID</th>
                 <th class="px-6 py-3">Facility</th>
                 <th class="px-6 py-3">Description</th>

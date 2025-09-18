@@ -36,9 +36,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
+<<<<<<< HEAD
             <a href="/admin/user/dashboard.php" class="flex items-center gap-2">
                 <img src="/admin/assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
                 <img src="/admin/assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
+=======
+            <a href="/user/dashboard.php" class="flex items-center gap-2">
+                <img src="../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
+                <img src="../assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
+>>>>>>> 4ef48a1cf7462091f94b00b2c6cd47906db68a05
             </a>
             <button id="sidebar-toggle" class="text-white focus:outline-none">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -49,16 +55,32 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <nav class="flex-1 px-2 py-4 space-y-2">
             <!-- Facility List -->
            <!-- Facility Reservation -->
+<<<<<<< HEAD
             <a href="/admin/Views/modules/facility.php" 
+=======
+            <a href="../Views/modules/facility.php" 
+>>>>>>> 4ef48a1cf7462091f94b00b2c6cd47906db68a05
             class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="building" class="w-5 h-5"></i>
                 <span class="sidebar-text">Facility Reservation</span>
             </a>
 
+<<<<<<< HEAD
             
 
             <!-- Visitor Logs -->
             <a href="/admin/user/Visitors.php" 
+=======
+            <!-- Hotel Booking (updated to correct file if needed) -->
+            <a href="../Main/booking.php" 
+            class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'hotel.php' ? 'bg-gray-700' : '' ?>">
+                <i data-lucide="building" class="w-5 h-5"></i>
+                <span class="sidebar-text">Hotel Booking</span>
+            </a>
+
+            <!-- Visitor Logs -->
+            <a href=../user/Visitors.php" 
+>>>>>>> 4ef48a1cf7462091f94b00b2c6cd47906db68a05
             class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>

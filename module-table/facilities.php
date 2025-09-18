@@ -16,20 +16,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['form_type'])) {
 }
 
 // ================= FETCH DATA =================
-$facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC");
-if (!$facilitiesResult) die("Facilities query failed: " . $conn->error);
+$facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") or die("Facilities query failed: " . $conn->error);
 
 $resResult = $conn->query("SELECT r.*, f.name AS facility_name 
                            FROM reservations r 
                            JOIN facilities f ON r.facility_id = f.id 
-                           ORDER BY r.start_time DESC");
-if (!$resResult) die("Reservations query failed: " . $conn->error);
+                           ORDER BY r.start_time DESC") or die("Reservations query failed: " . $conn->error);
 
 $mainResult = $conn->query("SELECT m.*, f.name AS facility_name 
                             FROM maintenance m 
                             JOIN facilities f ON m.facility_id = f.id 
-                            ORDER BY m.created_at DESC");
-if (!$mainResult) die("Maintenance query failed: " . $conn->error);
+                            ORDER BY m.created_at DESC") or die("Maintenance query failed: " . $conn->error);
 
 // ================= COUNTS =================
 $totalFacilities   = $facilitiesResult->num_rows;
@@ -106,7 +103,7 @@ function getStatusBadge($status) {
       <!-- Facilities Tab -->
       <div id="facilities" class="tab-content">
         <div class="bg-white rounded-lg shadow overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
               <tr>
                 <th class="px-6 py-3">ID</th>
@@ -125,7 +122,7 @@ function getStatusBadge($status) {
                 <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
                 <td class="px-6 py-4"><?= $row['capacity'] ?></td>
                 <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex gap-2">
+                <td class="px-6 py-4 flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
@@ -141,7 +138,7 @@ function getStatusBadge($status) {
       <!-- Reservations Tab -->
       <div id="reservations" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
               <tr>
                 <th class="px-6 py-3">ID</th>
@@ -162,7 +159,7 @@ function getStatusBadge($status) {
                 <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['start_time'])) ?></td>
                 <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
                 <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex gap-2">
+                <td class="px-6 py-4 flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
@@ -178,7 +175,7 @@ function getStatusBadge($status) {
       <!-- Maintenance Tab -->
       <div id="maintenance" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow overflow-x-auto">
-          <table class="min-w-full text-sm">
+          <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
               <tr>
                 <th class="px-6 py-3">ID</th>
@@ -199,7 +196,7 @@ function getStatusBadge($status) {
                 <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
                 <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
                 <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                <td class="px-6 py-4 flex gap-2">
+                <td class="px-6 py-4 flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
@@ -213,109 +210,6 @@ function getStatusBadge($status) {
       </div>
     </div>
   </main>
-
-  <!-- CHATBOT -->
-  <div class="fixed bottom-6 right-6 z-50">
-    <button id="chatbotToggle" class="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition-all duration-300 group">
-      <img src="/admin/assets/image/logo2.png" alt="Admin Assistant" class="w-12 h-12 object-contain">
-      <span class="absolute bottom-full mb-2 right-1/2 transform translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity shadow-lg">Admin Assistant</span>
-    </button>
-
-    <div id="chatbotBox" class="fixed bottom-24 right-6 w-80 bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 scale-95 pointer-events-none transition-all duration-300 overflow-hidden">
-      <div class="p-4 border-b bg-blue-600 text-white font-semibold">Admin Assistant</div>
-      <div id="chatContent" class="p-4 h-64 overflow-y-auto text-sm bg-gray-50 space-y-4"></div>
-      <div class="p-3 border-t flex gap-2">
-        <input id="userInput" type="text" placeholder="Ask me anything..." class="flex-1 rounded-lg px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">Send</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    lucide.createIcons();
-
-    // Tabs
-    const tabs = document.querySelectorAll('.tab-link');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('border-blue-600','text-blue-600'));
-        contents.forEach(c => c.classList.add('hidden'));
-        tab.classList.add('border-blue-600','text-blue-600');
-        document.getElementById(tab.dataset.tab).classList.remove('hidden');
-      });
-    });
-
-    // Mobile Sidebar
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileSidebar = document.getElementById('sidebar-mobile');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const toggleMobileSidebar = () => {
-      mobileSidebar.style.display = mobileSidebar.style.display === 'flex' ? 'none' : 'flex';
-    };
-    if (mobileMenuButton) mobileMenuButton.addEventListener('click', toggleMobileSidebar);
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMobileSidebar);
-
-    // Chatbot
-    class AdminChatbot {
-      constructor() {
-        this.toggleBtn = document.getElementById('chatbotToggle');
-        this.chatBox = document.getElementById('chatbotBox');
-        this.chatContent = document.getElementById('chatContent');
-        this.userInput = document.getElementById('userInput');
-        this.sendBtn = document.getElementById('sendBtn');
-        this.isOpen = false;
-        this.init();
-      }
-      init() {
-        this.toggleBtn.addEventListener('click', () => this.toggle());
-        this.sendBtn.addEventListener('click', () => this.sendMessage());
-        this.userInput.addEventListener('keypress', e => { if (e.key === 'Enter') this.sendMessage(); });
-        this.addMessage("Hello! I'm your facilities assistant. How can I help you today?");
-      }
-      toggle() {
-        this.isOpen = !this.isOpen;
-        if (this.isOpen) {
-          this.chatBox.classList.remove('opacity-0','scale-95','pointer-events-none');
-          this.chatBox.classList.add('opacity-100','scale-100','pointer-events-auto');
-          this.userInput.focus();
-        } else {
-          this.chatBox.classList.add('opacity-0','scale-95','pointer-events-none');
-          this.chatBox.classList.remove('opacity-100','scale-100','pointer-events-auto');
-        }
-      }
-      addMessage(message, isUser = false) {
-        const wrap = document.createElement('div');
-        wrap.className = `flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`;
-        wrap.innerHTML = `
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isUser?'bg-gray-600':'bg-blue-600'}">
-            ${isUser?'U':'AI'}
-          </div>
-          <div class="p-3 rounded-lg shadow-sm max-w-xs ${isUser?'bg-blue-600 text-white':'bg-white text-gray-800'}">
-            <p class="text-sm">${message}</p>
-          </div>`;
-        this.chatContent.appendChild(wrap);
-        this.chatContent.scrollTop = this.chatContent.scrollHeight;
-      }
-      sendMessage() {
-        const msg = this.userInput.value.trim();
-        if (!msg) return;
-        this.addMessage(msg,true);
-        this.userInput.value = '';
-        setTimeout(() => this.addMessage(this.getResponse(msg)),800);
-      }
-      getResponse(msg) {
-        const q = msg.toLowerCase();
-        if (q.includes('facility')) return `We have <?= $totalFacilities ?> facilities registered.`;
-        if (q.includes('reservation')) return `There are <?= $totalReservations ?> reservations.`;
-        if (q.includes('maintenance')) return `There are <?= $totalMaintenance ?> maintenance records.`;
-        return "I can help with facilities, reservations, and maintenance. What would you like to check?";
-      }
-    }
-    new AdminChatbot();
-  });
-  </script>
 </body>
 </html>
 <?php $conn->close(); ?>

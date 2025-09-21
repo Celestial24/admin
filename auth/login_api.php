@@ -75,7 +75,7 @@ if ($admin) {
     echo json_encode([
         'success' => true,
         'role' => 'admin',
-        'greeting' => 'Hi Admin',
+        'greeting' => 'Admin',
         'name' => $_SESSION['name'],
         'redirectUrl' => '../Main/Dashboard.php'
     ]);
@@ -96,7 +96,7 @@ if ($user) {
     echo json_encode([
         'success' => true,
         'role' => 'user',
-        'greeting' => 'Hi ' . $_SESSION['name'],
+        'greeting' => 'User',
         'name' => $_SESSION['name'],
         'redirectUrl' => '../user/dashboard.php'
     ]);

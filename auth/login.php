@@ -239,7 +239,7 @@ if ($result['success']) {
       </div>
 
       <h3 class="text-lg sm:text-xl font-semibold mb-1">Sign in</h3>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Use your administrator credentials to continue.</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Use your user credentials to continue.</p>
 
       <!-- Inline attempt + info banners -->
       <div id="alert" class="alert alert-error hidden mb-2" role="alert"></div>
@@ -304,7 +304,7 @@ if ($result['success']) {
         </svg>
         <span id="iconRipple" class="absolute inset-0 rounded-full border border-white/60 opacity-0"></span>
       </div>
-      <h4 id="popupTitle" class="text-xl font-extrabold text-center" style="color:var(--gold)">Hello, Admin 👋</h4>
+      <h4 id="popupTitle" class="text-xl font-extrabold text-center" style="color:var(--gold)">Hello, User 👋</h4>
       <p id="popupMsg" class="mt-1 text-sm text-center text-slate-600 dark:text-slate-400 typing"></p>
       <div class="mt-4 flex justify-center">
         <button id="popupOkBtn" class="btn !w-auto px-4 py-2 text-sm">OK</button>
@@ -461,12 +461,12 @@ if ($result['success']) {
     const q = new URLSearchParams(location.search);
     if (q.get('logout') === '1') {
       sessionStorage.removeItem('atiera_logged_in');
-      showPopup({
-        title: 'Goodbye, ADMIN 👋',
-        message: 'Thank you ADMIN — See you next time!',
-        variant: 'goodbye',
-        autocloseMs: 4200
-      });
+        showPopup({
+          title: 'Goodbye, User 👋',
+          message: 'Thank you User — See you next time!',
+          variant: 'goodbye',
+          autocloseMs: 4200
+        });
     }
   })();
 
@@ -550,7 +550,7 @@ if ($result['success']) {
         stopLoading(true);
         showPopup({
           title: data.greeting + " 👋",
-          message: `Welcome ${data.name} — Redirecting…`,
+          message: `Welcome ${data.greeting} — Redirecting…`,
           variant: 'success',
           autocloseMs: 4200,
           onClose: () => { window.location.href = data.redirectUrl; }

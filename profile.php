@@ -5,26 +5,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/backend/sql/db.php';
 
-$username = 'user'; // default fallback
+// Set display name based on user type
+$username = 'User'; // default for regular users
 
-if (!empty($_SESSION['user_type']) && !empty($_SESSION['user_id'])) {
-    $user_id = (int) $_SESSION['user_id'];
+if (!empty($_SESSION['user_type'])) {
     $user_type = $_SESSION['user_type'];
-
+    
     if ($user_type === 'admin') {
-        $stmt = $conn->prepare("SELECT username FROM admin_user WHERE id = ?");
+        $username = 'Admin';
     } elseif ($user_type === 'user') {
-        $stmt = $conn->prepare("SELECT name AS username FROM users WHERE id = ?");
-    }
-
-    if (isset($stmt)) {
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($user = $result->fetch_assoc()) {
-            $username = $user['username'];
-        }
-        $stmt->close();
+        $username = 'User';
     }
 }
 ?>

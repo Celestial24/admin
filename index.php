@@ -61,7 +61,7 @@
   <section class="py-16 bg-yellow-500 text-center text-white" id="book">
     <h2 class="text-3xl font-bold mb-4">Ready to Experience ATIERA?</h2>
     <p class="mb-6">Book your stay or reserve your table today.</p>
-    <a href="auth/login.php" class="px-6 py-3 bg-black rounded-lg font-semibold hover:bg-gray-800">Login now</a>
+    <a href="/admin/auth/login.php" class="px-6 py-3 bg-black rounded-lg font-semibold hover:bg-gray-800">Login now</a>
   </section>
 
 

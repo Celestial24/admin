@@ -23,6 +23,7 @@ if ($table_check->num_rows == 0) {
         location VARCHAR(255) NOT NULL,
         description TEXT,
         amenities TEXT,
+        notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )";
@@ -39,28 +40,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         try {   
             if ($action === 'add_facility') {
-                $stmt = $conn->prepare("INSERT INTO facilities (facility_name, facility_type, capacity, status, location, description, amenities) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO facilities (facility_name, facility_type, capacity, status, location, description, amenities, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 if ($stmt === false) {
                     throw new Exception("Prepare failed: " . $conn->error);
                 }
-                $stmt->bind_param("ssissss", 
-                    $_POST['facility_name'], 
-                    $_POST['facility_type'], 
-                    $_POST['capacity'], 
-                    $_POST['status'], 
-                    $_POST['location'], 
-                    $_POST['description'], 
-                    $_POST['amenities']
-                );
-                $stmt->execute();
-                $success_message = "Facility added successfully!";
-                
-            } elseif ($action === 'update_facility') {
-                $stmt = $conn->prepare("UPDATE facilities SET facility_name=?, facility_type=?, capacity=?, status=?, location=?, description=?, amenities=? WHERE id=?");
-                if ($stmt === false) {
-                    throw new Exception("Prepare failed: " . $conn->error);
-                }
-                $stmt->bind_param("ssissssi", 
+                $stmt->bind_param("ssisssss", 
                     $_POST['facility_name'], 
                     $_POST['facility_type'], 
                     $_POST['capacity'], 
@@ -68,6 +52,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $_POST['location'], 
                     $_POST['description'], 
                     $_POST['amenities'],
+                    $_POST['notes']
+                );
+                $stmt->execute();
+                $success_message = "Facility added successfully!";
+                
+            } elseif ($action === 'update_facility') {
+                $stmt = $conn->prepare("UPDATE facilities SET facility_name=?, facility_type=?, capacity=?, status=?, location=?, description=?, amenities=?, notes=? WHERE id=?");
+                if ($stmt === false) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
+                $stmt->bind_param("ssisssssi", 
+                    $_POST['facility_name'], 
+                    $_POST['facility_type'], 
+                    $_POST['capacity'], 
+                    $_POST['status'], 
+                    $_POST['location'], 
+                    $_POST['description'], 
+                    $_POST['amenities'],
+                    $_POST['notes'],
                     $_POST['facility_id']
                 );
                 $stmt->execute();
@@ -185,7 +188,7 @@ try {
                         <?php 
                         $facilities_result->data_seek(0); // Reset result pointer
                         $count = 0;
-                        while ($facility = $facilities_result->fetch_assoc() && $count < 6): 
+                        while ($count < 6 && ($facility = $facilities_result->fetch_assoc())): 
                             $count++;
                         ?>
                             <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" 
@@ -306,6 +309,12 @@ try {
                             <textarea name="amenities" id="amenities" rows="2"
                                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
                         </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Notes</label>
+                            <textarea name="notes" id="notes" rows="3" placeholder="Additional notes or special instructions..."
+                                      class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                        </div>
                     </div>
                     
                     <div class="flex justify-end space-x-3 mt-6">
@@ -418,6 +427,12 @@ try {
                                 <div class="mb-4">
                                     <h5 class="text-sm font-medium text-gray-700 mb-2">Amenities</h5>
                                     <p class="text-sm text-gray-900 bg-white p-3 rounded border">${facility.amenities}</p>
+                                </div>
+                            ` : ''}
+                            ${facility.notes ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Notes</h5>
+                                    <p class="text-sm text-gray-900 bg-white p-3 rounded border">${facility.notes}</p>
                                 </div>
                             ` : ''}
                             <div class="text-xs text-gray-500">

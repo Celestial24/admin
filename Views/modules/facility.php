@@ -59,8 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Fetch facilities
-$facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
+// Fetch facilities with error handling
+$facilities_result = false;
+try {
+    $facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
+} catch (Exception $e) {
+    error_log("Facilities query failed: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -134,7 +139,7 @@ $facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_na
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($facilities_result->num_rows > 0): ?>
+                            <?php if ($facilities_result && $facilities_result !== false && $facilities_result->num_rows > 0): ?>
                                 <?php while ($facility = $facilities_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">

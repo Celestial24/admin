@@ -2,29 +2,6 @@
 // ================= DATABASE CONNECTION =================
 require_once '../backend/sql/db.php';
 
-// Check if facilities table exists
-$table_check = $conn->query("SHOW TABLES LIKE 'facilities'");
-if ($table_check->num_rows == 0) {
-    // Create facilities table if it doesn't exist
-    $create_table = "CREATE TABLE IF NOT EXISTS facilities (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        facility_name VARCHAR(255) NOT NULL,
-        facility_type VARCHAR(100) NOT NULL,
-        capacity INT NOT NULL,
-        status VARCHAR(50) NOT NULL DEFAULT 'Active',
-        location VARCHAR(255) NOT NULL,
-        description TEXT,
-        amenities TEXT,
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )";
-    
-    if ($conn->query($create_table) === FALSE) {
-        die("Error creating facilities table: " . $conn->error);
-    }
-}
-
 // ================= DELETE HANDLING =================
 $message = '';
 $messageType = '';
@@ -67,17 +44,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
 $facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") 
     or die("Facilities query failed: " . $conn->error);
 
-$resResult = $conn->query("SELECT r.*, f.facility_name AS facility_name 
-                           FROM reservations r 
-                           JOIN facilities f ON r.facility_id = f.id 
-                           ORDER BY r.start_time DESC") 
-    or die("Reservations query failed: " . $conn->error);
+// Fetch reservations with error handling
+$resResult = false;
+try {
+    // Try different possible column names for facility reference
+    $resResult = $conn->query("SELECT r.*, f.facility_name AS facility_name 
+                               FROM reservations r 
+                               JOIN facilities f ON r.facility_id = f.id 
+                               ORDER BY r.start_time DESC");
+} catch (Exception $e) {
+    // If facility_id doesn't exist, try without join
+    try {
+        $resResult = $conn->query("SELECT * FROM reservations ORDER BY start_time DESC");
+    } catch (Exception $e2) {
+        error_log("Reservations query failed: " . $e2->getMessage());
+    }
+}
 
-$mainResult = $conn->query("SELECT m.*, f.facility_name AS facility_name 
-                            FROM maintenance m 
-                            JOIN facilities f ON m.facility_id = f.id 
-                            ORDER BY m.created_at DESC") 
-    or die("Maintenance query failed: " . $conn->error);
+// Fetch maintenance with error handling
+$mainResult = false;
+try {
+    $mainResult = $conn->query("SELECT m.*, f.facility_name AS facility_name 
+                                FROM maintenance m 
+                                JOIN facilities f ON m.facility_id = f.id 
+                                ORDER BY m.created_at DESC");
+} catch (Exception $e) {
+    // If facility_id doesn't exist, try without join
+    try {
+        $mainResult = $conn->query("SELECT * FROM maintenance ORDER BY created_at DESC");
+    } catch (Exception $e2) {
+        error_log("Maintenance query failed: " . $e2->getMessage());
+    }
+}
 
 // ================= HELPER: STATUS BADGE =================
 function getStatusBadge($status) {
@@ -256,11 +254,11 @@ function getStatusBadge($status) {
               </tr>
             </thead>
             <tbody>
-              <?php if ($resResult->num_rows > 0): ?>
+              <?php if ($resResult && $resResult !== false && $resResult->num_rows > 0): ?>
                 <?php while ($row = $resResult->fetch_assoc()): ?>
                   <tr class="border-b hover:bg-gray-50">
                     <td class="px-6 py-4"><?= $row['id'] ?></td>
-                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name'] ?? 'Unknown Facility') ?></td>
                     <td class="px-6 py-4"><?= htmlspecialchars($row['reserved_by']) ?></td>
                     <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['start_time'])) ?></td>
                     <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
@@ -299,11 +297,11 @@ function getStatusBadge($status) {
               </tr>
             </thead>
             <tbody>
-              <?php if ($mainResult->num_rows > 0): ?>
+              <?php if ($mainResult && $mainResult !== false && $mainResult->num_rows > 0): ?>
                 <?php while ($row = $mainResult->fetch_assoc()): ?>
                   <tr class="border-b hover:bg-gray-50">
                     <td class="px-6 py-4"><?= $row['id'] ?></td>
-                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name'] ?? 'Unknown Facility') ?></td>
                     <td class="px-6 py-4"><?= htmlspecialchars($row['description']) ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
                     <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>

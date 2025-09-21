@@ -211,78 +211,18 @@ try {
                 </div>
             </div>
 
-            <!-- Maintenance Reports Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facility</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported By</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($maintenance_result && $maintenance_result !== false && $maintenance_result->num_rows > 0): ?>
-                                <?php while ($report = $maintenance_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($report['facility_name']) ?></div>
-                                            <div class="text-sm text-gray-500"><?= htmlspecialchars($report['facility_type']) ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= htmlspecialchars($report['issue_type']) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-8 w-8">
-                                                    <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                                                        <i data-lucide="user" class="w-4 h-4 text-gray-600"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="ml-3">
-                                                    <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($report['reported_by']) ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <?= $report['priority'] === 'High' ? 'bg-red-100 text-red-800' : 
-                                                   ($report['priority'] === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') ?>">
-                                                <?= htmlspecialchars($report['priority']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <?= $report['status'] === 'Open' ? 'bg-red-100 text-red-800' : 
-                                                   ($report['status'] === 'In Progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') ?>">
-                                                <?= htmlspecialchars($report['status']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= date('M j, Y g:i A', strtotime($report['reported_at'])) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button onclick="viewDetails(<?= htmlspecialchars(json_encode($report)) ?>)" 
-                                                    class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                            <?php if ($report['status'] !== 'Resolved'): ?>
-                                                <button onclick="updateStatus(<?= $report['id'] ?>, '<?= $report['status'] ?>')" 
-                                                        class="text-indigo-600 hover:text-indigo-900">Update</button>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No maintenance reports found</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+            <!-- Information Card -->
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="info" class="w-6 h-6 text-orange-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-orange-800">Maintenance Report Input Only</h3>
+                        <div class="mt-2 text-sm text-orange-700">
+                            <p>This module is for reporting maintenance issues only. To view, manage, or track existing maintenance reports, please use the <a href="../../module-table/facilities.php" class="font-medium underline hover:text-orange-800">Facilities Overview</a> page.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -461,28 +401,12 @@ try {
             document.getElementById('reportModal').classList.add('hidden');
         }
 
-        function closeDetailsModal() {
-            document.getElementById('detailsModal').classList.add('hidden');
-        }
-
-        function closeStatusModal() {
-            document.getElementById('statusModal').classList.add('hidden');
-        }
-
-        // Close modals when clicking outside
+        // Close modal when clicking outside
         window.onclick = function(event) {
             const reportModal = document.getElementById('reportModal');
-            const detailsModal = document.getElementById('detailsModal');
-            const statusModal = document.getElementById('statusModal');
             
             if (event.target === reportModal) {
                 closeModal();
-            }
-            if (event.target === detailsModal) {
-                closeDetailsModal();
-            }
-            if (event.target === statusModal) {
-                closeStatusModal();
             }
         }
     </script>

@@ -158,61 +158,18 @@ try {
                 </button>
             </div>
 
-            <!-- Reservations Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facility</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($reservations_result && $reservations_result !== false && $reservations_result->num_rows > 0): ?>
-                                <?php while ($reservation = $reservations_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($reservation['facility_name']) ?></div>
-                                            <div class="text-sm text-gray-500"><?= htmlspecialchars($reservation['facility_type']) ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= htmlspecialchars($reservation['purpose']) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div><?= date('M j, Y', strtotime($reservation['start_time'])) ?></div>
-                                            <div class="text-gray-500"><?= date('g:i A', strtotime($reservation['start_time'])) ?> - <?= date('g:i A', strtotime($reservation['end_time'])) ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <?= $reservation['status'] === 'Approved' ? 'bg-green-100 text-green-800' : 
-                                                   ($reservation['status'] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                   ($reservation['status'] === 'Cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')) ?>">
-                                                <?= htmlspecialchars($reservation['status']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <?php if ($reservation['status'] === 'Pending'): ?>
-                                                <button onclick="editReservation(<?= htmlspecialchars(json_encode($reservation)) ?>)" 
-                                                        class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                                                <button onclick="cancelReservation(<?= $reservation['id'] ?>)" 
-                                                        class="text-red-600 hover:text-red-900">Cancel</button>
-                                            <?php else: ?>
-                                                <span class="text-gray-400">No actions</span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No reservations found</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+            <!-- Information Card -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="info" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">Reservation Input Only</h3>
+                        <div class="mt-2 text-sm text-green-700">
+                            <p>This module is for creating new reservations only. To view, manage, or track existing reservations, please use the <a href="../../module-table/facilities.php" class="font-medium underline hover:text-green-800">Facilities Overview</a> page.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -325,30 +282,6 @@ try {
             document.getElementById('reservationModal').classList.remove('hidden');
         }
 
-        function editReservation(reservation) {
-            document.getElementById('modalTitle').textContent = 'Edit Reservation';
-            document.getElementById('formAction').value = 'update_reservation';
-            document.getElementById('reservationId').value = reservation.id;
-            document.getElementById('facilityId').value = reservation.facility_id;
-            document.getElementById('reservedBy').value = reservation.reserved_by;
-            document.getElementById('purpose').value = reservation.purpose;
-            document.getElementById('startTime').value = reservation.start_time.replace(' ', 'T');
-            document.getElementById('endTime').value = reservation.end_time.replace(' ', 'T');
-            document.getElementById('reservationModal').classList.remove('hidden');
-        }
-
-        function cancelReservation(id) {
-            if (confirm('Are you sure you want to cancel this reservation?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="cancel_reservation">
-                    <input type="hidden" name="reservation_id" value="${id}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
 
         function closeModal() {
             document.getElementById('reservationModal').classList.add('hidden');

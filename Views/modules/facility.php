@@ -131,61 +131,18 @@ try {
                 </button>
             </div>
 
-            <!-- Facilities Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facility</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($facilities_result && $facilities_result !== false && $facilities_result->num_rows > 0): ?>
-                                <?php while ($facility = $facilities_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($facility['facility_name']) ?></div>
-                                            <div class="text-sm text-gray-500"><?= htmlspecialchars($facility['description']) ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= htmlspecialchars($facility['facility_type']) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= htmlspecialchars($facility['capacity']) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                <?= $facility['status'] === 'Active' ? 'bg-green-100 text-green-800' : 
-                                                   ($facility['status'] === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') ?>">
-                                                <?= htmlspecialchars($facility['status']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= htmlspecialchars($facility['location']) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button onclick="viewDetails(<?= htmlspecialchars(json_encode($facility)) ?>)" 
-                                                    class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                            <button onclick="editFacility(<?= htmlspecialchars(json_encode($facility)) ?>)" 
-                                                    class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                                            <button onclick="deleteFacility(<?= $facility['id'] ?>)" 
-                                                    class="text-red-600 hover:text-red-900">Delete</button>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No facilities found</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+            <!-- Information Card -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="info" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">Facility Input Only</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <p>This module is for adding new facilities only. To view, edit, or manage existing facilities, please use the <a href="../../module-table/facilities.php" class="font-medium underline hover:text-blue-800">Facilities Overview</a> page.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -270,23 +227,6 @@ try {
         </div>
     </div>
 
-    <!-- Details Modal -->
-    <div id="detailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Facility Details</h3>
-                <div id="facilityDetails" class="space-y-3">
-                    <!-- Details will be populated by JavaScript -->
-                </div>
-                <div class="flex justify-end mt-6">
-                    <button onclick="closeDetailsModal()" 
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Initialize Lucide icons
@@ -302,67 +242,17 @@ try {
             document.getElementById('facilityModal').classList.remove('hidden');
         }
 
-        function editFacility(facility) {
-            document.getElementById('modalTitle').textContent = 'Edit Facility';
-            document.getElementById('formAction').value = 'update_facility';
-            document.getElementById('facilityId').value = facility.id;
-            document.getElementById('facilityName').value = facility.facility_name;
-            document.getElementById('facilityType').value = facility.facility_type;
-            document.getElementById('capacity').value = facility.capacity;
-            document.getElementById('status').value = facility.status;
-            document.getElementById('location').value = facility.location;
-            document.getElementById('description').value = facility.description || '';
-            document.getElementById('amenities').value = facility.amenities || '';
-            document.getElementById('facilityModal').classList.remove('hidden');
-        }
-
-        function viewDetails(facility) {
-            const details = `
-                <div class="space-y-2">
-                    <div><strong>Name:</strong> ${facility.facility_name}</div>
-                    <div><strong>Type:</strong> ${facility.facility_type}</div>
-                    <div><strong>Capacity:</strong> ${facility.capacity}</div>
-                    <div><strong>Status:</strong> ${facility.status}</div>
-                    <div><strong>Location:</strong> ${facility.location}</div>
-                    <div><strong>Description:</strong> ${facility.description || 'N/A'}</div>
-                    <div><strong>Amenities:</strong> ${facility.amenities || 'N/A'}</div>
-                </div>
-            `;
-            document.getElementById('facilityDetails').innerHTML = details;
-            document.getElementById('detailsModal').classList.remove('hidden');
-        }
-
-        function deleteFacility(id) {
-            if (confirm('Are you sure you want to delete this facility?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="delete_facility">
-                    <input type="hidden" name="facility_id" value="${id}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
 
         function closeModal() {
             document.getElementById('facilityModal').classList.add('hidden');
         }
 
-        function closeDetailsModal() {
-            document.getElementById('detailsModal').classList.add('hidden');
-        }
-
-        // Close modals when clicking outside
+        // Close modal when clicking outside
         window.onclick = function(event) {
             const facilityModal = document.getElementById('facilityModal');
-            const detailsModal = document.getElementById('detailsModal');
             
             if (event.target === facilityModal) {
                 closeModal();
-            }
-            if (event.target === detailsModal) {
-                closeDetailsModal();
             }
         }
     </script>

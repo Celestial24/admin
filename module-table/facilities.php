@@ -11,17 +11,20 @@ if ($conn->connect_error) {
 }
 
 // ================= FETCH DATA =================
-$facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") or die("Facilities query failed: " . $conn->error);
+$facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") 
+    or die("Facilities query failed: " . $conn->error);
 
 $resResult = $conn->query("SELECT r.*, f.name AS facility_name 
                            FROM reservations r 
                            JOIN facilities f ON r.facility_id = f.id 
-                           ORDER BY r.start_time DESC") or die("Reservations query failed: " . $conn->error);
+                           ORDER BY r.start_time DESC") 
+    or die("Reservations query failed: " . $conn->error);
 
 $mainResult = $conn->query("SELECT m.*, f.name AS facility_name 
                             FROM maintenance m 
                             JOIN facilities f ON m.facility_id = f.id 
-                            ORDER BY m.created_at DESC") or die("Maintenance query failed: " . $conn->error);
+                            ORDER BY m.created_at DESC") 
+    or die("Maintenance query failed: " . $conn->error);
 
 // ================= HELPER: STATUS BADGE =================
 function getStatusBadge($status) {
@@ -37,7 +40,7 @@ function getStatusBadge($status) {
     if (in_array($statusLower, ['unavailable','cancelled'])) $color = 'red';
 
     return "<span class='px-2 py-1 text-xs font-medium text-{$color}-800 bg-{$color}-100 rounded-full'>"
-           . htmlspecialchars($status) . "</span>";
+         . htmlspecialchars($status) . "</span>";
 }
 ?>
 <!DOCTYPE html>
@@ -84,9 +87,9 @@ function getStatusBadge($status) {
       <!-- Tabs -->
       <div class="border-b border-gray-200 mb-6">
         <nav class="flex -mb-px space-x-6" aria-label="Tabs">
-          <button class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-blue-600 text-blue-600" data-tab="facilities">Facilities</button>
-          <button class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500" data-tab="reservations">Reservations</button>
-          <button class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500" data-tab="maintenance">Maintenance</button>
+          <button type="button" class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-blue-600 text-blue-600" data-tab="facilities">Facilities</button>
+          <button type="button" class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500" data-tab="reservations">Reservations</button>
+          <button type="button" class="tab-link py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500" data-tab="maintenance">Maintenance</button>
         </nav>
       </div>
 
@@ -105,20 +108,22 @@ function getStatusBadge($status) {
               </tr>
             </thead>
             <tbody>
-              <?php if ($facilitiesResult->num_rows > 0): while ($row = $facilitiesResult->fetch_assoc()): ?>
-              <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
-                <td class="px-6 py-4"><?= $row['capacity'] ?></td>
-                <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2">
-                  <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                  <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </td>
-              </tr>
-              <?php endwhile; else: ?>
-              <tr><td colspan="6" class="py-6 text-gray-500">No facilities found.</td></tr>
+              <?php if ($facilitiesResult->num_rows > 0): ?>
+                <?php while ($row = $facilitiesResult->fetch_assoc()): ?>
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="px-6 py-4"><?= $row['id'] ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
+                    <td class="px-6 py-4"><?= $row['capacity'] ?></td>
+                    <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
+                    <td class="px-6 py-4 flex justify-center gap-2">
+                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr><td colspan="6" class="py-6 text-gray-500">No facilities found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -130,7 +135,7 @@ function getStatusBadge($status) {
         <div class="bg-white rounded-lg shadow overflow-x-auto">
           <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
-              <tr class="text-center">
+              <tr>
                 <th class="px-6 py-3">ID</th>
                 <th class="px-6 py-3">Facility</th>
                 <th class="px-6 py-3">Reserved By</th>
@@ -141,21 +146,23 @@ function getStatusBadge($status) {
               </tr>
             </thead>
             <tbody>
-              <?php if ($resResult->num_rows > 0): while ($row = $resResult->fetch_assoc()): ?>
-              <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['reserved_by']) ?></td>
-                <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['start_time'])) ?></td>
-                <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
-                <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2">
-                  <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                  <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </td>
-              </tr>
-              <?php endwhile; else: ?>
-              <tr><td colspan="7" class="py-6 text-gray-500">No reservations found.</td></tr>
+              <?php if ($resResult->num_rows > 0): ?>
+                <?php while ($row = $resResult->fetch_assoc()): ?>
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="px-6 py-4"><?= $row['id'] ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['reserved_by']) ?></td>
+                    <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['start_time'])) ?></td>
+                    <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
+                    <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
+                    <td class="px-6 py-4 flex justify-center gap-2">
+                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr><td colspan="7" class="py-6 text-gray-500">No reservations found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -178,21 +185,23 @@ function getStatusBadge($status) {
               </tr>
             </thead>
             <tbody>
-              <?php if ($mainResult->num_rows > 0): while ($row = $mainResult->fetch_assoc()): ?>
-              <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['description']) ?></td>
-                <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
-                <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
-                <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2">
-                  <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                  <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </td>
-              </tr>
-              <?php endwhile; else: ?>
-              <tr><td colspan="7" class="py-6 text-gray-500">No maintenance records found.</td></tr>
+              <?php if ($mainResult->num_rows > 0): ?>
+                <?php while ($row = $mainResult->fetch_assoc()): ?>
+                  <tr class="border-b hover:bg-gray-50">
+                    <td class="px-6 py-4"><?= $row['id'] ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['description']) ?></td>
+                    <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
+                    <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                    <td class="px-6 py-4 flex justify-center gap-2">
+                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <tr><td colspan="7" class="py-6 text-gray-500">No maintenance records found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -211,14 +220,14 @@ function getStatusBadge($status) {
         link.addEventListener("click", function () {
           // reset tabs
           tabLinks.forEach(l => {
-            l.classList.remove("border-blue-600","text-blue-600");
-            l.classList.add("border-transparent","text-gray-500");
+            l.classList.remove("border-blue-600", "text-blue-600");
+            l.classList.add("border-transparent", "text-gray-500");
           });
           tabContents.forEach(c => c.classList.add("hidden"));
 
-          // activate selected
-          this.classList.add("border-blue-600","text-blue-600");
-          this.classList.remove("border-transparent","text-gray-500");
+          // activate selected tab
+          this.classList.add("border-blue-600", "text-blue-600");
+          this.classList.remove("border-transparent", "text-gray-500");
 
           const tabId = this.getAttribute("data-tab");
           document.getElementById(tabId).classList.remove("hidden");
@@ -226,6 +235,7 @@ function getStatusBadge($status) {
       });
     });
   </script>
+
 </body>
 </html>
 <?php $conn->close(); ?>

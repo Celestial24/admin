@@ -59,6 +59,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Fetch facilities for dropdown
 $facilities_result = $conn->query("SELECT id, facility_name, facility_type, capacity FROM facilities WHERE status = 'Active' ORDER BY facility_name");
+if (!$facilities_result) {
+    $facilities_result = false;
+}
 
 // Fetch user's reservations
 $user_id = $_SESSION['user_id'];
@@ -69,6 +72,14 @@ $reservations_result = $conn->query("
     WHERE r.employee_id = $user_id 
     ORDER BY r.start_time DESC
 ");
+
+// Check if query was successful, if not create empty result
+if (!$reservations_result) {
+    // Create a mock result object with num_rows = 0
+    $reservations_result = new stdClass();
+    $reservations_result->num_rows = 0;
+    $reservations_result->fetch_assoc = function() { return false; };
+}
 ?>
 
 <!DOCTYPE html>
@@ -204,15 +215,23 @@ $reservations_result = $conn->query("
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Facilities</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php 
-                    $facilities_result->data_seek(0); // Reset result pointer
-                    while ($facility = $facilities_result->fetch_assoc()): 
+                    if ($facilities_result && $facilities_result->num_rows > 0) {
+                        $facilities_result->data_seek(0); // Reset result pointer
+                        while ($facility = $facilities_result->fetch_assoc()): 
                     ?>
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <h4 class="font-medium text-gray-900"><?= htmlspecialchars($facility['facility_name']) ?></h4>
                             <p class="text-sm text-gray-600"><?= htmlspecialchars($facility['facility_type']) ?></p>
                             <p class="text-sm text-gray-500">Capacity: <?= htmlspecialchars($facility['capacity']) ?> people</p>
                         </div>
-                    <?php endwhile; ?>
+                    <?php 
+                        endwhile; 
+                    } else {
+                    ?>
+                        <div class="col-span-full text-center text-gray-500 py-8">
+                            <p>No facilities available at the moment.</p>
+                        </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>
@@ -234,13 +253,17 @@ $reservations_result = $conn->query("
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                 <option value="">Select Facility</option>
                                 <?php 
-                                $facilities_result->data_seek(0); // Reset result pointer
-                                while ($facility = $facilities_result->fetch_assoc()): 
+                                if ($facilities_result && $facilities_result->num_rows > 0) {
+                                    $facilities_result->data_seek(0); // Reset result pointer
+                                    while ($facility = $facilities_result->fetch_assoc()): 
                                 ?>
                                     <option value="<?= $facility['id'] ?>">
                                         <?= htmlspecialchars($facility['facility_name']) ?> (<?= htmlspecialchars($facility['facility_type']) ?>)
                                     </option>
-                                <?php endwhile; ?>
+                                <?php 
+                                    endwhile; 
+                                }
+                                ?>
                             </select>
                         </div>
                         

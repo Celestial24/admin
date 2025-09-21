@@ -109,6 +109,13 @@ try {
         <!-- Header -->
         <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
             <div>
+                <div class="flex items-center gap-4 mb-2">
+                    <a href="../../module-table/facilities.php" 
+                       class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span>Back to Overview</span>
+                    </a>
+                </div>
                 <h2 class="text-xl font-semibold text-gray-800">Reservation Module (Employees only)</h2>
                 <p class="text-sm text-gray-600">Manage your facility reservations</p>
             </div>

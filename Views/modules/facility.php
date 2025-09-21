@@ -95,7 +95,14 @@ try {
     <div id="mainContent" class="ml-64 flex flex-col flex-1 overflow-hidden">
         <!-- Header -->
         <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
-            <h2 class="text-xl font-semibold text-gray-800">Facilities Management - Details</h2>
+            <div class="flex items-center gap-4">
+                <a href="../../module-table/facilities.php" 
+                   class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    <span>Back to Overview</span>
+                </a>
+                <h2 class="text-xl font-semibold text-gray-800">Facilities Management - Details</h2>
+            </div>
             <?php include '../../profile.php'; ?>
         </div>
 

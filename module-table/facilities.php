@@ -136,6 +136,45 @@ function getStatusBadge($status) {
         </div>
       <?php endif; ?>
       
+      <!-- Quick Actions -->
+      <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a href="../Views/modules/facility.php" 
+             class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i data-lucide="building" class="w-6 h-6 text-blue-600"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-900">Facility Management</h4>
+              <p class="text-sm text-gray-500">Add, edit, and manage facilities</p>
+            </div>
+          </a>
+          
+          <a href="../Views/modules/reservation.php" 
+             class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <i data-lucide="calendar" class="w-6 h-6 text-green-600"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-900">Reservation System</h4>
+              <p class="text-sm text-gray-500">Create and manage reservations</p>
+            </div>
+          </a>
+          
+          <a href="../Views/modules/maintenance.php" 
+             class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-300 transition-colors">
+            <div class="p-2 bg-orange-100 rounded-lg">
+              <i data-lucide="wrench" class="w-6 h-6 text-orange-600"></i>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-900">Maintenance Reports</h4>
+              <p class="text-sm text-gray-500">Report and track maintenance issues</p>
+            </div>
+          </a>
+        </div>
+      </div>
+      
       <!-- Tabs -->
       <div class="border-b border-gray-200 mb-6">
         <nav class="flex -mb-px space-x-6" aria-label="Tabs">
@@ -169,7 +208,10 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= $row['capacity'] ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <a href="../Views/modules/facility.php?edit=<?= $row['id'] ?>" 
+                         class="text-blue-600 hover:text-blue-900" title="Edit Facility">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                      </a>
                       <button onclick="confirmDelete('facility', <?= $row['id'] ?>, '<?= htmlspecialchars($row['name']) ?>')" 
                               class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
@@ -209,7 +251,10 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <a href="../Views/modules/reservation.php?edit=<?= $row['id'] ?>" 
+                         class="text-blue-600 hover:text-blue-900" title="Edit Reservation">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                      </a>
                       <button onclick="confirmDelete('reservation', <?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
                               class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
@@ -249,7 +294,10 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
                     <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <a href="../Views/modules/maintenance.php?edit=<?= $row['id'] ?>" 
+                         class="text-blue-600 hover:text-blue-900" title="Edit Maintenance">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                      </a>
                       <button onclick="confirmDelete('maintenance', <?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
                               class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>

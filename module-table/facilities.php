@@ -10,6 +10,44 @@ if ($conn->connect_error) {
     die("❌ Connection failed: " . $conn->connect_error);
 }
 
+// ================= DELETE HANDLING =================
+$message = '';
+$messageType = '';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    
+    try {
+        if ($action === 'delete_facility' && isset($_POST['id'])) {
+            $id = (int)$_POST['id'];
+            $stmt = $conn->prepare("DELETE FROM facilities WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $message = "Facility deleted successfully!";
+            $messageType = "success";
+            
+        } elseif ($action === 'delete_reservation' && isset($_POST['id'])) {
+            $id = (int)$_POST['id'];
+            $stmt = $conn->prepare("DELETE FROM reservations WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $message = "Reservation deleted successfully!";
+            $messageType = "success";
+            
+        } elseif ($action === 'delete_maintenance' && isset($_POST['id'])) {
+            $id = (int)$_POST['id'];
+            $stmt = $conn->prepare("DELETE FROM maintenance WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $message = "Maintenance record deleted successfully!";
+            $messageType = "success";
+        }
+    } catch (Exception $e) {
+        $message = "Error deleting record: " . $e->getMessage();
+        $messageType = "error";
+    }
+}
+
 // ================= FETCH DATA =================
 $facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") 
     or die("Facilities query failed: " . $conn->error);
@@ -84,6 +122,20 @@ function getStatusBadge($status) {
     </header>
 
     <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
+      <!-- Message Display -->
+      <?php if ($message): ?>
+        <div class="mb-4 p-4 rounded-md <?= $messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200' ?>">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <i data-lucide="<?= $messageType === 'success' ? 'check-circle' : 'alert-circle' ?>" class="w-5 h-5"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium"><?= htmlspecialchars($message) ?></p>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
+      
       <!-- Tabs -->
       <div class="border-b border-gray-200 mb-6">
         <nav class="flex -mb-px space-x-6" aria-label="Tabs">
@@ -117,8 +169,9 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= $row['capacity'] ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button onclick="confirmDelete('facility', <?= $row['id'] ?>, '<?= htmlspecialchars($row['name']) ?>')" 
+                              class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                   </tr>
                 <?php endwhile; ?>
@@ -156,8 +209,9 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= date("M d, Y, g:i A", strtotime($row['end_time'])) ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button onclick="confirmDelete('reservation', <?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
+                              class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                   </tr>
                 <?php endwhile; ?>
@@ -195,8 +249,9 @@ function getStatusBadge($status) {
                     <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
                     <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
-                      <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                      <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      <button class="text-blue-600 hover:text-blue-900" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                      <button onclick="confirmDelete('maintenance', <?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
+                              class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                   </tr>
                 <?php endwhile; ?>
@@ -210,7 +265,38 @@ function getStatusBadge($status) {
     </div>
   </main>
 
-  <!-- Tabs Script -->
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+          <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mt-4">Confirm Delete</h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500" id="deleteMessage">
+            Are you sure you want to delete this item? This action cannot be undone.
+          </p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <form id="deleteForm" method="POST" class="inline">
+            <input type="hidden" name="action" id="deleteAction">
+            <input type="hidden" name="id" id="deleteId">
+            <button type="button" id="cancelDelete" 
+                    class="bg-gray-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 mr-2">
+              Cancel
+            </button>
+            <button type="submit" 
+                    class="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600">
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const tabLinks = document.querySelectorAll(".tab-link");
@@ -233,6 +319,65 @@ function getStatusBadge($status) {
           document.getElementById(tabId).classList.remove("hidden");
         });
       });
+
+      // Mobile menu toggle
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const sidebarMobile = document.getElementById('sidebar-mobile');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', () => {
+          sidebarMobile.classList.remove('hidden');
+        });
+      }
+
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+          sidebarMobile.classList.add('hidden');
+        });
+      }
+    });
+
+    // Delete confirmation function
+    function confirmDelete(type, id, name) {
+      const modal = document.getElementById('deleteModal');
+      const message = document.getElementById('deleteMessage');
+      const actionInput = document.getElementById('deleteAction');
+      const idInput = document.getElementById('deleteId');
+      
+      // Set the appropriate message and action based on type
+      let actionName = '';
+      switch(type) {
+        case 'facility':
+          actionName = 'facility';
+          message.textContent = `Are you sure you want to delete the facility "${name}"? This action cannot be undone.`;
+          break;
+        case 'reservation':
+          actionName = 'reservation';
+          message.textContent = `Are you sure you want to delete the reservation for "${name}"? This action cannot be undone.`;
+          break;
+        case 'maintenance':
+          actionName = 'maintenance';
+          message.textContent = `Are you sure you want to delete the maintenance record for "${name}"? This action cannot be undone.`;
+          break;
+      }
+      
+      actionInput.value = `delete_${actionName}`;
+      idInput.value = id;
+      
+      modal.classList.remove('hidden');
+    }
+
+    // Cancel delete
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('deleteModal')) {
+        document.getElementById('deleteModal').classList.add('hidden');
+      }
     });
   </script>
 

@@ -42,16 +42,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Fetch facilities for dropdown
-$facilities_result = $conn->query("SELECT id, facility_name, facility_type FROM facilities ORDER BY facility_name");
+// Fetch facilities for dropdown with error handling
+$facilities_result = false;
+try {
+    $facilities_result = $conn->query("SELECT id, facility_name, facility_type FROM facilities ORDER BY facility_name");
+} catch (Exception $e) {
+    error_log("Facilities query failed: " . $e->getMessage());
+}
 
-// Fetch maintenance reports with reporter information
-$maintenance_result = $conn->query("
-    SELECT mr.*, f.facility_name, f.facility_type 
-    FROM maintenance_reports mr 
-    JOIN facilities f ON mr.facility_id = f.id 
-    ORDER BY mr.reported_at DESC
-");
+// Fetch maintenance reports with reporter information with error handling
+$maintenance_result = false;
+try {
+    $maintenance_result = $conn->query("
+        SELECT mr.*, f.facility_name, f.facility_type 
+        FROM maintenance_reports mr 
+        JOIN facilities f ON mr.facility_id = f.id 
+        ORDER BY mr.reported_at DESC
+    ");
+} catch (Exception $e) {
+    error_log("Maintenance reports query failed: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -116,16 +126,33 @@ $maintenance_result = $conn->query("
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <?php
-                // Get statistics
-                $stats_result = $conn->query("
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open_count,
-                        SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress_count,
-                        SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) as resolved_count
-                    FROM maintenance_reports
-                ");
-                $stats = $stats_result->fetch_assoc();
+                // Get statistics with error handling
+                $stats = [
+                    'total' => 0,
+                    'open_count' => 0,
+                    'in_progress_count' => 0,
+                    'resolved_count' => 0
+                ];
+                
+                try {
+                    $stats_result = $conn->query("
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open_count,
+                            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress_count,
+                            SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) as resolved_count
+                        FROM maintenance_reports
+                    ");
+                    
+                    if ($stats_result && $stats_result !== false) {
+                        $stats_data = $stats_result->fetch_assoc();
+                        if ($stats_data) {
+                            $stats = $stats_data;
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log("Maintenance stats query failed: " . $e->getMessage());
+                }
                 ?>
                 
                 <div class="bg-white p-4 rounded-lg shadow">
@@ -193,7 +220,7 @@ $maintenance_result = $conn->query("
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($maintenance_result->num_rows > 0): ?>
+                            <?php if ($maintenance_result && $maintenance_result !== false && $maintenance_result->num_rows > 0): ?>
                                 <?php while ($report = $maintenance_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -269,13 +296,17 @@ $maintenance_result = $conn->query("
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                 <option value="">Select Facility</option>
                                 <?php 
-                                $facilities_result->data_seek(0); // Reset result pointer
-                                while ($facility = $facilities_result->fetch_assoc()): 
+                                if ($facilities_result && $facilities_result !== false) {
+                                    $facilities_result->data_seek(0); // Reset result pointer
+                                    while ($facility = $facilities_result->fetch_assoc()): 
                                 ?>
                                     <option value="<?= $facility['id'] ?>">
                                         <?= htmlspecialchars($facility['facility_name']) ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php 
+                                    endwhile; 
+                                }
+                                ?>
                             </select>
                         </div>
                         

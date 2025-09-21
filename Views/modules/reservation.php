@@ -57,18 +57,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Fetch facilities for dropdown
-$facilities_result = $conn->query("SELECT id, facility_name, facility_type, capacity FROM facilities WHERE status = 'Active' ORDER BY facility_name");
+// Fetch facilities for dropdown with error handling
+$facilities_result = false;
+try {
+    $facilities_result = $conn->query("SELECT id, facility_name, facility_type, capacity FROM facilities WHERE status = 'Active' ORDER BY facility_name");
+} catch (Exception $e) {
+    error_log("Facilities query failed: " . $e->getMessage());
+}
 
-// Fetch user's reservations
+// Fetch user's reservations with error handling
 $user_id = $_SESSION['user_id'];
-$reservations_result = $conn->query("
-    SELECT r.*, f.facility_name, f.facility_type 
-    FROM reservations r 
-    JOIN facilities f ON r.facility_id = f.id 
-    WHERE r.employee_id = $user_id 
-    ORDER BY r.start_time DESC
-");
+$reservations_result = false;
+try {
+    $reservations_result = $conn->query("
+        SELECT r.*, f.facility_name, f.facility_type 
+        FROM reservations r 
+        JOIN facilities f ON r.facility_id = f.id 
+        WHERE r.employee_id = $user_id 
+        ORDER BY r.start_time DESC
+    ");
+} catch (Exception $e) {
+    error_log("Reservations query failed: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -155,7 +165,7 @@ $reservations_result = $conn->query("
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if ($reservations_result->num_rows > 0): ?>
+                            <?php if ($reservations_result && $reservations_result !== false && $reservations_result->num_rows > 0): ?>
                                 <?php while ($reservation = $reservations_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -204,15 +214,21 @@ $reservations_result = $conn->query("
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Facilities</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php 
-                    $facilities_result->data_seek(0); // Reset result pointer
-                    while ($facility = $facilities_result->fetch_assoc()): 
+                    if ($facilities_result && $facilities_result !== false) {
+                        $facilities_result->data_seek(0); // Reset result pointer
+                        while ($facility = $facilities_result->fetch_assoc()): 
                     ?>
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <h4 class="font-medium text-gray-900"><?= htmlspecialchars($facility['facility_name']) ?></h4>
                             <p class="text-sm text-gray-600"><?= htmlspecialchars($facility['facility_type']) ?></p>
                             <p class="text-sm text-gray-500">Capacity: <?= htmlspecialchars($facility['capacity']) ?> people</p>
                         </div>
-                    <?php endwhile; ?>
+                    <?php 
+                        endwhile; 
+                    } else {
+                        echo '<div class="col-span-full text-center text-gray-500 py-8">No facilities available</div>';
+                    }
+                    ?>
                 </div>
             </div>
         </div>
@@ -234,13 +250,17 @@ $reservations_result = $conn->query("
                                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                                 <option value="">Select Facility</option>
                                 <?php 
-                                $facilities_result->data_seek(0); // Reset result pointer
-                                while ($facility = $facilities_result->fetch_assoc()): 
+                                if ($facilities_result && $facilities_result !== false) {
+                                    $facilities_result->data_seek(0); // Reset result pointer
+                                    while ($facility = $facilities_result->fetch_assoc()): 
                                 ?>
                                     <option value="<?= $facility['id'] ?>">
                                         <?= htmlspecialchars($facility['facility_name']) ?> (<?= htmlspecialchars($facility['facility_type']) ?>)
                                     </option>
-                                <?php endwhile; ?>
+                                <?php 
+                                    endwhile; 
+                                }
+                                ?>
                             </select>
                         </div>
                         

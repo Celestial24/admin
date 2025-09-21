@@ -10,6 +10,28 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'user') {
 // Database connection
 require_once '../../backend/sql/db.php';
 
+// Check if facilities table exists
+$table_check = $conn->query("SHOW TABLES LIKE 'facilities'");
+if ($table_check->num_rows == 0) {
+    // Create facilities table if it doesn't exist
+    $create_table = "CREATE TABLE IF NOT EXISTS facilities (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_name VARCHAR(255) NOT NULL,
+        facility_type VARCHAR(100) NOT NULL,
+        capacity INT NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'Active',
+        location VARCHAR(255) NOT NULL,
+        description TEXT,
+        amenities TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )";
+    
+    if ($conn->query($create_table) === FALSE) {
+        die("Error creating facilities table: " . $conn->error);
+    }
+}
+
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['action'])) {
@@ -18,6 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {   
             if ($action === 'add_facility') {
                 $stmt = $conn->prepare("INSERT INTO facilities (facility_name, facility_type, capacity, status, location, description, amenities) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                if ($stmt === false) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
                 $stmt->bind_param("ssissss", 
                     $_POST['facility_name'], 
                     $_POST['facility_type'], 
@@ -32,6 +57,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
             } elseif ($action === 'update_facility') {
                 $stmt = $conn->prepare("UPDATE facilities SET facility_name=?, facility_type=?, capacity=?, status=?, location=?, description=?, amenities=? WHERE id=?");
+                if ($stmt === false) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
                 $stmt->bind_param("ssissssi", 
                     $_POST['facility_name'], 
                     $_POST['facility_type'], 
@@ -47,6 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
             } elseif ($action === 'delete_facility') {
                 $stmt = $conn->prepare("DELETE FROM facilities WHERE id=?");
+                if ($stmt === false) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
                 $stmt->bind_param("i", $_POST['facility_id']);
                 $stmt->execute();
                 $success_message = "Facility deleted successfully!";
@@ -145,6 +176,71 @@ try {
                     </div>
                 </div>
             </div>
+
+            <!-- Recent Facilities Cards -->
+            <?php if ($facilities_result && $facilities_result !== false && $facilities_result->num_rows > 0): ?>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Facilities Added</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <?php 
+                        $facilities_result->data_seek(0); // Reset result pointer
+                        $count = 0;
+                        while ($facility = $facilities_result->fetch_assoc() && $count < 6): 
+                            $count++;
+                        ?>
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" 
+                                 onclick="viewFacilityDetails(<?= htmlspecialchars(json_encode($facility)) ?>)">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-gray-900 text-lg"><?= htmlspecialchars($facility['facility_name']) ?></h4>
+                                        <p class="text-sm text-gray-600"><?= htmlspecialchars($facility['facility_type']) ?></p>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        <?= $facility['status'] === 'Active' ? 'bg-green-100 text-green-800' : 
+                                           ($facility['status'] === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') ?>">
+                                        <?= htmlspecialchars($facility['status']) ?>
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="users" class="w-4 h-4"></i>
+                                        <span>Capacity: <?= htmlspecialchars($facility['capacity']) ?> people</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                        <span><?= htmlspecialchars($facility['location']) ?></span>
+                                    </div>
+                                    <?php if (!empty($facility['description'])): ?>
+                                        <div class="flex items-start gap-2">
+                                            <i data-lucide="file-text" class="w-4 h-4 mt-0.5"></i>
+                                            <span class="line-clamp-2"><?= htmlspecialchars(substr($facility['description'], 0, 100)) ?><?= strlen($facility['description']) > 100 ? '...' : '' ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        Added: <?= date('M j, Y', strtotime($facility['created_at'])) ?>
+                                    </span>
+                                    <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        View Details <i data-lucide="arrow-right" class="w-4 h-4 inline ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                    
+                    <?php if ($facilities_result->num_rows > 6): ?>
+                        <div class="mt-4 text-center">
+                            <a href="../../module-table/facilities.php" 
+                               class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium">
+                                View All Facilities <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -227,6 +323,30 @@ try {
         </div>
     </div>
 
+    <!-- Facility Details Modal -->
+    <div id="detailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Facility Details</h3>
+                    <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div id="facilityDetails" class="space-y-4">
+                    <!-- Details will be populated by JavaScript -->
+                </div>
+                
+                <div class="flex justify-end mt-6">
+                    <button onclick="closeDetailsModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Initialize Lucide icons
@@ -247,12 +367,90 @@ try {
             document.getElementById('facilityModal').classList.add('hidden');
         }
 
+        function viewFacilityDetails(facility) {
+            const details = `
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">${facility.facility_name}</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="building" class="w-5 h-5 text-blue-600"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700">Type:</span>
+                                        <span class="text-sm text-gray-900 ml-2">${facility.facility_type}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="users" class="w-5 h-5 text-green-600"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700">Capacity:</span>
+                                        <span class="text-sm text-gray-900 ml-2">${facility.capacity} people</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="map-pin" class="w-5 h-5 text-red-600"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700">Location:</span>
+                                        <span class="text-sm text-gray-900 ml-2">${facility.location}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="activity" class="w-5 h-5 text-yellow-600"></i>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full ml-2 ${
+                                            facility.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                                            (facility.status === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800')
+                                        }">${facility.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            ${facility.description ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Description</h5>
+                                    <p class="text-sm text-gray-900 bg-white p-3 rounded border">${facility.description}</p>
+                                </div>
+                            ` : ''}
+                            ${facility.amenities ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Amenities</h5>
+                                    <p class="text-sm text-gray-900 bg-white p-3 rounded border">${facility.amenities}</p>
+                                </div>
+                            ` : ''}
+                            <div class="text-xs text-gray-500">
+                                <p>Created: ${new Date(facility.created_at).toLocaleDateString()}</p>
+                                ${facility.updated_at !== facility.created_at ? `<p>Updated: ${new Date(facility.updated_at).toLocaleDateString()}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('facilityDetails').innerHTML = details;
+            document.getElementById('detailsModal').classList.remove('hidden');
+            
+            // Re-initialize Lucide icons for the modal content
+            if (typeof lucide !== "undefined") {
+                lucide.createIcons();
+            }
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
         // Close modal when clicking outside
         window.onclick = function(event) {
             const facilityModal = document.getElementById('facilityModal');
+            const detailsModal = document.getElementById('detailsModal');
             
             if (event.target === facilityModal) {
                 closeModal();
+            }
+            if (event.target === detailsModal) {
+                closeDetailsModal();
             }
         }
     </script>

@@ -93,7 +93,7 @@ if (!$maintenance_result) {
         <!-- Header -->
         <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
             <div>
-                <h2 class="text-xl font-semibold text-gray-800">Maintenance - Who Reported</h2>
+                <h2 class="text-xl font-semibold text-gray-800">Maintenance</h2>
                 <p class="text-sm text-gray-600">Track maintenance issues and who reported them</p>
             </div>
             <?php include '../../profile.php'; ?>

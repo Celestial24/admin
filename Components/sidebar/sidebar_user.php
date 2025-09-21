@@ -62,28 +62,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <!-- Facility Modules (Hidden by default) -->
             <div id="facilityModules" class="facility-modules ml-4 space-y-1">
                 <!-- Facility List (Employees only) -->
-                <a href="/admin/Views/modules/facility.php" 
+                <a href="../../Views/modules/facility.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facility.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="list" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Facility List (Employees only)</span>
                 </a>
 
-                <!-- Facilizties Management -->
-                <a href="/admin/Views/modules/maintenance.php" 
+                <!-- Facilities Management -->
+                <a href="../../Views/modules/facilities.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facility_management.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Management - Details</span>
                 </a>
 
                 <!-- Reservation (Employees only) -->
-                <a href="/admin/Views/modules/reservation_module.php" 
+                <a href="../../Views/modules/reservation_module.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation_module.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Reservation (Employees only)</span>
                 </a>
 
                 <!-- Maintenance -->
-                <a href="/admin/Views/modules/maintenance.php" 
+                <a href="../../Views/modules/maintenance.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="wrench" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Maintenance - Who Reported</span>
@@ -91,21 +91,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
 
             <!-- Visitor Logs -->
-            <a href="../user/visitors.php" 
+            <a href="../../user/visitors.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
 
             <!-- My Reservations -->
-            <a href="../user/my_reservations.php" 
+            <a href="../../user/my_reservations.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'my_reservations.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="calendar" class="w-5 h-5"></i>
                 <span class="sidebar-text">My Reservations</span>
             </a>
 
             <!-- Settings -->
-            <a href="../user/settings.php" 
+            <a href="../../user/settings.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'settings.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="settings" class="w-5 h-5"></i>
                 <span class="sidebar-text">Settings</span>

@@ -7,8 +7,8 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'user') {
     exit();
 }
 
-// Database connection for facilities
-require_once '../../backend/sql/facilities_db.php';
+// Database connection
+require_once '../../backend/sql/db.php';
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -53,14 +53,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $stmt->close();
-            
-            // Refresh the facilities list after successful operation
-            $facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
-            if (!$facilities_result) {
-                $facilities_result = new stdClass();
-                $facilities_result->num_rows = 0;
-                $facilities_result->fetch_assoc = function() { return false; };
-            }
         } catch (Exception $e) {
             $error_message = "Error: " . $e->getMessage();
         }
@@ -69,14 +61,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Fetch facilities
 $facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
-
-// Check if query was successful
-if (!$facilities_result) {
-    // Create a mock result object if query fails
-    $facilities_result = new stdClass();
-    $facilities_result->num_rows = 0;
-    $facilities_result->fetch_assoc = function() { return false; };
-}
 ?>
 
 <!DOCTYPE html>

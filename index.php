@@ -24,7 +24,7 @@
 <body class="font-sans bg-gray-50 text-gray-900">
 
   
-  <section class="relative bg-cover bg-center h-screen" style="background-image: url('hotel-bg.jpg')">
+  <section class="relative bg-cover bg-center h-screen" style="background-image: url('assets/image/hotel-bg.jpg')">
     <div class="absolute inset-0 bg-black/60"></div>
     <div class="relative z-10 flex flex-col justify-center items-center h-full text-center text-white">
       <h1 class="text-5xl font-bold mb-4">Welcome to ATIERA Hotel & Restaurant</h1>

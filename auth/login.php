@@ -255,7 +255,7 @@ if ($result['success']) {
               <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5Z" fill="currentColor"/>
             </svg>
           </span>
-          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">admin</span> or <span class="font-mono">admin@example.com</span></p>
+          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">username</span> or <span class="font-mono">email@example.com</span></p>
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">

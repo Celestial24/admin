@@ -10,11 +10,6 @@ if ($conn->connect_error) {
     die("❌ Connection failed: " . $conn->connect_error);
 }
 
-// ================= FORM HANDLING PLACEHOLDER =================
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['form_type'])) {
-    // TODO: Add form handling for facility, reservation, maintenance
-}
-
 // ================= FETCH DATA =================
 $facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") or die("Facilities query failed: " . $conn->error);
 
@@ -27,11 +22,6 @@ $mainResult = $conn->query("SELECT m.*, f.name AS facility_name
                             FROM maintenance m 
                             JOIN facilities f ON m.facility_id = f.id 
                             ORDER BY m.created_at DESC") or die("Maintenance query failed: " . $conn->error);
-
-// ================= COUNTS =================
-$totalFacilities   = $facilitiesResult->num_rows;
-$totalReservations = $resResult->num_rows;
-$totalMaintenance  = $mainResult->num_rows;
 
 // ================= HELPER: STATUS BADGE =================
 function getStatusBadge($status) {
@@ -73,7 +63,7 @@ function getStatusBadge($status) {
     <?php include '../Components/sidebar/sidebar_admin.php'; ?>
   </aside>
 
-  <aside id="sidebar-mobile" class="h-full fixed inset-0 flex z-40 lg:hidden" style="display: none;">
+  <aside id="sidebar-mobile" class="h-full fixed inset-0 flex z-40 lg:hidden hidden">
     <div class="fixed inset-0 bg-black bg-opacity-50" id="sidebar-overlay"></div>
     <div class="relative flex-1 flex flex-col max-w-xs w-full">
       <?php include '../Components/sidebar/sidebar_user.php'; ?>
@@ -114,21 +104,21 @@ function getStatusBadge($status) {
                 <th class="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody class="text-center">
+            <tbody>
               <?php if ($facilitiesResult->num_rows > 0): while ($row = $facilitiesResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4 text-center"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 text-center font-medium"><?= htmlspecialchars($row['name']) ?></td>
-                <td class="px-6 py-4 text-cente"><?= htmlspecialchars($row['type']) ?></td>
-                <td class="px-6 py-4 text-center"><?= $row['capacity'] ?></td>
-                <td class="px-6 py-4 text-center"><?= getStatusBadge($row['status']) ?></td>
-                <td class="px-6 py-4 flex justify-center gap-2 text-center">
+                <td class="px-6 py-4"><?= $row['id'] ?></td>
+                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
+                <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
+                <td class="px-6 py-4"><?= $row['capacity'] ?></td>
+                <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
+                <td class="px-6 py-4 flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
               </tr>
               <?php endwhile; else: ?>
-              <tr><td colspan="6" class="text-center py-6 text-gray-500">No facilities found.</td></tr>
+              <tr><td colspan="6" class="py-6 text-gray-500">No facilities found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -140,7 +130,7 @@ function getStatusBadge($status) {
         <div class="bg-white rounded-lg shadow overflow-x-auto">
           <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
-              <tr>
+              <tr class="text-center">
                 <th class="px-6 py-3">ID</th>
                 <th class="px-6 py-3">Facility</th>
                 <th class="px-6 py-3">Reserved By</th>
@@ -165,7 +155,7 @@ function getStatusBadge($status) {
                 </td>
               </tr>
               <?php endwhile; else: ?>
-              <tr><td colspan="7" class="text-center py-6 text-gray-500">No reservations found.</td></tr>
+              <tr><td colspan="7" class="py-6 text-gray-500">No reservations found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -176,7 +166,8 @@ function getStatusBadge($status) {
       <div id="maintenance" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow overflow-x-auto">
           <table class="min-w-full text-sm text-center">
-            <thead class="bg-gray-50 text-xs text-gray-700 uppercase text-center">
+            <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
+              <tr>
                 <th class="px-6 py-3">ID</th>
                 <th class="px-6 py-3">Facility</th>
                 <th class="px-6 py-3">Description</th>
@@ -186,22 +177,22 @@ function getStatusBadge($status) {
                 <th class="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody class="text-center">
+            <tbody>
               <?php if ($mainResult->num_rows > 0): while ($row = $mainResult->fetch_assoc()): ?>
               <tr class="border-b hover:bg-gray-50">
-                <td class="px-6 py-4 text-center"><?= $row['id'] ?></td>
-                <td class="px-6 py-4 font-medium text-center"><?= htmlspecialchars($row['facility_name']) ?></td>
-                <td class="px-6 py-4 text-center"><?= htmlspecialchars($row['description']) ?></td>
-                <td class="px-6 py-4 text-center"><?= getStatusBadge($row['priority']) ?></td>
-                <td class="px-6 py-4 text-center "><?= htmlspecialchars($row['reported_by']) ?></td>
-                <td class="px-6 py-4 text-center"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                <td class="px-6 py-4 text-center flex justify-center gap-2">
+                <td class="px-6 py-4"><?= $row['id'] ?></td>
+                <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                <td class="px-6 py-4"><?= htmlspecialchars($row['description']) ?></td>
+                <td class="px-6 py-4"><?= getStatusBadge($row['priority']) ?></td>
+                <td class="px-6 py-4"><?= htmlspecialchars($row['reported_by']) ?></td>
+                <td class="px-6 py-4"><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                <td class="px-6 py-4 flex justify-center gap-2">
                   <button class="text-blue-600 hover:text-blue-900"><i data-lucide="edit" class="w-4 h-4"></i></button>
                   <button class="text-red-600 hover:text-red-900"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
               </tr>
               <?php endwhile; else: ?>
-              <tr><td colspan="7" class="text-center py-6 text-gray-500">No maintenance records found.</td></tr>
+              <tr><td colspan="7" class="py-6 text-gray-500">No maintenance records found.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -209,6 +200,32 @@ function getStatusBadge($status) {
       </div>
     </div>
   </main>
+
+  <!-- Tabs Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabLinks = document.querySelectorAll(".tab-link");
+      const tabContents = document.querySelectorAll(".tab-content");
+
+      tabLinks.forEach(link => {
+        link.addEventListener("click", function () {
+          // reset tabs
+          tabLinks.forEach(l => {
+            l.classList.remove("border-blue-600","text-blue-600");
+            l.classList.add("border-transparent","text-gray-500");
+          });
+          tabContents.forEach(c => c.classList.add("hidden"));
+
+          // activate selected
+          this.classList.add("border-blue-600","text-blue-600");
+          this.classList.remove("border-transparent","text-gray-500");
+
+          const tabId = this.getAttribute("data-tab");
+          document.getElementById(tabId).classList.remove("hidden");
+        });
+      });
+    });
+  </script>
 </body>
 </html>
 <?php $conn->close(); ?>

@@ -67,13 +67,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
 $facilitiesResult = $conn->query("SELECT * FROM facilities ORDER BY id ASC") 
     or die("Facilities query failed: " . $conn->error);
 
-$resResult = $conn->query("SELECT r.*, f.name AS facility_name 
+$resResult = $conn->query("SELECT r.*, f.facility_name AS facility_name 
                            FROM reservations r 
                            JOIN facilities f ON r.facility_id = f.id 
                            ORDER BY r.start_time DESC") 
     or die("Reservations query failed: " . $conn->error);
 
-$mainResult = $conn->query("SELECT m.*, f.name AS facility_name 
+$mainResult = $conn->query("SELECT m.*, f.facility_name AS facility_name 
                             FROM maintenance m 
                             JOIN facilities f ON m.facility_id = f.id 
                             ORDER BY m.created_at DESC") 

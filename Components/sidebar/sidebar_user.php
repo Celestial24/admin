@@ -76,7 +76,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
 
                 <!-- Reservation (Employees only) -->
-                <a href="/admin/Views/modules/reservation_module.php" 
+                <a href="/admin/Views/modules/reservation.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation_module.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Reservation (Employees only)</span>
@@ -91,7 +91,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
 
             <!-- Visitor Logs -->
-            <a href="../../user/visitors.php" 
+            <a href="/admin/user/visitors.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>

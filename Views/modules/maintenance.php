@@ -7,8 +7,8 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'user') {
     exit();
 }
 
-// Database connection
-require_once '../../backend/sql/db.php';
+// Database connection for facilities
+require_once '../../backend/sql/facilities_db.php';
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -44,6 +44,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Fetch facilities for dropdown
 $facilities_result = $conn->query("SELECT id, facility_name, facility_type FROM facilities ORDER BY facility_name");
+if (!$facilities_result) {
+    $facilities_result = false;
+}
 
 // Fetch maintenance reports with reporter information
 $maintenance_result = $conn->query("
@@ -52,6 +55,14 @@ $maintenance_result = $conn->query("
     JOIN facilities f ON mr.facility_id = f.id 
     ORDER BY mr.reported_at DESC
 ");
+
+// Check if query was successful, if not create empty result
+if (!$maintenance_result) {
+    // Create a mock result object with num_rows = 0
+    $maintenance_result = new stdClass();
+    $maintenance_result->num_rows = 0;
+    $maintenance_result->fetch_assoc = function() { return false; };
+}
 ?>
 
 <!DOCTYPE html>
@@ -125,7 +136,19 @@ $maintenance_result = $conn->query("
                         SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) as resolved_count
                     FROM maintenance_reports
                 ");
-                $stats = $stats_result->fetch_assoc();
+                
+                // Check if query was successful
+                if ($stats_result && $stats_result->num_rows > 0) {
+                    $stats = $stats_result->fetch_assoc();
+                } else {
+                    // Default values if query fails
+                    $stats = [
+                        'total' => 0,
+                        'open_count' => 0,
+                        'in_progress_count' => 0,
+                        'resolved_count' => 0
+                    ];
+                }
                 ?>
                 
                 <div class="bg-white p-4 rounded-lg shadow">

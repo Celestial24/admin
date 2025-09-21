@@ -7,8 +7,8 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'user') {
     exit();
 }
 
-// Database connection
-require_once '../../backend/sql/db.php';
+// Database connection for facilities
+require_once '../../backend/sql/facilities_db.php';
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

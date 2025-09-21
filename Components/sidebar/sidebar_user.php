@@ -69,7 +69,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
 
                 <!-- Facilities Management -->
-                <a href="../../Views/modules/maintenance.php" 
+                <a href="../Views/modules/maintenance.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facility_management.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Management - Details</span>

@@ -1,13 +1,28 @@
 <?php
 // ================= DATABASE CONNECTION =================
-$host   = "localhost";
-$user   = "admin_admin_admin";
-$pass   = "123";
-$dbname = "admin_facilities";
+require_once '../backend/sql/db.php';
 
-$conn = new mysqli($host, $user, $pass, $dbname);
-if ($conn->connect_error) {
-    die("❌ Connection failed: " . $conn->connect_error);
+// Check if facilities table exists
+$table_check = $conn->query("SHOW TABLES LIKE 'facilities'");
+if ($table_check->num_rows == 0) {
+    // Create facilities table if it doesn't exist
+    $create_table = "CREATE TABLE IF NOT EXISTS facilities (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_name VARCHAR(255) NOT NULL,
+        facility_type VARCHAR(100) NOT NULL,
+        capacity INT NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'Active',
+        location VARCHAR(255) NOT NULL,
+        description TEXT,
+        amenities TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )";
+    
+    if ($conn->query($create_table) === FALSE) {
+        die("Error creating facilities table: " . $conn->error);
+    }
 }
 
 // ================= DELETE HANDLING =================
@@ -203,8 +218,8 @@ function getStatusBadge($status) {
                 <?php while ($row = $facilitiesResult->fetch_assoc()): ?>
                   <tr class="border-b hover:bg-gray-50">
                     <td class="px-6 py-4"><?= $row['id'] ?></td>
-                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['name']) ?></td>
-                    <td class="px-6 py-4"><?= htmlspecialchars($row['type']) ?></td>
+                    <td class="px-6 py-4 font-medium"><?= htmlspecialchars($row['facility_name']) ?></td>
+                    <td class="px-6 py-4"><?= htmlspecialchars($row['facility_type']) ?></td>
                     <td class="px-6 py-4"><?= $row['capacity'] ?></td>
                     <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                     <td class="px-6 py-4 flex justify-center gap-2">
@@ -212,7 +227,7 @@ function getStatusBadge($status) {
                          class="text-blue-600 hover:text-blue-900" title="Edit Facility">
                         <i data-lucide="edit" class="w-4 h-4"></i>
                       </a>
-                      <button onclick="confirmDelete('facility', <?= $row['id'] ?>, '<?= htmlspecialchars($row['name']) ?>')" 
+                      <button onclick="confirmDelete('facility', <?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
                               class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                   </tr>

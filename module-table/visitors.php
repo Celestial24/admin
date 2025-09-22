@@ -3,9 +3,9 @@ session_start();
 
 // -- DATABASE CONNECTION --
 $host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "visitor";
+$user = "admin_visitors";
+$pass = "123";
+$dbname = "admin_visitors";
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

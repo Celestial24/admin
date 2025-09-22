@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Fetch facilities for dropdown with error handling
 $facilities_result = false;
 try {
-    $facilities_result = $conn->query("SELECT id, facility_name, facility_type, capacity FROM facilities WHERE status = 'Active' ORDER BY facility_name");
+$facilities_result = $conn->query("SELECT id, facility_name, facility_type, capacity FROM facilities WHERE status = 'Active' ORDER BY facility_name");
 } catch (Exception $e) {
     error_log("Facilities query failed: " . $e->getMessage());
 }
@@ -69,13 +69,13 @@ try {
 $user_id = $_SESSION['user_id'];
 $reservations_result = false;
 try {
-    $reservations_result = $conn->query("
-        SELECT r.*, f.facility_name, f.facility_type 
-        FROM reservations r 
-        JOIN facilities f ON r.facility_id = f.id 
-        WHERE r.employee_id = $user_id 
-        ORDER BY r.start_time DESC
-    ");
+$reservations_result = $conn->query("
+    SELECT r.*, f.facility_name, f.facility_type 
+    FROM reservations r 
+    JOIN facilities f ON r.facility_id = f.id 
+    WHERE r.employee_id = $user_id 
+    ORDER BY r.start_time DESC
+");
 } catch (Exception $e) {
     error_log("Reservations query failed: " . $e->getMessage());
 }
@@ -179,8 +179,8 @@ try {
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php 
                     if ($facilities_result && $facilities_result !== false) {
-                        $facilities_result->data_seek(0); // Reset result pointer
-                        while ($facility = $facilities_result->fetch_assoc()): 
+                    $facilities_result->data_seek(0); // Reset result pointer
+                    while ($facility = $facilities_result->fetch_assoc()): 
                     ?>
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <h4 class="font-medium text-gray-900"><?= htmlspecialchars($facility['facility_name']) ?></h4>
@@ -215,8 +215,8 @@ try {
                                 <option value="">Select Facility</option>
                                 <?php 
                                 if ($facilities_result && $facilities_result !== false) {
-                                    $facilities_result->data_seek(0); // Reset result pointer
-                                    while ($facility = $facilities_result->fetch_assoc()): 
+                                $facilities_result->data_seek(0); // Reset result pointer
+                                while ($facility = $facilities_result->fetch_assoc()): 
                                 ?>
                                     <option value="<?= $facility['id'] ?>">
                                         <?= htmlspecialchars($facility['facility_name']) ?> (<?= htmlspecialchars($facility['facility_type']) ?>)

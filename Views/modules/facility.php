@@ -96,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Fetch facilities with error handling
 $facilities_result = false;
 try {
-    $facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
+$facilities_result = $conn->query("SELECT * FROM facilities ORDER BY facility_name");
 } catch (Exception $e) {
     error_log("Facilities query failed: " . $e->getMessage());
 }
@@ -135,7 +135,7 @@ try {
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     <span>Back to Overview</span>
                 </a>
-                <h2 class="text-xl font-semibold text-gray-800">Facilities Management - Details</h2>
+            <h2 class="text-xl font-semibold text-gray-800">Facilities Management - Details</h2>
             </div>
             <?php include '../../profile.php'; ?>
         </div>
@@ -199,10 +199,10 @@ try {
                                         <p class="text-sm text-gray-600"><?= htmlspecialchars($facility['facility_type']) ?></p>
                                     </div>
                                     <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                        <?= $facility['status'] === 'Active' ? 'bg-green-100 text-green-800' : 
-                                           ($facility['status'] === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') ?>">
-                                        <?= htmlspecialchars($facility['status']) ?>
-                                    </span>
+                                                <?= $facility['status'] === 'Active' ? 'bg-green-100 text-green-800' : 
+                                                   ($facility['status'] === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') ?>">
+                                                <?= htmlspecialchars($facility['status']) ?>
+                                            </span>
                                 </div>
                                 
                                 <div class="space-y-2 text-sm text-gray-600">
@@ -231,7 +231,7 @@ try {
                                     </button>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
+                                <?php endwhile; ?>
                     </div>
                     
                     <?php if ($facilities_result->num_rows > 6): ?>
@@ -241,7 +241,7 @@ try {
                                 View All Facilities <i data-lucide="arrow-right" class="w-4 h-4"></i>
                             </a>
                         </div>
-                    <?php endif; ?>
+                            <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>

@@ -261,7 +261,7 @@ if (!$visitorLogsResult) {
     <header class="px-6 py-4 bg-white border-b shadow-sm">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Visitor Time-In/Time-Out Management</h1>
+          <h1 class="text-2xl font-bold text-gray-800">Visitor Managemnet</h1>
           <p class="text-sm text-gray-500 mt-1">Real-time Visitor Tracking & Management System</p>
         </div>
         <div class="flex items-center gap-4">

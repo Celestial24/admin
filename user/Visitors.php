@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $error_message = "Database error: " . $conn->error . ". Please contact administrator.";
             error_log("Prepare failed: " . $conn->error);
         } else {
-            $stmt->bind_param("ssssisssis", $full_name, $email, $phone, $special_notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
+            $stmt->bind_param("ssssisssisi", $full_name, $email, $phone, $special_notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
             
             if ($stmt->execute()) {
                 $success_message = "Thank you for time-in! Welcome to our Hotel & Restaurant.";

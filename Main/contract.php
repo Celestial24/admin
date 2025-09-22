@@ -60,18 +60,83 @@
         <section class="bg-white p-6 rounded shadow">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">📤 Upload Contract</h2>
 
-          <div class="p-4 bg-blue-50 border border-blue-200 rounded mb-4">
-            <p class="text-sm text-blue-800">The upload form has moved to the Contracts module.</p>
-          </div>
+          <form
+            action="../backend/weka_contract_api.php"
+            method="POST"
+            id="contractForm"
+            class="space-y-4"
+            enctype="multipart/form-data"
+            novalidate
+          >
+            <div>
+              <label for="employeeName" class="block text-sm font-medium text-gray-700">
+                Employee Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="employee_name" id="employeeName" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee name" />
+              <p class="text-red-500 text-xs mt-1 hidden" id="employeeNameError">Employee Name is required.</p>
+            </div>
 
-          <a href="/admin/module-table/Contract.php" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M4 12l4-4m0 0l4 4m-4-4v12" /></svg>
-            Go to Upload Page
-          </a>
+            <div>
+              <label for="employeeId" class="block text-sm font-medium text-gray-700">
+                Employee ID <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="employee_id" id="employeeId" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee ID" />
+              <p class="text-red-500 text-xs mt-1 hidden" id="employeeIdError">Employee ID is required.</p>
+            </div>
+            
+            <div>
+              <label for="party" class="block text-sm font-medium text-gray-700">
+                Contracting Party <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="party" id="party" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter contracting party name" />
+              <p class="text-red-500 text-xs mt-1 hidden" id="partyError">Contracting Party is required.</p>
+            </div>
 
-          <div class="mt-6 text-sm text-gray-500">
-            Tip: After uploading, return here to monitor Weka AI analysis and risk indicators.
-          </div>
+            <div>
+              <label for="title" class="block text-sm font-medium text-gray-700">
+                Contract Title <span class="text-red-500">*</span>
+              </label>
+              <input type="text" name="title" id="title" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter contract title" />
+              <p class="text-red-500 text-xs mt-1 hidden" id="titleError">Contract Title is required.</p>
+            </div>
+
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+              <textarea name="description" id="description" rows="3" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Optional description"></textarea>
+            </div>
+            
+            <div>
+                <label for="ocr_text" class="block text-sm font-medium text-gray-700">Contract Text (paste or summary)</label>
+                <textarea name="ocr_text" id="ocr_text" rows="5" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Paste contract text or summary for analysis"></textarea>
+            </div>
+
+            <div>
+              <label for="document" class="block text-sm font-medium text-gray-700">
+                Upload Document
+              </label>
+              <input type="file" name="document" id="document" accept=".pdf, .doc, .docx, .png, .jpg, .jpeg" class="mt-1 text-sm text-gray-600" />
+              <p class="text-xs text-gray-400 mt-1">Allowed: PDF, Word, Images. (Optional if text is pasted above)</p>
+            </div>
+
+            <div class="flex space-x-4 pt-4">
+              <button type="submit" id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 transition">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <span>Run OCR & Analyze</span>
+              </button>
+
+              <a href="legalmanagement.php" id="viewAnalysisBtn" class="border border-blue-500 text-blue-600 px-4 py-2 rounded hover:bg-blue-50 flex items-center gap-2 transition opacity-50 pointer-events-none">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>View Analysis</span>
+              </a>
+            </div>
+
+            <p id="responseMessage" class="text-center font-semibold mt-4"></p>
+
+            <div id="ocrResultContainer" class="hidden pt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">📄 Extracted OCR Text</label>
+              <textarea id="ocrText" rows="6" readonly class="w-full p-2 border rounded bg-gray-50 text-sm text-gray-800"></textarea>
+            </div>
+          </form>
         </section>
 
       </div>

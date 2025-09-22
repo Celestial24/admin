@@ -29,26 +29,38 @@ if ($conn->connect_error) {
     die("Connection failed: " . htmlspecialchars($conn->connect_error));
 }
 
+// Fetch visitor types for dropdown
+$visitorTypesResult = $conn->query("SELECT * FROM visitor_types WHERE is_active = 1 ORDER BY type_name");
+
+// Fetch employees for host selection
+$employeesResult = $conn->query("SELECT * FROM employees WHERE is_active = 1 ORDER BY full_name");
+
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'checkin') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'timein') {
 
     $full_name = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $special_notes = trim($_POST['special_notes'] ?? '');
+    $visitor_type_id = (int)($_POST['visitor_type'] ?? 1);
+    $purpose = trim($_POST['purpose'] ?? '');
+    $company = trim($_POST['company'] ?? '');
+    $host_employee = trim($_POST['host_employee'] ?? '');
+    $expected_duration = (int)($_POST['expected_duration'] ?? 60);
+    $priority = $_POST['priority'] ?? 'Medium';
     $agreement = isset($_POST['agreement']) ? 1 : 0;
 
     if (empty($full_name) || empty($email) || !$agreement) {
         $error_message = "Please fill all required fields and agree to terms.";
     } else {
-        $sql = "INSERT INTO guest_submissions (full_name, email, phone, notes, submitted_at) VALUES (?, ?, ?, ?, NOW())";
+        $sql = "INSERT INTO guest_submissions (full_name, email, phone, notes, visitor_type_id, purpose, company, host_employee, expected_duration, priority, time_in, status, agreement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'Time In', ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssss", $full_name, $email, $phone, $special_notes);
+        $stmt->bind_param("ssssisssis", $full_name, $email, $phone, $special_notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
         
         if ($stmt->execute()) {
-            $success_message = "Thank you for checking in! Welcome to our Hotel & Restaurant.";
+            $success_message = "Thank you for time-in! Welcome to our Hotel & Restaurant.";
         } else {
-            $error_message = "Error occurred while checking in. Please try again.";
+            $error_message = "Error occurred during time-in. Please try again.";
         }
         $stmt->close();
     }
@@ -118,7 +130,7 @@ $conn->close();
       <div class="bg-white p-6 rounded-lg shadow">
         <h2 class="text-xl font-semibold mb-4">Visitor Check-in Form</h2>
         <form id="visitorForm" method="POST" class="space-y-4">
-          <input type="hidden" name="action" value="checkin">
+          <input type="hidden" name="action" value="timein">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -137,14 +149,90 @@ $conn->close();
               <div id="email-error" class="text-red-500 text-sm mt-1 hidden"></div>
             </div>
           </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="visitor_type" class="block text-sm font-medium text-gray-700">Visitor Type *</label>
+              <select id="visitor_type" name="visitor_type" required 
+                      class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select visitor type...</option>
+                <?php if ($visitorTypesResult && $visitorTypesResult->num_rows > 0): ?>
+                  <?php while ($type = $visitorTypesResult->fetch_assoc()): ?>
+                    <option value="<?= $type['id'] ?>" 
+                            <?= (isset($_POST['visitor_type']) && $_POST['visitor_type'] == $type['id']) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($type['type_name']) ?>
+                    </option>
+                  <?php endwhile; ?>
+                <?php endif; ?>
+              </select>
+            </div>
+            
+            <div>
+              <label for="company" class="block text-sm font-medium text-gray-700">Company/Organization</label>
+              <input type="text" id="company" name="company" 
+                     class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     placeholder="Enter company name"
+                     value="<?php echo htmlspecialchars($_POST['company'] ?? ''); ?>">
+            </div>
+          </div>
           
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input type="tel" id="phone" name="phone" 
+                     class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     placeholder="Enter your phone number"
+                     value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+              <div id="phone-error" class="text-red-500 text-sm mt-1 hidden"></div>
+            </div>
+            
+            <div>
+              <label for="host_employee" class="block text-sm font-medium text-gray-700">Host Employee</label>
+              <select id="host_employee" name="host_employee" 
+                      class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select host employee...</option>
+                <?php if ($employeesResult && $employeesResult->num_rows > 0): ?>
+                  <?php while ($employee = $employeesResult->fetch_assoc()): ?>
+                    <option value="<?= htmlspecialchars($employee['full_name']) ?>" 
+                            <?= (isset($_POST['host_employee']) && $_POST['host_employee'] == $employee['full_name']) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($employee['full_name']) ?> (<?= htmlspecialchars($employee['department']) ?>)
+                    </option>
+                  <?php endwhile; ?>
+                <?php endif; ?>
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-            <input type="tel" id="phone" name="phone" 
-                   class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="Enter your phone number"
-                   value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
-            <div id="phone-error" class="text-red-500 text-sm mt-1 hidden"></div>
+            <label for="purpose" class="block text-sm font-medium text-gray-700">Purpose of Visit *</label>
+            <textarea id="purpose" name="purpose" rows="2" required
+                      class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Describe the purpose of your visit..."><?php echo htmlspecialchars($_POST['purpose'] ?? ''); ?></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="expected_duration" class="block text-sm font-medium text-gray-700">Expected Duration (minutes)</label>
+              <select id="expected_duration" name="expected_duration" 
+                      class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="30" <?= (isset($_POST['expected_duration']) && $_POST['expected_duration'] == 30) ? 'selected' : '' ?>>30 minutes</option>
+                <option value="60" <?= (isset($_POST['expected_duration']) && $_POST['expected_duration'] == 60) ? 'selected' : '' ?>>1 hour</option>
+                <option value="120" <?= (isset($_POST['expected_duration']) && $_POST['expected_duration'] == 120) ? 'selected' : '' ?>>2 hours</option>
+                <option value="240" <?= (isset($_POST['expected_duration']) && $_POST['expected_duration'] == 240) ? 'selected' : '' ?>>4 hours</option>
+                <option value="480" <?= (isset($_POST['expected_duration']) && $_POST['expected_duration'] == 480) ? 'selected' : '' ?>>8 hours (Full day)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="priority" class="block text-sm font-medium text-gray-700">Priority Level</label>
+              <select id="priority" name="priority" 
+                      class="w-full mt-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="Low" <?= (isset($_POST['priority']) && $_POST['priority'] == 'Low') ? 'selected' : '' ?>>Low</option>
+                <option value="Medium" <?= (isset($_POST['priority']) && $_POST['priority'] == 'Medium') ? 'selected' : '' ?>>Medium</option>
+                <option value="High" <?= (isset($_POST['priority']) && $_POST['priority'] == 'High') ? 'selected' : '' ?>>High</option>
+                <option value="Urgent" <?= (isset($_POST['priority']) && $_POST['priority'] == 'Urgent') ? 'selected' : '' ?>>Urgent</option>
+              </select>
+            </div>
           </div>
           
           <div>
@@ -173,8 +261,8 @@ $conn->close();
           <div class="flex flex-col sm:flex-row gap-4 pt-4">
             <button type="submit" id="submitBtn" disabled
                     class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 cursor-not-allowed opacity-50 font-medium flex items-center justify-center">
-              <i data-lucide="log-in" class="w-5 h-5 mr-2"></i>
-              <span>Check In</span>
+              <i data-lucide="clock" class="w-5 h-5 mr-2"></i>
+              <span>Time In</span>
             </button>
             <button type="reset" 
                     class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-medium flex items-center justify-center">

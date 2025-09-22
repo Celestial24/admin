@@ -366,6 +366,7 @@ $conn->close();
         setTimeout(() => errorMsg.remove(), 7000);
       }
 
+
     });
   </script>
 </body>

@@ -20,7 +20,7 @@
 <body class="bg-gray-100 h-screen flex font-sans">
 
   <aside class="w-64 bg-white shadow h-screen overflow-hidden">
-    <?php include '../Components/sidebar/sidebar_admin.php'; ?>
+    <?php include '../Components/sidebar/sidebar_user.php'; ?>
   </aside>
 
   <div class="flex-1 flex flex-col h-screen overflow-hidden">
@@ -60,6 +60,11 @@
         <section class="bg-white p-6 rounded shadow">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">📤 Upload Contract</h2>
 
+          <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+            <div><span class="font-medium">Uploaded By:</span> <?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown')) ?></div>
+            <div><span class="font-medium">Department:</span> <?= htmlspecialchars($_SESSION['user']['department'] ?? ($_SESSION['department'] ?? 'N/A')) ?></div>
+          </div>
+
           <form
             action="../backend/weka_contract_api.php"
             method="POST"
@@ -68,11 +73,15 @@
             enctype="multipart/form-data"
             novalidate
           >
+            <!-- Uploader attribution -->
+            <input type="hidden" name="uploaded_by_id" value="<?= htmlspecialchars((string)($_SESSION['user']['id'] ?? ($_SESSION['user_id'] ?? ''))) ?>">
+            <input type="hidden" name="uploaded_by_name" value="<?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown')) ?>">
+
             <div>
               <label for="employeeName" class="block text-sm font-medium text-gray-700">
                 Employee Name <span class="text-red-500">*</span>
               </label>
-              <input type="text" name="employee_name" id="employeeName" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee name" />
+              <input type="text" name="employee_name" id="employeeName" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee name" value="<?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? '')) ?>" />
               <p class="text-red-500 text-xs mt-1 hidden" id="employeeNameError">Employee Name is required.</p>
             </div>
 
@@ -83,7 +92,12 @@
               <input type="text" name="employee_id" id="employeeId" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee ID" />
               <p class="text-red-500 text-xs mt-1 hidden" id="employeeIdError">Employee ID is required.</p>
             </div>
-            
+
+            <div>
+              <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
+              <input type="text" name="department" id="department" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="e.g., HR, Legal" value="<?= htmlspecialchars($_SESSION['user']['department'] ?? ($_SESSION['department'] ?? '')) ?>" />
+            </div>
+
             <div>
               <label for="party" class="block text-sm font-medium text-gray-700">
                 Contracting Party <span class="text-red-500">*</span>

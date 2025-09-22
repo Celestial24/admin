@@ -11,27 +11,37 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// -- FETCH VISITOR TYPES AND EMPLOYEES --
+$visitorTypesResult = $conn->query("SELECT * FROM visitor_types WHERE is_active = 1 ORDER BY type_name");
+$employeesResult = $conn->query("SELECT * FROM employees WHERE is_active = 1 ORDER BY full_name");
+
 // -- EMPLOYEE MONITORING STATISTICS --
 $stats = [];
 $stats['total_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions")->fetch_assoc()['count'];
-$stats['active_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE checked_out = 0")->fetch_assoc()['count'];
-$stats['checked_out_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(checked_out_at) = CURDATE()")->fetch_assoc()['count'];
-$stats['checked_in_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(submitted_at) = CURDATE()")->fetch_assoc()['count'];
+$stats['active_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE status = 'Time In'")->fetch_assoc()['count'];
+$stats['time_out_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_out) = CURDATE()")->fetch_assoc()['count'];
+$stats['time_in_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_in) = CURDATE()")->fetch_assoc()['count'];
 
-// -- HANDLE CHECK-IN FORM SUBMISSION --
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_checkin'])) {
+// -- HANDLE TIME-IN FORM SUBMISSION --
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_timein'])) {
     if (!empty($_POST['fullName']) && !empty($_POST['email']) && isset($_POST['agreement'])) {
         
         $fullName = $_POST['fullName'];
         $email = $_POST['email'];
         $phone = $_POST['phone'] ?? null;
         $notes = $_POST['notes'] ?? null;
+        $visitor_type_id = (int)($_POST['visitor_type'] ?? 1);
+        $purpose = $_POST['purpose'] ?? null;
+        $company = $_POST['company'] ?? null;
+        $host_employee = $_POST['host_employee'] ?? null;
+        $expected_duration = (int)($_POST['expected_duration'] ?? 60);
+        $priority = $_POST['priority'] ?? 'Medium';
         $agreement = 1;
 
         $stmt = $conn->prepare(
-            "INSERT INTO guest_submissions (full_name, email, phone, notes, agreement, submitted_at) VALUES (?, ?, ?, ?, ?, NOW())"
+            "INSERT INTO guest_submissions (full_name, email, phone, notes, visitor_type_id, purpose, company, host_employee, expected_duration, priority, time_in, status, agreement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'Time In', ?)"
         );
-        $stmt->bind_param("ssssi", $fullName, $email, $phone, $notes, $agreement);
+        $stmt->bind_param("ssssisssis", $fullName, $email, $phone, $notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
         $stmt->execute();
         $stmt->close();
 
@@ -40,11 +50,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_checkin'])) {
     }
 }
 
-// -- HANDLE CHECK-OUT ACTION --
-if (isset($_GET['action']) && $_GET['action'] == 'checkout' && isset($_GET['id'])) {
+// -- HANDLE TIME-OUT ACTION --
+if (isset($_GET['action']) && $_GET['action'] == 'timeout' && isset($_GET['id'])) {
     $visitorId = (int)$_GET['id'];
     
-    $stmt = $conn->prepare("UPDATE guest_submissions SET checked_out = 1, checked_out_at = NOW() WHERE id = ? AND checked_out = 0");
+    $stmt = $conn->prepare("UPDATE guest_submissions SET time_out = NOW(), status = 'Time Out', actual_duration = TIMESTAMPDIFF(MINUTE, time_in, NOW()) WHERE id = ? AND status = 'Time In'");
     $stmt->bind_param("i", $visitorId);
     $stmt->execute();
     $stmt->close();
@@ -59,11 +69,11 @@ $search = $_GET['search'] ?? '';
 
 $whereClause = "1=1";
 if ($filter === 'active') {
-    $whereClause = "checked_out = 0";
-} elseif ($filter === 'checked_out') {
-    $whereClause = "checked_out = 1";
+    $whereClause = "gs.status = 'Time In'";
+} elseif ($filter === 'completed') {
+    $whereClause = "gs.status = 'Time Out'";
 } elseif ($filter === 'today') {
-    $whereClause = "DATE(submitted_at) = CURDATE()";
+    $whereClause = "DATE(gs.time_in) = CURDATE()";
 }
 
 if (!empty($search)) {
@@ -71,7 +81,13 @@ if (!empty($search)) {
     $whereClause .= " AND (full_name LIKE '%$search%' OR email LIKE '%$search%' OR phone LIKE '%$search%')";
 }
 
-$visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereClause ORDER BY submitted_at DESC");
+$visitorLogsResult = $conn->query("
+    SELECT gs.*, vt.type_name, vt.color_code 
+    FROM guest_submissions gs 
+    LEFT JOIN visitor_types vt ON gs.visitor_type_id = vt.id 
+    WHERE $whereClause 
+    ORDER BY gs.time_in DESC
+");
 
 ?>
 <!DOCTYPE html>
@@ -79,7 +95,7 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visitor Monitoring Dashboard - Employee</title>
+  <title>Visitor Time-In/Time-Out Management</title>
   <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -95,12 +111,12 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
     <header class="px-6 py-4 bg-white border-b shadow-sm">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Visitor Monitoring Dashboard</h1>
-          <p class="text-sm text-gray-500 mt-1">Real-time Visitor Tracking & Management</p>
+          <h1 class="text-2xl font-bold text-gray-800">Visitor Time-In/Time-Out Management</h1>
+          <p class="text-sm text-gray-500 mt-1">Real-time Visitor Tracking & Management System</p>
         </div>
         <div class="flex items-center gap-4">
-            <button id="openCheckinModalBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center gap-2">
-                ➕ Manual Check-in
+            <button id="openTimeinModalBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center gap-2">
+                ➕ Manual Time-In
             </button>
             <button id="refreshDataBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center gap-2">
                 🔄 Refresh
@@ -136,8 +152,8 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
         <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
           <div class="flex items-center">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Checked In Today</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['checked_in_today'] ?></p>
+              <p class="text-sm font-medium text-gray-600">Time-In Today</p>
+              <p class="text-2xl font-bold text-gray-900"><?= $stats['time_in_today'] ?></p>
             </div>
             <div class="text-yellow-500 text-3xl">📥</div>
           </div>
@@ -146,8 +162,8 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
         <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
           <div class="flex items-center">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Checked Out Today</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['checked_out_today'] ?></p>
+              <p class="text-sm font-medium text-gray-600">Time-Out Today</p>
+              <p class="text-2xl font-bold text-gray-900"><?= $stats['time_out_today'] ?></p>
             </div>
             <div class="text-red-500 text-3xl">📤</div>
           </div>
@@ -162,8 +178,8 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
               <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
               <select id="statusFilter" class="border border-gray-300 rounded-md px-3 py-2">
                 <option value="all" <?= $filter === 'all' ? 'selected' : '' ?>>All Visitors</option>
-                <option value="active" <?= $filter === 'active' ? 'selected' : '' ?>>Active Only</option>
-                <option value="checked_out" <?= $filter === 'checked_out' ? 'selected' : '' ?>>Checked Out</option>
+                <option value="active" <?= $filter === 'active' ? 'selected' : '' ?>>Time-In Only</option>
+                <option value="completed" <?= $filter === 'completed' ? 'selected' : '' ?>>Time-Out Only</option>
                 <option value="today" <?= $filter === 'today' ? 'selected' : '' ?>>Today Only</option>
               </select>
             </div>
@@ -198,9 +214,9 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
               </span>
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span class="text-xs text-gray-600">Active</span>
+                <span class="text-xs text-gray-600">Time In</span>
                 <div class="w-3 h-3 bg-gray-400 rounded-full ml-2"></div>
-                <span class="text-xs text-gray-600">Checked Out</span>
+                <span class="text-xs text-gray-600">Time Out</span>
               </div>
             </div>
           </div>
@@ -211,11 +227,11 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
               <tr>
                 <th class="px-6 py-3">ID</th>
                 <th class="px-6 py-3">Visitor Info</th>
-                <th class="px-6 py-3">Contact</th>
-                <th class="px-6 py-3">Check-in Time</th>
+                <th class="px-6 py-3">Type & Purpose</th>
+                <th class="px-6 py-3">Time In</th>
                 <th class="px-6 py-3">Duration</th>
                 <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3">Notes</th>
+                <th class="px-6 py-3">Host</th>
                 <th class="px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -223,60 +239,63 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
               <?php if ($visitorLogsResult && $visitorLogsResult->num_rows > 0) : ?>
                 <?php while ($row = $visitorLogsResult->fetch_assoc()) : ?>
                   <?php
-                  $checkinTime = strtotime($row['submitted_at']);
-                  $checkoutTime = $row['checked_out_at'] ? strtotime($row['checked_out_at']) : time();
-                  $duration = $checkoutTime - $checkinTime;
-                  $hours = floor($duration / 3600);
-                  $minutes = floor(($duration % 3600) / 60);
-                  $durationText = $row['checked_out'] ? sprintf('%dh %dm', $hours, $minutes) : 'Ongoing';
+                  $duration = $row['actual_duration'] ?: 
+                      ($row['time_in'] ? floor((time() - strtotime($row['time_in'])) / 60) : 0);
+                  $durationText = $duration > 0 ? sprintf('%dh %dm', floor($duration / 60), $duration % 60) : 'N/A';
                   ?>
                   <tr class="bg-white border-b hover:bg-gray-50">
                     <td class="px-6 py-4 font-medium text-gray-900"><?= sprintf('%03d', $row['id']) ?></td>
                     <td class="px-6 py-4">
                       <div>
                         <div class="font-medium text-gray-900"><?= htmlspecialchars($row['full_name']) ?></div>
-                        <div class="text-sm text-gray-500">ID: <?= sprintf('%03d', $row['id']) ?></div>
+                        <div class="text-sm text-gray-500"><?= htmlspecialchars($row['email']) ?></div>
+                        <?php if ($row['company']): ?>
+                          <div class="text-sm text-gray-500"><?= htmlspecialchars($row['company']) ?></div>
+                        <?php endif; ?>
                       </div>
                     </td>
                     <td class="px-6 py-4">
                       <div>
-                        <div class="text-gray-900"><?= htmlspecialchars($row['email']) ?></div>
-                        <?php if ($row['phone']): ?>
-                          <div class="text-sm text-gray-500"><?= htmlspecialchars($row['phone']) ?></div>
-                        <?php endif; ?>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                              style="background-color: <?= $row['color_code'] ?>20; color: <?= $row['color_code'] ?>">
+                          <?= htmlspecialchars($row['type_name']) ?>
+                        </span>
+                        <div class="text-sm text-gray-500 mt-1 max-w-xs truncate">
+                          <?= htmlspecialchars($row['purpose'] ?: 'No purpose specified') ?>
+                        </div>
                       </div>
                     </td>
                     <td class="px-6 py-4 text-green-600 font-medium">
-                      <?= date('Y-m-d H:i', strtotime($row['submitted_at'])) ?>
+                      <?= $row['time_in'] ? date('Y-m-d H:i', strtotime($row['time_in'])) : 'N/A' ?>
                     </td>
                     <td class="px-6 py-4">
-                      <span class="text-sm <?= $row['checked_out'] ? 'text-gray-600' : 'text-green-600 font-medium' ?>">
+                      <span class="text-sm <?= $row['status'] === 'Time In' ? 'text-green-600 font-medium' : 'text-gray-600' ?>">
                         <?= $durationText ?>
                       </span>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <?php if (!$row['checked_out']): ?>
+                      <?php if ($row['status'] === 'Time In'): ?>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                          Active
+                          Time In
                         </span>
                       <?php else: ?>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           <div class="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
-                          Checked Out
+                          Time Out
                         </span>
                       <?php endif; ?>
                     </td>
                     <td class="px-6 py-4">
-                      <div class="max-w-xs truncate">
-                        <?= htmlspecialchars($row['notes'] ?: 'No notes') ?>
+                      <div class="text-sm text-gray-900">
+                        <?= htmlspecialchars($row['host_employee'] ?: 'No host assigned') ?>
                       </div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <?php if (!$row['checked_out']): ?>
-                        <a href="?action=checkout&id=<?= $row['id'] ?>" 
+                      <?php if ($row['status'] === 'Time In'): ?>
+                        <a href="?action=timeout&id=<?= $row['id'] ?>" 
                            class="font-medium text-red-600 hover:text-red-800 hover:underline">
-                          Check Out
+                          Time Out
                         </a>
                       <?php else: ?>
                         <span class="font-medium text-gray-400">Completed</span>
@@ -302,31 +321,97 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
     </div>
   </main>
 
-<!-- Check-in Modal -->
-<div id="checkinModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
-    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg">
+<!-- Time-In Modal -->
+<div id="timeinModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Visitor Check-in Form</h2>
-            <button id="closeCheckinModalBtn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            <h2 class="text-2xl font-bold text-gray-800">Visitor Time-In Form</h2>
+            <button id="closeTimeinModalBtn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
         </div>
         <form method="POST" action="" class="space-y-4">
-            <input type="hidden" name="submit_checkin" value="1">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Full Name *</label>
-                <input type="text" name="fullName" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            <input type="hidden" name="submit_timein" value="1">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Full Name *</label>
+                    <input type="text" name="fullName" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address *</label>
+                    <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email Address *</label>
-                <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="text" name="phone" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Visitor Type *</label>
+                    <select name="visitor_type" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="">Select visitor type...</option>
+                        <?php if ($visitorTypesResult && $visitorTypesResult->num_rows > 0): ?>
+                            <?php while ($type = $visitorTypesResult->fetch_assoc()): ?>
+                                <option value="<?= $type['id'] ?>"><?= htmlspecialchars($type['type_name']) ?></option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                <input type="text" name="phone" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Company/Organization</label>
+                    <input type="text" name="company" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Enter company name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Host Employee</label>
+                    <select name="host_employee" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="">Select host employee...</option>
+                        <?php if ($employeesResult && $employeesResult->num_rows > 0): ?>
+                            <?php while ($employee = $employeesResult->fetch_assoc()): ?>
+                                <option value="<?= htmlspecialchars($employee['full_name']) ?>">
+                                    <?= htmlspecialchars($employee['full_name']) ?> (<?= htmlspecialchars($employee['department']) ?>)
+                                </option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
             </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Purpose of Visit *</label>
+                <textarea name="purpose" rows="2" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Describe the purpose of your visit..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Expected Duration (minutes)</label>
+                    <select name="expected_duration" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 hour</option>
+                        <option value="120">2 hours</option>
+                        <option value="240">4 hours</option>
+                        <option value="480">8 hours (Full day)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Priority Level</label>
+                    <select name="priority" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700">Special Notes</label>
-                <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Any additional notes or special requirements..."></textarea>
             </div>
+            
             <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
                 <div class="flex items-start">
                     <input id="agreement" name="agreement" type="checkbox" required class="h-4 w-4 text-blue-600 border-gray-300 rounded mt-1">
@@ -335,9 +420,12 @@ $visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereC
                     </label>
                 </div>
             </div>
+            
             <div class="flex justify-end gap-4 pt-4">
                 <button type="button" id="clearFormBtn" class="bg-gray-200 px-4 py-2 rounded-lg">Clear</button>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg">→ Check In</button>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2">
+                    🕐 Time In
+                </button>
             </div>
         </form>
     </div>
@@ -491,29 +579,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     const statusFilter = document.getElementById('statusFilter');
     const searchInput = document.getElementById('searchInput');
-    const openCheckinModalBtn = document.getElementById('openCheckinModalBtn');
-    const closeCheckinModalBtn = document.getElementById('closeCheckinModalBtn');
-    const checkinModal = document.getElementById('checkinModal');
+    const openTimeinModalBtn = document.getElementById('openTimeinModalBtn');
+    const closeTimeinModalBtn = document.getElementById('closeTimeinModalBtn');
+    const timeinModal = document.getElementById('timeinModal');
     const clearFormBtn = document.getElementById('clearFormBtn');
 
     // Modal functionality
-    openCheckinModalBtn?.addEventListener('click', function() {
-        checkinModal.classList.remove('hidden');
+    openTimeinModalBtn?.addEventListener('click', function() {
+        timeinModal.classList.remove('hidden');
     });
 
-    closeCheckinModalBtn?.addEventListener('click', function() {
-        checkinModal.classList.add('hidden');
+    closeTimeinModalBtn?.addEventListener('click', function() {
+        timeinModal.classList.add('hidden');
     });
 
     clearFormBtn?.addEventListener('click', function() {
-        const form = checkinModal.querySelector('form');
+        const form = timeinModal.querySelector('form');
         form.reset();
     });
 
     // Close modal when clicking outside
-    checkinModal?.addEventListener('click', function(e) {
-        if (e.target === checkinModal) {
-            checkinModal.classList.add('hidden');
+    timeinModal?.addEventListener('click', function(e) {
+        if (e.target === timeinModal) {
+            timeinModal.classList.add('hidden');
         }
     });
 

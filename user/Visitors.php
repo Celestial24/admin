@@ -20,9 +20,9 @@ if (!$hasStructuredSession) {
 
 // Database connection
 $host = 'localhost';
-$user = 'root';
-$pass = '';
-$db   = 'visitor';
+$user = 'admin_visitors';
+$pass = '123';
+$db   = 'admin_visitors';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

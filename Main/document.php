@@ -15,6 +15,9 @@ if ($conn->connect_error) {
 // Include document functions
 include '../backend/sql/document.php';
 
+// Initialize database tables and data
+initializeDocumentDatabase($conn);
+
 // Handle AJAX requests
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
@@ -90,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();
-                break;
         }
     }
 }

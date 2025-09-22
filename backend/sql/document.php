@@ -22,10 +22,15 @@ if (!isset($conn)) {
 // =====================================================
 
 /**
- * Create user_documents table
- * Stores all document information including metadata
+ * Initialize database tables and data
+ * This function should be called to set up the database
  */
-$createUserDocumentsTable = "
+function initializeDocumentDatabase($conn) {
+    /**
+     * Create user_documents table
+     * Stores all document information including metadata
+     */
+    $createUserDocumentsTable = "
 CREATE TABLE IF NOT EXISTS user_documents (
     id int(11) NOT NULL AUTO_INCREMENT,
     user_id int(11) NOT NULL,
@@ -185,6 +190,9 @@ if ($conn->query($insertDefaultCategories)) {
     echo "✅ Default categories inserted successfully\n";
 } else {
     echo "❌ Error inserting default categories: " . $conn->error . "\n";
+}
+
+echo "🎉 Document Management System database setup completed!\n";
 }
 
 // =====================================================

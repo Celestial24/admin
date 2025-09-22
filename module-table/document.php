@@ -21,6 +21,10 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Include document functions and initialize database
+include __DIR__ . '/../backend/sql/document.php';
+initializeDocumentDatabase($conn);
+
 // Handle AJAX requests
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_stats') {
     header('Content-Type: application/json');

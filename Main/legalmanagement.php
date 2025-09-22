@@ -144,7 +144,7 @@ $wekaConn = $conn; // Use existing connection
             </div>
             <div>
                 <h4 class="font-semibold mb-2">Full Contract Text</h4>
-                <textarea id="viewText" rows="8" readonly class="w-full p-2 border rounded bg-gray-50 text-xs"></textarea>
+                <textarea id="viewText" rows="8" readonly class="w-full p-2 border rounded bg-gray-50 text-xs whitespace-pre-wrap break-words"></textarea>
             </div>
         </div>
       </div>
@@ -244,18 +244,18 @@ $wekaConn = $conn; // Use existing connection
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         tr.innerHTML = `
-          <td class="px-3 py-3 align-top font-medium">${c.title}</td>
-          <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'}">${maskedParty}</td>
-          <td class="px-3 py-3 align-top">${c.expiry || '—'}</td>
-          <td class="px-3 py-3 align-top">
+          <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
+          <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
               ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}
             </div>
           </td>
-          <td class="px-3 py-3 align-top text-sm">${confidenceCell}</td>
-          <td class="px-3 py-3 align-top text-sm">${c.uploaded_by_name || 'Unknown'}</td>
-          <td class="px-3 py-3 align-top text-sm">${c.department || 'N/A'}</td>
-          <td class="px-3 py-3 align-top text-sm text-gray-600">${c.access.join(', ')}</td>
+          <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${confidenceCell}</td>
+          <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${c.uploaded_by_name || 'Unknown'}</td>
+          <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${c.department || 'N/A'}</td>
+          <td class="px-3 py-3 align-top text-sm text-gray-600 break-words whitespace-normal">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2">
               <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>

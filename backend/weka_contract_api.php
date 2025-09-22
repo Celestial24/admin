@@ -56,6 +56,7 @@ class WekaContractAnalyzer {
             employee_id VARCHAR(100) NOT NULL,
             uploaded_by_id INT NULL,
             uploaded_by_name VARCHAR(255) NULL,
+            department VARCHAR(255) NULL,
             description TEXT,
             document_path VARCHAR(500),
             ocr_text LONGTEXT,
@@ -76,25 +77,27 @@ class WekaContractAnalyzer {
         // Ensure columns exist (for existing deployments)
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_id INT NULL");
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_name VARCHAR(255) NULL");
+        $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS department VARCHAR(255) NULL");
 
         // Insert contract analysis
         $stmt = $this->conn->prepare("
             INSERT INTO weka_contracts 
-            (title, party, employee_name, employee_id, uploaded_by_id, uploaded_by_name, description, document_path, ocr_text, 
+            (title, party, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, ocr_text, 
              risk_score, risk_level, probability_percent, weka_confidence, risk_factors, recommendations, legal_review_required, high_risk_alert) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $riskFactorsJson = json_encode($analysis['risk_factors']);
         $recommendationsJson = json_encode($analysis['recommendations']);
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
-        $stmt->bind_param('ssssissssisiissii',
+        $stmt->bind_param('ssssisssssisiissii',
             $contractData['title'],
             $contractData['party'],
             $contractData['employee_name'],
             $contractData['employee_id'],
             $contractData['uploaded_by_id'],
             $contractData['uploaded_by_name'],
+            $contractData['department'],
             $contractData['description'],
             $contractData['document_path'],
             $contractData['ocr_text'],
@@ -136,6 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'employee_id' => trim($_POST['employee_id'] ?? ''),
             'uploaded_by_id' => intval($_POST['uploaded_by_id'] ?? 0) ?: null,
             'uploaded_by_name' => trim($_POST['uploaded_by_name'] ?? ''),
+            'department' => trim($_POST['department'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'document_path' => $_POST['document_path'] ?? '',
             'ocr_text' => trim($_POST['ocr_text'] ?? ''),

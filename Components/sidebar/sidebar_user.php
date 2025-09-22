@@ -105,7 +105,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
 
             <!-- Document Archiver -->
-            <a href="/admin/user/document.php" 
+            <a href="/admin/module-table/document.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="folder-kanban" class="w-5 h-5"></i>
                 <span class="sidebar-text">Document Archiver</span>

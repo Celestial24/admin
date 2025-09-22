@@ -6,9 +6,9 @@
 
 // Database connection
 $host = 'localhost';
-$user = 'admin_visitors';
+$user = 'admin_Document';
 $pass = '123';
-$db = 'admin_visitors';
+$db = 'admin_Document';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

@@ -66,6 +66,9 @@ $categories = getDocumentCategories($conn);
                 <a href="module-table/document.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                     <i class="fas fa-table mr-2"></i>View Table
                 </a>
+                
+                <!-- User Profile -->
+                <?php include __DIR__ . '/../profile.php'; ?>
             </div>
         </div>
 

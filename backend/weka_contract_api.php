@@ -88,7 +88,7 @@ class WekaContractAnalyzer {
         $recommendationsJson = json_encode($analysis['recommendations']);
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
-        $stmt->bind_param('ssssissssissssiii',
+        $stmt->bind_param('ssssissssisiissii',
             $contractData['title'],
             $contractData['party'],
             $contractData['employee_name'],
@@ -141,6 +141,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'ocr_text' => trim($_POST['ocr_text'] ?? ''),
             'text' => trim($_POST['ocr_text'] ?? '')
         ];
+
+        // Handle uploaded file, if any
+        if (isset($_FILES['document']) && is_uploaded_file($_FILES['document']['tmp_name'])) {
+            $uploadDir = __DIR__ . '/../uploads/contracts';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+            $original = basename($_FILES['document']['name']);
+            $ext = pathinfo($original, PATHINFO_EXTENSION);
+            $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
+            $filename = $safeBase . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . ($ext ? ('.' . $ext) : '');
+            $destPath = $uploadDir . '/' . $filename;
+            if (move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
+                // Public/relative path for later download
+                $relative = 'uploads/contracts/' . $filename;
+                $contractData['document_path'] = $relative;
+            }
+        }
         if (empty($contractData['title']) || empty($contractData['party']) || empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
             throw new Exception('Required fields are missing');
         }

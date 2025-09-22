@@ -317,23 +317,15 @@
 
   // Reset UI elements when a new file is chosen.
   fileInput.addEventListener('change', () => {
+    // Reset all visual indicators; do not generate preliminary values
     updateProgressBar(0);
+    probabilityPercent.textContent = '0%';
     ocrTextArea.value = '';
     ocrResultContainer.classList.add('hidden');
     viewAnalysisBtn.classList.add('opacity-50', 'pointer-events-none');
     responseMessage.textContent = '';
     riskFactorsList.innerHTML = '<li>Upload a contract to begin...</li>';
     riskFactorsList.className = 'list-disc list-inside text-sm text-red-400 space-y-1';
-
-    if (fileInput.files.length > 0) {
-      const preliminaryScore = Math.floor(Math.random() * 21) + 10; // Random score between 10-30
-      updateProgressBar(preliminaryScore);
-      riskFactorsList.innerHTML = `
-        <li>Preliminary check complete.</li>
-        <li>File is ready for full analysis.</li>
-      `;
-      riskFactorsList.className = 'list-disc list-inside text-sm text-gray-400 space-y-1';
-    }
   });
 
   // Handle the form submission process.

@@ -88,7 +88,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                     Overview
                 </a>
-                <a href="/admin/Main/contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/Contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                     Contracts
                 </a>
             </div>

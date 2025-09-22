@@ -100,7 +100,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Main/contract.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
-                    <span class="sidebar-text text-sm">Legal Cases</span>
+                    <span class="sidebar-text text-sm">Contract & Weka</span>
                 </a>
             </div>
 

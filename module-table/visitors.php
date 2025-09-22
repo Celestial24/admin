@@ -71,15 +71,103 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_timein'])) {
         $priority = $_POST['priority'] ?? 'Medium';
         $agreement = 1;
 
-        $stmt = $conn->prepare(
-            "INSERT INTO guest_submissions (full_name, email, phone, notes, visitor_type_id, purpose, company, host_employee, expected_duration, priority, time_in, status, agreement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'Time In', ?)"
-        );
-        $stmt->bind_param("ssssisssis", $fullName, $email, $phone, $notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
-        $stmt->execute();
+        // Check which columns exist to build appropriate SQL
+        $checkColumns = $conn->query("SHOW COLUMNS FROM guest_submissions");
+        $existingColumns = [];
+        if ($checkColumns) {
+            while ($row = $checkColumns->fetch_assoc()) {
+                $existingColumns[] = $row['Field'];
+            }
+        }
+        
+        // Build SQL based on existing columns
+        $columns = ['full_name', 'email', 'phone', 'notes'];
+        $placeholders = ['?', '?', '?', '?'];
+        $params = [$fullName, $email, $phone, $notes];
+        $types = "ssss";
+        
+        // Add optional columns if they exist
+        if (in_array('visitor_type_id', $existingColumns)) {
+            $columns[] = 'visitor_type_id';
+            $placeholders[] = '?';
+            $params[] = $visitor_type_id;
+            $types .= 'i';
+        }
+        
+        if (in_array('purpose', $existingColumns)) {
+            $columns[] = 'purpose';
+            $placeholders[] = '?';
+            $params[] = $purpose;
+            $types .= 's';
+        }
+        
+        if (in_array('company', $existingColumns)) {
+            $columns[] = 'company';
+            $placeholders[] = '?';
+            $params[] = $company;
+            $types .= 's';
+        }
+        
+        if (in_array('host_employee', $existingColumns)) {
+            $columns[] = 'host_employee';
+            $placeholders[] = '?';
+            $params[] = $host_employee;
+            $types .= 's';
+        }
+        
+        if (in_array('expected_duration', $existingColumns)) {
+            $columns[] = 'expected_duration';
+            $placeholders[] = '?';
+            $params[] = $expected_duration;
+            $types .= 'i';
+        }
+        
+        if (in_array('priority', $existingColumns)) {
+            $columns[] = 'priority';
+            $placeholders[] = '?';
+            $params[] = $priority;
+            $types .= 's';
+        }
+        
+        // Add time_in and status
+        if (in_array('time_in', $existingColumns)) {
+            $columns[] = 'time_in';
+            $placeholders[] = 'NOW()';
+        }
+        
+        if (in_array('status', $existingColumns)) {
+            $columns[] = 'status';
+            $placeholders[] = "'Time In'";
+        }
+        
+        // Add agreement
+        $columns[] = 'agreement';
+        $placeholders[] = '?';
+        $params[] = $agreement;
+        $types .= 'i';
+        
+        $sql = "INSERT INTO guest_submissions (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        
+        $stmt = $conn->prepare($sql);
+        
+        if ($stmt === false) {
+            error_log("Prepare failed for time-in: " . $conn->error);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        }
+        
+        $stmt->bind_param($types, ...$params);
+        
+        if ($stmt->execute()) {
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        } else {
+            error_log("Execute failed for time-in: " . $stmt->error);
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        }
+        
         $stmt->close();
-
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
     }
 }
 
@@ -87,13 +175,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_timein'])) {
 if (isset($_GET['action']) && $_GET['action'] == 'timeout' && isset($_GET['id'])) {
     $visitorId = (int)$_GET['id'];
     
-    $stmt = $conn->prepare("UPDATE guest_submissions SET time_out = NOW(), status = 'Time Out', actual_duration = TIMESTAMPDIFF(MINUTE, time_in, NOW()) WHERE id = ? AND status = 'Time In'");
-    $stmt->bind_param("i", $visitorId);
-    $stmt->execute();
-    $stmt->close();
+    // Check if actual_duration column exists
+    $checkColumn = $conn->query("SHOW COLUMNS FROM guest_submissions LIKE 'actual_duration'");
+    $hasActualDuration = $checkColumn && $checkColumn->num_rows > 0;
     
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
+    if ($hasActualDuration) {
+        $sql = "UPDATE guest_submissions SET time_out = NOW(), status = 'Time Out', actual_duration = TIMESTAMPDIFF(MINUTE, time_in, NOW()) WHERE id = ? AND status = 'Time In'";
+    } else {
+        $sql = "UPDATE guest_submissions SET time_out = NOW(), status = 'Time Out' WHERE id = ? AND status = 'Time In'";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($stmt === false) {
+        error_log("Prepare failed for timeout: " . $conn->error);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+    
+    $stmt->bind_param("i", $visitorId);
+    
+    if ($stmt->execute()) {
+        // Success - redirect
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } else {
+        error_log("Execute failed for timeout: " . $stmt->error);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+    
+    $stmt->close();
 }
 
 // -- FETCH VISITOR LOGS FOR DISPLAY WITH FILTERING --

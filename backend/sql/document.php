@@ -458,9 +458,4 @@ if (isset($_GET['test'])) {
     
     echo "\n✅ All tests completed!\n";
 }
-
-// Close connection
-$conn->close();
-
-echo "\n🎉 Document Management System database setup completed!\n";
 ?>

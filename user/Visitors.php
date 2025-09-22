@@ -54,45 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle checkout action
-if (isset($_GET['action']) && $_GET['action'] == 'checkout' && isset($_GET['id'])) {
-    $visitorId = (int)$_GET['id'];
-    
-    $stmt = $conn->prepare("UPDATE guest_submissions SET checked_out = 1, checked_out_at = NOW() WHERE id = ? AND checked_out = 0");
-    $stmt->bind_param("i", $visitorId);
-    $stmt->execute();
-    $stmt->close();
-    
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// Fetch visitor statistics for monitoring
-$stats = [];
-$stats['total_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions")->fetch_assoc()['count'];
-$stats['active_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE checked_out = 0")->fetch_assoc()['count'];
-$stats['checked_out_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(checked_out_at) = CURDATE()")->fetch_assoc()['count'];
-$stats['checked_in_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(submitted_at) = CURDATE()")->fetch_assoc()['count'];
-
-// Fetch visitor logs with filtering
-$filter = $_GET['filter'] ?? 'all';
-$search = $_GET['search'] ?? '';
-
-$whereClause = "1=1";
-if ($filter === 'active') {
-    $whereClause = "checked_out = 0";
-} elseif ($filter === 'checked_out') {
-    $whereClause = "checked_out = 1";
-} elseif ($filter === 'today') {
-    $whereClause = "DATE(submitted_at) = CURDATE()";
-}
-
-if (!empty($search)) {
-    $search = $conn->real_escape_string($search);
-    $whereClause .= " AND (full_name LIKE '%$search%' OR email LIKE '%$search%' OR phone LIKE '%$search%')";
-}
-
-$visitorLogsResult = $conn->query("SELECT * FROM guest_submissions WHERE $whereClause ORDER BY submitted_at DESC");
 
 $conn->close();
 ?>
@@ -102,7 +63,7 @@ $conn->close();
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png" />
-  <title>Visitor Management & Monitoring</title>
+  <title>Visitor Check-in</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -120,16 +81,8 @@ $conn->close();
 
   <div id="mainContent" class="ml-64 flex flex-col flex-1 overflow-hidden">
     <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
-      <div>
-        <h2 class="text-xl font-semibold text-gray-800">Visitor Management & Monitoring</h2>
-        <p class="text-sm text-gray-500 mt-1">Check-in visitors and monitor visitor logs</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <button id="refreshDataBtn" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center gap-2">
-          🔄 Refresh Data
-        </button>
-        <?php include __DIR__ . '/../profile.php'; ?>
-      </div>
+      <h2 class="text-xl font-semibold text-gray-800">Visitor Check-in</h2>
+      <?php include __DIR__ . '/../profile.php'; ?>
     </div>
 
     <div class="flex-1 overflow-y-auto p-6 space-y-8">
@@ -145,49 +98,6 @@ $conn->close();
           <?php echo htmlspecialchars($error_message); ?>
         </div>
       <?php endif; ?>
-
-      <!-- Visitor Monitoring Dashboard -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
-          <div class="flex items-center">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Total Visitors</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['total_visitors'] ?></p>
-            </div>
-            <div class="text-blue-500 text-3xl">👥</div>
-          </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-          <div class="flex items-center">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Active Visitors</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['active_visitors'] ?></p>
-            </div>
-            <div class="text-green-500 text-3xl">✅</div>
-          </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
-          <div class="flex items-center">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Checked In Today</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['checked_in_today'] ?></p>
-            </div>
-            <div class="text-yellow-500 text-3xl">📥</div>
-          </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-          <div class="flex items-center">
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">Checked Out Today</p>
-              <p class="text-2xl font-bold text-gray-900"><?= $stats['checked_out_today'] ?></p>
-            </div>
-            <div class="text-red-500 text-3xl">📤</div>
-          </div>
-        </div>
-      </div>
 
       <!-- Terms Section -->
       <div class="bg-white p-6 rounded-lg shadow mb-6">
@@ -273,157 +183,6 @@ $conn->close();
             </button>
           </div>
         </form>
-      </div>
-
-      <!-- Visitor Logs Monitoring Section -->
-      <div class="bg-white p-6 rounded-lg shadow">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-gray-800">Visitor Logs Monitoring</h2>
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span class="text-xs text-gray-600">Active</span>
-            <div class="w-3 h-3 bg-gray-400 rounded-full ml-2"></div>
-            <span class="text-xs text-gray-600">Checked Out</span>
-          </div>
-        </div>
-
-        <!-- Filter and Search Controls -->
-        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="flex flex-col md:flex-row gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
-                <select id="statusFilter" class="border border-gray-300 rounded-md px-3 py-2">
-                  <option value="all" <?= $filter === 'all' ? 'selected' : '' ?>>All Visitors</option>
-                  <option value="active" <?= $filter === 'active' ? 'selected' : '' ?>>Active Only</option>
-                  <option value="checked_out" <?= $filter === 'checked_out' ? 'selected' : '' ?>>Checked Out</option>
-                  <option value="today" <?= $filter === 'today' ? 'selected' : '' ?>>Today Only</option>
-                </select>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search Visitors</label>
-                <input type="text" id="searchInput" placeholder="Search by name, email, or phone..." 
-                       value="<?= htmlspecialchars($search) ?>"
-                       class="border border-gray-300 rounded-md px-3 py-2 w-64">
-              </div>
-            </div>
-            
-            <div class="flex gap-2">
-              <button id="applyFiltersBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
-                🔍 Apply Filters
-              </button>
-              <button id="clearFiltersBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition duration-300">
-                🗑️ Clear
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Visitor Logs Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm text-left">
-            <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
-              <tr>
-                <th class="px-6 py-3">ID</th>
-                <th class="px-6 py-3">Visitor Info</th>
-                <th class="px-6 py-3">Contact</th>
-                <th class="px-6 py-3">Check-in Time</th>
-                <th class="px-6 py-3">Duration</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3">Notes</th>
-                <th class="px-6 py-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if ($visitorLogsResult && $visitorLogsResult->num_rows > 0) : ?>
-                <?php while ($row = $visitorLogsResult->fetch_assoc()) : ?>
-                  <?php
-                  $checkinTime = strtotime($row['submitted_at']);
-                  $checkoutTime = $row['checked_out_at'] ? strtotime($row['checked_out_at']) : time();
-                  $duration = $checkoutTime - $checkinTime;
-                  $hours = floor($duration / 3600);
-                  $minutes = floor(($duration % 3600) / 60);
-                  $durationText = $row['checked_out'] ? sprintf('%dh %dm', $hours, $minutes) : 'Ongoing';
-                  ?>
-                  <tr class="bg-white border-b hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900"><?= sprintf('%03d', $row['id']) ?></td>
-                    <td class="px-6 py-4">
-                      <div>
-                        <div class="font-medium text-gray-900"><?= htmlspecialchars($row['full_name']) ?></div>
-                        <div class="text-sm text-gray-500">ID: <?= sprintf('%03d', $row['id']) ?></div>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4">
-                      <div>
-                        <div class="text-gray-900"><?= htmlspecialchars($row['email']) ?></div>
-                        <?php if ($row['phone']): ?>
-                          <div class="text-sm text-gray-500"><?= htmlspecialchars($row['phone']) ?></div>
-                        <?php endif; ?>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 text-green-600 font-medium">
-                      <?= date('Y-m-d H:i', strtotime($row['submitted_at'])) ?>
-                    </td>
-                    <td class="px-6 py-4">
-                      <span class="text-sm <?= $row['checked_out'] ? 'text-gray-600' : 'text-green-600 font-medium' ?>">
-                        <?= $durationText ?>
-                      </span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                      <?php if (!$row['checked_out']): ?>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                          Active
-                        </span>
-                      <?php else: ?>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          <div class="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
-                          Checked Out
-                        </span>
-                      <?php endif; ?>
-                    </td>
-                    <td class="px-6 py-4">
-                      <div class="max-w-xs truncate">
-                        <?= htmlspecialchars($row['notes'] ?: 'No notes') ?>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                      <?php if (!$row['checked_out']): ?>
-                        <a href="?action=checkout&id=<?= $row['id'] ?>" 
-                           class="font-medium text-red-600 hover:text-red-800 hover:underline">
-                          Check Out
-                        </a>
-                      <?php else: ?>
-                        <span class="font-medium text-gray-400">Completed</span>
-                      <?php endif; ?>
-                    </td>
-                  </tr>
-                <?php endwhile; ?>
-              <?php else : ?>
-                <tr>
-                  <td colspan="8" class="text-center py-8 text-gray-500">
-                    <div class="flex flex-col items-center">
-                      <div class="text-4xl mb-2">📋</div>
-                      <div>No visitor logs found.</div>
-                      <div class="text-sm text-gray-400 mt-1">Try adjusting your filters or check back later.</div>
-                    </div>
-                  </td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Table Footer -->
-        <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <div>
-            Showing <?= $visitorLogsResult ? $visitorLogsResult->num_rows : 0 ?> records
-          </div>
-          <div class="text-xs">
-            Last updated: <?= date('Y-m-d H:i:s') ?>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -607,95 +366,6 @@ $conn->close();
         setTimeout(() => errorMsg.remove(), 7000);
       }
 
-      // Visitor Monitoring Features
-      const refreshDataBtn = document.getElementById('refreshDataBtn');
-      const applyFiltersBtn = document.getElementById('applyFiltersBtn');
-      const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-      const statusFilter = document.getElementById('statusFilter');
-      const searchInput = document.getElementById('searchInput');
-
-      // Refresh data functionality
-      refreshDataBtn?.addEventListener('click', function() {
-        this.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>Refreshing...';
-        lucide.createIcons();
-        
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      });
-
-      // Apply filters functionality
-      applyFiltersBtn?.addEventListener('click', function() {
-        const filter = statusFilter.value;
-        const search = searchInput.value.trim();
-        
-        let url = window.location.pathname;
-        const params = new URLSearchParams();
-        
-        if (filter !== 'all') {
-          params.append('filter', filter);
-        }
-        
-        if (search) {
-          params.append('search', search);
-        }
-        
-        if (params.toString()) {
-          url += '?' + params.toString();
-        }
-        
-        window.location.href = url;
-      });
-
-      // Clear filters functionality
-      clearFiltersBtn?.addEventListener('click', function() {
-        statusFilter.value = 'all';
-        searchInput.value = '';
-        window.location.href = window.location.pathname;
-      });
-
-      // Auto-apply filters on Enter key in search
-      searchInput?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          applyFiltersBtn.click();
-        }
-      });
-
-      // Real-time search suggestions (optional enhancement)
-      let searchTimeout;
-      searchInput?.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          // Could add live search functionality here
-        }, 300);
-      });
-
-      // Auto-refresh data every 30 seconds for real-time monitoring
-      setInterval(() => {
-        // Only auto-refresh if no user interaction in the last 10 seconds
-        if (document.hidden === false) {
-          const lastInteraction = localStorage.getItem('lastUserInteraction');
-          const now = Date.now();
-          
-          if (!lastInteraction || (now - parseInt(lastInteraction)) > 10000) {
-            // Silently refresh the page to update data
-            window.location.reload();
-          }
-        }
-      }, 30000);
-
-      // Track user interactions to prevent auto-refresh during active use
-      ['click', 'keypress', 'scroll'].forEach(event => {
-        document.addEventListener(event, () => {
-          localStorage.setItem('lastUserInteraction', Date.now().toString());
-        });
-      });
-
-      // Add monitoring alerts for high visitor counts
-      const activeVisitors = <?= $stats['active_visitors'] ?>;
-      if (activeVisitors > 10) {
-        showToast(`High visitor activity: ${activeVisitors} active visitors`, 'info');
-      }
     });
   </script>
 </body>

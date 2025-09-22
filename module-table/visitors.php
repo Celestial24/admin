@@ -277,7 +277,9 @@ if (!$visitorLogsResult) {
               <?php if ($visitorLogsResult && $visitorLogsResult->num_rows > 0) : ?>
                 <?php while ($row = $visitorLogsResult->fetch_assoc()) : ?>
                   <?php
-                  $duration = $row['actual_duration'] ?: 
+                  // Safely get actual_duration with fallback
+                  $actualDuration = isset($row['actual_duration']) ? $row['actual_duration'] : null;
+                  $duration = $actualDuration ?: 
                       ($row['time_in'] ? floor((time() - strtotime($row['time_in'])) / 60) : 0);
                   $durationText = $duration > 0 ? sprintf('%dh %dm', floor($duration / 60), $duration % 60) : 'N/A';
                   ?>
@@ -287,7 +289,7 @@ if (!$visitorLogsResult) {
                       <div>
                         <div class="font-medium text-gray-900"><?= htmlspecialchars($row['full_name']) ?></div>
                         <div class="text-sm text-gray-500"><?= htmlspecialchars($row['email']) ?></div>
-                        <?php if ($row['company']): ?>
+                        <?php if (isset($row['company']) && $row['company']): ?>
                           <div class="text-sm text-gray-500"><?= htmlspecialchars($row['company']) ?></div>
                         <?php endif; ?>
                       </div>
@@ -299,7 +301,7 @@ if (!$visitorLogsResult) {
                           <?= htmlspecialchars($row['type_name']) ?>
                         </span>
                         <div class="text-sm text-gray-500 mt-1 max-w-xs truncate">
-                          <?= htmlspecialchars($row['purpose'] ?: 'No purpose specified') ?>
+                          <?= htmlspecialchars(isset($row['purpose']) && $row['purpose'] ? $row['purpose'] : 'No purpose specified') ?>
                         </div>
                       </div>
                     </td>
@@ -307,12 +309,12 @@ if (!$visitorLogsResult) {
                       <?= $row['time_in'] ? date('Y-m-d H:i', strtotime($row['time_in'])) : 'N/A' ?>
                     </td>
                     <td class="px-6 py-4">
-                      <span class="text-sm <?= $row['status'] === 'Time In' ? 'text-green-600 font-medium' : 'text-gray-600' ?>">
+                      <span class="text-sm <?= (isset($row['status']) && $row['status'] === 'Time In') ? 'text-green-600 font-medium' : 'text-gray-600' ?>">
                         <?= $durationText ?>
                       </span>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <?php if ($row['status'] === 'Time In'): ?>
+                      <?php if (isset($row['status']) && $row['status'] === 'Time In'): ?>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
                           Time In
@@ -326,11 +328,11 @@ if (!$visitorLogsResult) {
                     </td>
                     <td class="px-6 py-4">
                       <div class="text-sm text-gray-900">
-                        <?= htmlspecialchars($row['host_employee'] ?: 'No host assigned') ?>
+                        <?= htmlspecialchars(isset($row['host_employee']) && $row['host_employee'] ? $row['host_employee'] : 'No host assigned') ?>
                       </div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <?php if ($row['status'] === 'Time In'): ?>
+                      <?php if (isset($row['status']) && $row['status'] === 'Time In'): ?>
                         <a href="?action=timeout&id=<?= $row['id'] ?>" 
                            class="font-medium text-red-600 hover:text-red-800 hover:underline">
                           Time Out

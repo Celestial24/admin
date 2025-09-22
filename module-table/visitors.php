@@ -13,14 +13,47 @@ if ($conn->connect_error) {
 
 // -- FETCH VISITOR TYPES AND EMPLOYEES --
 $visitorTypesResult = $conn->query("SELECT * FROM visitor_types WHERE is_active = 1 ORDER BY type_name");
+if (!$visitorTypesResult) {
+    error_log("Error fetching visitor types: " . $conn->error);
+    $visitorTypesResult = false;
+}
+
 $employeesResult = $conn->query("SELECT * FROM employees WHERE is_active = 1 ORDER BY full_name");
+if (!$employeesResult) {
+    error_log("Error fetching employees: " . $conn->error);
+    $employeesResult = false;
+}
 
 // -- EMPLOYEE MONITORING STATISTICS --
 $stats = [];
-$stats['total_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions")->fetch_assoc()['count'];
-$stats['active_visitors'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE status = 'Time In'")->fetch_assoc()['count'];
-$stats['time_out_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_out) = CURDATE()")->fetch_assoc()['count'];
-$stats['time_in_today'] = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_in) = CURDATE()")->fetch_assoc()['count'];
+$stats['total_visitors'] = 0;
+$stats['active_visitors'] = 0;
+$stats['time_out_today'] = 0;
+$stats['time_in_today'] = 0;
+
+// Get total visitors count
+$totalResult = $conn->query("SELECT COUNT(*) as count FROM guest_submissions");
+if ($totalResult && $totalResult->num_rows > 0) {
+    $stats['total_visitors'] = $totalResult->fetch_assoc()['count'];
+}
+
+// Get active visitors count
+$activeResult = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE status = 'Time In'");
+if ($activeResult && $activeResult->num_rows > 0) {
+    $stats['active_visitors'] = $activeResult->fetch_assoc()['count'];
+}
+
+// Get time out today count
+$timeOutResult = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_out) = CURDATE()");
+if ($timeOutResult && $timeOutResult->num_rows > 0) {
+    $stats['time_out_today'] = $timeOutResult->fetch_assoc()['count'];
+}
+
+// Get time in today count
+$timeInResult = $conn->query("SELECT COUNT(*) as count FROM guest_submissions WHERE DATE(time_in) = CURDATE()");
+if ($timeInResult && $timeInResult->num_rows > 0) {
+    $stats['time_in_today'] = $timeInResult->fetch_assoc()['count'];
+}
 
 // -- HANDLE TIME-IN FORM SUBMISSION --
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_timein'])) {
@@ -88,6 +121,11 @@ $visitorLogsResult = $conn->query("
     WHERE $whereClause 
     ORDER BY gs.time_in DESC
 ");
+
+if (!$visitorLogsResult) {
+    error_log("Error fetching visitor logs: " . $conn->error);
+    $visitorLogsResult = false;
+}
 
 ?>
 <!DOCTYPE html>

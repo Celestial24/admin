@@ -4,15 +4,17 @@
  * This file contains all SQL operations for the document management system
  */
 
-// Database connection
-$host = 'localhost';
-$user = 'admin_Document';
-$pass = '123';
-$db = 'admin_Document';
+// Database connection - only create if not already exists
+if (!isset($conn)) {
+    $host = 'localhost';
+    $user = 'admin_Document';
+    $pass = '123';
+    $db = 'admin_Document';
 
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    $conn = new mysqli($host, $user, $pass, $db);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
 }
 
 // =====================================================
@@ -64,7 +66,7 @@ CREATE TABLE IF NOT EXISTS document_categories (
     name varchar(100) NOT NULL,
     description text DEFAULT NULL,
     color_code varchar(7) DEFAULT '#3B82F6',
-    icon varchar(50) DEFAULT '📄',
+    icon varchar(50) DEFAULT 'file',
     is_active tinyint(1) DEFAULT 1,
     sort_order int(11) DEFAULT 0,
     created_at timestamp NOT NULL DEFAULT current_timestamp(),
@@ -168,16 +170,16 @@ foreach ($tables as $tableName => $sql) {
  */
 $insertDefaultCategories = "
 INSERT IGNORE INTO document_categories (name, description, color_code, icon, sort_order) VALUES
-('General', 'General purpose documents', '#6B7280', '📄', 1),
-('Contracts', 'Legal contracts and agreements', '#EF4444', '📋', 2),
-('Reports', 'Business reports and analytics', '#3B82F6', '📊', 3),
-('Forms', 'Application forms and templates', '#10B981', '📝', 4),
-('Images', 'Photos, graphics, and visual content', '#8B5CF6', '🖼️', 5),
-('Archives', 'Compressed files and archives', '#F59E0B', '📦', 6),
-('Presentations', 'Slides and presentation files', '#EC4899', '📽️', 7),
-('Spreadsheets', 'Excel files and data sheets', '#059669', '📈', 8),
-('PDFs', 'PDF documents and manuals', '#DC2626', '📕', 9),
-('Other', 'Other file types', '#6B7280', '📁', 10)";
+('General', 'General purpose documents', '#6B7280', 'file', 1),
+('Contracts', 'Legal contracts and agreements', '#EF4444', 'file-text', 2),
+('Reports', 'Business reports and analytics', '#3B82F6', 'bar-chart', 3),
+('Forms', 'Application forms and templates', '#10B981', 'edit', 4),
+('Images', 'Photos, graphics, and visual content', '#8B5CF6', 'image', 5),
+('Archives', 'Compressed files and archives', '#F59E0B', 'archive', 6),
+('Presentations', 'Slides and presentation files', '#EC4899', 'presentation', 7),
+('Spreadsheets', 'Excel files and data sheets', '#059669', 'trending-up', 8),
+('PDFs', 'PDF documents and manuals', '#DC2626', 'file-text', 9),
+('Other', 'Other file types', '#6B7280', 'folder', 10)";
 
 if ($conn->query($insertDefaultCategories)) {
     echo "✅ Default categories inserted successfully\n";

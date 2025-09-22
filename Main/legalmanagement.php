@@ -18,6 +18,9 @@ if (!$hasStructuredSession) {
     exit();
 }
 
+// Current user role
+$userRole = $_SESSION['user']['role'] ?? ($_SESSION['role'] ?? 'Employee');
+
 // Create DB connection for Weka integration
 include '../backend/sql/db.php';
 $wekaConn = $conn; // Use existing connection
@@ -38,7 +41,12 @@ $wekaConn = $conn; // Use existing connection
     .risk-medium { background: linear-gradient(90deg,#fde68a,#fca5a5); }
     .risk-high { background: linear-gradient(90deg,#fecaca,#f87171); }
     .modal-backdrop { background: rgba(0,0,0,0.4); }
+    .blur-protected { filter: blur(6px); pointer-events: none; user-select: none; }
   </style>
+  <script>
+    // Expose current role to JS
+    window.APP_ROLE = <?php echo json_encode($userRole ?: 'Employee'); ?>;
+  </script>
 </head>
 <body class="flex h-screen bg-gray-100 text-gray-800">
 
@@ -221,33 +229,33 @@ $wekaConn = $conn; // Use existing connection
     function renderContracts(filter=''){
       const tbody = document.getElementById('contractsTableBody');
       tbody.innerHTML = '';
-      const role = 'Admin'; // Simplified as role selector is removed
+      const role = window.APP_ROLE || 'Employee';
+      const isAdmin = role === 'Admin';
       const list = store.contracts.filter(c => (c.title+c.party+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
         tr.className = 'border-t';
-        const accessAllowed = c.access.map(a=>a.trim()).includes(role) || role==='Admin';
+        const accessAllowed = (c.access.map(a=>a.trim()).includes(role)) || isAdmin;
+        const maskedParty = isAdmin ? c.party : '••••••';
+        const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top font-medium">${c.title}</td>
-          <td class="px-3 py-3 align-top">${c.party}</td>
+          <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'}">${maskedParty}</td>
           <td class="px-3 py-3 align-top">${c.expiry || '—'}</td>
           <td class="px-3 py-3 align-top">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
-              ${c.level} (${c.score})
-              ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}
+              ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}
             </div>
           </td>
-          <td class="px-3 py-3 align-top text-sm">
-            ${c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—'}
-          </td>
+          <td class="px-3 py-3 align-top text-sm">${confidenceCell}</td>
           <td class="px-3 py-3 align-top text-sm text-gray-600">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2">
-              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}">View Details</button>
+              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>
               ${accessAllowed?`<button class="btnAnalyze px-2 py-1 border rounded text-xs" data-id="${c.id}">Weka Analysis</button>`:''}
-              ${c.level==='High'?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
-              ${role==='Admin'?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
+              ${c.level==='High'&&isAdmin?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
+              ${isAdmin?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
             </div>
           </td>
         `;
@@ -286,20 +294,21 @@ $wekaConn = $conn; // Use existing connection
         const c = store.contracts.find(x=>x.id===id);
         if(!c) return;
         
-        const role = 'Admin'; // Role is hardcoded now
-        if(!(c.access.includes(role) || role==='Admin')) {
+        const role = window.APP_ROLE || 'Employee';
+        const isAdmin = role === 'Admin';
+        if(!(c.access.includes(role) || isAdmin)) {
             alert('You do not have access to view this contract');
             return;
         }
 
         // Populate Modal
         document.getElementById('viewModalTitle').innerText = c.title;
-        document.getElementById('viewParty').innerText = c.party;
+        document.getElementById('viewParty').innerText = isAdmin ? c.party : '••••••';
         document.getElementById('viewExpiry').innerText = c.expiry || '—';
         document.getElementById('viewRiskLevel').innerHTML = `<span class="inline-block px-2 py-1 rounded-full text-xs ${c.level==='High'?'bg-red-100 text-red-800':c.level==='Medium'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-800'}">${c.level}</span>`;
         document.getElementById('viewRiskScore').innerText = c.score;
         document.getElementById('viewConfidence').innerText = `${c.weka_confidence || 'N/A'}%`;
-        document.getElementById('viewText').value = c.text || 'No text available.';
+        document.getElementById('viewText').value = isAdmin ? (c.text || 'No text available.') : '•••••• (restricted)';
         
         const riskFactorsUl = document.getElementById('viewRiskFactors');
         riskFactorsUl.innerHTML = '';

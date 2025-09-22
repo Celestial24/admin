@@ -26,7 +26,7 @@
   <div class="flex-1 flex flex-col h-screen overflow-hidden">
 
     <header class="px-6 py-4 bg-white border-b shadow">
-      <h1 class="text-2xl font-bold text-gray-800">Contract & Legal Management</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Contract </h1>
       <p class="text-sm text-gray-500 mt-1">Powered by Weka AI Engine</p>
     </header>
 

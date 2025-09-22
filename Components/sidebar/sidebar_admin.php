@@ -58,13 +58,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                    Facility List
+                    Facilities Employee
                 </a>
                 <a href="/admin/Views/modules/reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
-                    Reservation
+                    Reservation Employee
                 </a>
                 <a href="/admin/Views/modules/maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
-                    Maintenance
+                    Maintenance Employee
                 </a>
             </div>
 

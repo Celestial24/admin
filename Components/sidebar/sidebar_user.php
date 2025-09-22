@@ -72,7 +72,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Views/modules/reservation.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation_module.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span class="sidebar-text text-sm">Reservation </span>
+                    <span class="sidebar-text text-sm">Facilities Reservations</span>
                 </a>
 
                 <!-- Maintenance -->
@@ -95,12 +95,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Main/legalmanagement.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="layout" class="w-4 h-4"></i>
-                    <span class="sidebar-text text-sm">Overview</span>
+                    <span class="sidebar-text text-sm">Legal Documents</span>
                 </a>
                 <a href="/admin/Main/contract.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
-                    <span class="sidebar-text text-sm">Contracts</span>
+                    <span class="sidebar-text text-sm">Legal Cases</span>
                 </a>
             </div>
 

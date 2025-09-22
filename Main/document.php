@@ -42,33 +42,34 @@ $categories = getDocumentCategories($conn);
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <div class="bg-blue-600 p-2 rounded-lg">
-                        <i class="fas fa-file-alt text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Document Management</h1>
-                        <p class="text-gray-600">Admin Panel - Manage all documents</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="refreshStats()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-sync-alt mr-2"></i>Refresh
-                    </button>
-                    <a href="module-table/document.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-table mr-2"></i>View Table
-                    </a>
-                </div>
+<body class="bg-gray-50 flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <?php include '../Components/sidebar/sidebar_user.php'; ?>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b pb-4 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">
+                Document Management
+                <span class="ml-4 text-base text-gray-500 font-normal">
+                    (Total Documents: <?= $stats['total_documents'] ?>)
+                </span>
+            </h2>
+            
+            <div class="flex items-center space-x-4">
+                <button onclick="refreshStats()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+                <a href="module-table/document.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-table mr-2"></i>View Table
+                </a>
             </div>
         </div>
-    </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="flex-1 overflow-y-auto w-full py-4 px-6 space-y-6">
         <!-- Statistics Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow p-6 fade-in">
@@ -233,6 +234,7 @@ $categories = getDocumentCategories($conn);
                 </div>
             </div>
         </div>
+        </main>
     </div>
 
     <script>

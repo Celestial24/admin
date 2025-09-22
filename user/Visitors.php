@@ -31,9 +31,17 @@ if ($conn->connect_error) {
 
 // Fetch visitor types for dropdown
 $visitorTypesResult = $conn->query("SELECT * FROM visitor_types WHERE is_active = 1 ORDER BY type_name");
+if (!$visitorTypesResult) {
+    error_log("Error fetching visitor types: " . $conn->error);
+    $visitorTypesResult = false;
+}
 
 // Fetch employees for host selection
 $employeesResult = $conn->query("SELECT * FROM employees WHERE is_active = 1 ORDER BY full_name");
+if (!$employeesResult) {
+    error_log("Error fetching employees: " . $conn->error);
+    $employeesResult = false;
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'timein') {
@@ -55,14 +63,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $sql = "INSERT INTO guest_submissions (full_name, email, phone, notes, visitor_type_id, purpose, company, host_employee, expected_duration, priority, time_in, status, agreement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'Time In', ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssisssis", $full_name, $email, $phone, $special_notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
         
-        if ($stmt->execute()) {
-            $success_message = "Thank you for time-in! Welcome to our Hotel & Restaurant.";
+        if ($stmt === false) {
+            $error_message = "Database error: " . $conn->error . ". Please contact administrator.";
+            error_log("Prepare failed: " . $conn->error);
         } else {
-            $error_message = "Error occurred during time-in. Please try again.";
+            $stmt->bind_param("ssssisssis", $full_name, $email, $phone, $special_notes, $visitor_type_id, $purpose, $company, $host_employee, $expected_duration, $priority, $agreement);
+            
+            if ($stmt->execute()) {
+                $success_message = "Thank you for time-in! Welcome to our Hotel & Restaurant.";
+            } else {
+                $error_message = "Error occurred during time-in: " . $stmt->error . ". Please try again.";
+                error_log("Execute failed: " . $stmt->error);
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 

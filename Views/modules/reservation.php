@@ -86,7 +86,7 @@ $reservations_result = $conn->query("
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Module (Employees only)</title>
+    <title>Reservation</title>
     <link rel="icon" type="image/png" href="../../assets/image/logo2.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -116,7 +116,7 @@ $reservations_result = $conn->query("
                         <span>Back to Overview</span>
                     </a>
                 </div>
-                <h2 class="text-xl font-semibold text-gray-800">Reservation Module (Employees only)</h2>
+                <h2 class="text-xl font-semibold text-gray-800">Reservation </h2>
                 <p class="text-sm text-gray-600">Manage your facility reservations</p>
             </div>
             <?php include '../../profile.php'; ?>

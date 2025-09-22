@@ -5,7 +5,7 @@ header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Include database connection
-include 'sql/db.php';
+include 'sql/contract.php';
 
 class WekaContractAnalyzer {
     private $conn;

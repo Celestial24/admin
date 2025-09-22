@@ -21,7 +21,7 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
     exit();
 }
 
-include '../backend/sql/db.php';
+include '../backend/sql/contract.php';
 ?>
 <!doctype html>
 <html lang="en">

@@ -91,7 +91,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
 
             <!-- Visitor Logs -->
-            <a href="/admin/user/visitors.php" 
+            <a href="/admin/user/Visitors.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>

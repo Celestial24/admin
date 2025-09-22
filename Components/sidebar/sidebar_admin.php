@@ -47,32 +47,52 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-2 py-4 space-y-2">
-            <!-- Facility List -->
-            <a href="/admin/module-table/facilities.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="building" class="w-5 h-5"></i>
-                <span class="sidebar-text">Facility List</span>
-            </a>
+            
+            <!-- Facilities (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="facilities-submenu">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="building" class="w-5 h-5"></i>
+                    <span class="sidebar-text">Facilities</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
+            </button>
+            <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
+                    Facility List
+                </a>
+                <a href="/admin/Views/modules/reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
+                    Reservation
+                </a>
+                <a href="/admin/Views/modules/maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
+                    Maintenance
+                </a>
+            </div>
 
-           
             <!-- Visitor Logs -->
             <a href="/admin/module-table/visitors.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
 
-            <!-- Contract Weka -->
-            <a href="/admin/Main/contract.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="file-text" class="w-5 h-5"></i>
-                <span class="sidebar-text">Contract Weka</span>
-            </a>
+        
 
-            <!-- Legal Management -->
-            <a href="/admin/Main/legalmanagement.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="gavel" class="w-5 h-5"></i>
-                <span class="sidebar-text">Legal Management</span>
-            </a>
+            <!-- Legal Management (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="legal-submenu">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="gavel" class="w-5 h-5"></i>
+                    <span class="sidebar-text">Legal Management</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
+            </button>
+            <div id="legal-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+                    Overview
+                </a>
+                <a href="/admin/Main/contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                    Contracts
+                </a>
+            </div>
 
-         
             <!-- Document Archiver -->
             <a href="/admin/module-table/document.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="folder-kanban" class="w-5 h-5"></i>
@@ -84,7 +104,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="blocks" class="w-5 h-5"></i>
                 <span class="sidebar-text">Account User</span>
             </a>
-
 
         </nav>
     </div>
@@ -115,6 +134,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 
                 // Rotate the toggle icon
                 icon.classList.toggle("rotate-180");
+            });
+
+            // Submenu toggles
+            document.querySelectorAll('[data-submenu-toggle]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-submenu-toggle');
+                    const submenu = document.getElementById(targetId);
+                    const chevron = btn.querySelector('.submenu-chevron');
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        chevron && chevron.classList.toggle('rotate-180');
+                    }
+                });
             });
 
             // Initialize Lucide icons

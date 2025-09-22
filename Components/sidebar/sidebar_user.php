@@ -68,8 +68,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <span class="sidebar-text text-sm">Facilities Employee</span>
                 </a>
 
-               
-
                 <!-- Reservation (Employees only) -->
                 <a href="/admin/Views/modules/reservation.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation_module.php' ? 'bg-gray-700' : '' ?>">
@@ -81,7 +79,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Views/modules/maintenance.php" 
                    class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="wrench" class="w-4 h-4"></i>
-                    <span class="sidebar-text text-sm">Maintenance - Who Reported</span>
+                    <span class="sidebar-text text-sm">Maintenance </span>
+                </a>
+            </div>
+
+            <!-- Legal Management Toggle Button -->
+            <button id="legalToggle" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 w-full text-left">
+                <i data-lucide="gavel" class="w-5 h-5"></i>
+                <span class="sidebar-text">Legal Management</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 ml-auto legal-arrow"></i>
+            </button>
+
+            <!-- Legal Management Modules (Hidden by default) -->
+            <div id="legalModules" class="facility-modules ml-4 space-y-1">
+                <a href="/admin/Main/legalmanagement.php" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+                    <i data-lucide="layout" class="w-4 h-4"></i>
+                    <span class="sidebar-text text-sm">Overview</span>
+                </a>
+                <a href="/admin/Main/contract.php" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span class="sidebar-text text-sm">Contracts</span>
                 </a>
             </div>
 
@@ -92,16 +111,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
 
-          
+            
 
             <!-- Document Archiver -->
             <a href="/admin/Main/document.php" 
-               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
+               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-graWhoy-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="folder-kanban" class="w-5 h-5"></i>
                 <span class="sidebar-text">Document Archiver</span>
             </a>
 
-           
+            
 
             <!-- Logout -->
             <a href="../../auth/logout.php" 
@@ -125,6 +144,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         const facilityToggle = document.getElementById("facilityToggle");
         const facilityModules = document.getElementById("facilityModules");
         const facilityArrow = document.querySelector(".facility-arrow");
+        
+        // Legal toggle functionality
+        const legalToggle = document.getElementById("legalToggle");
+        const legalModules = document.getElementById("legalModules");
+        const legalArrow = document.querySelector(".legal-arrow");
 
         // Sidebar toggle functionality
         if (toggleBtn) {
@@ -148,6 +172,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             facilityToggle.addEventListener("click", () => {
                 facilityModules.classList.toggle("show");
                 facilityArrow.classList.toggle("rotate-180");
+            });
+        }
+
+        // Legal modules toggle functionality
+        if (legalToggle && legalModules && legalArrow) {
+            legalToggle.addEventListener("click", () => {
+                legalModules.classList.toggle("show");
+                legalArrow.classList.toggle("rotate-180");
             });
         }
 

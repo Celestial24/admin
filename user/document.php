@@ -29,9 +29,11 @@ if ($conn->connect_error) {
     die("Connection failed: " . htmlspecialchars($conn->connect_error));
 }
 
-// Include document functions and initialize database
+// Include document functions and initialize database (suppress output)
 include __DIR__ . '/../backend/sql/document.php';
+ob_start();
 initializeDocumentDatabase($conn);
+ob_end_clean();
 
 // Create documents table if it doesn't exist
 $createTable = "CREATE TABLE IF NOT EXISTS user_documents (

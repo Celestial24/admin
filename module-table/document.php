@@ -21,9 +21,11 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Include document functions and initialize database
+// Include document functions and initialize database (suppress output)
 include __DIR__ . '/../backend/sql/document.php';
+ob_start();
 initializeDocumentDatabase($conn);
+ob_end_clean();
 
 // Handle AJAX requests
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_stats') {

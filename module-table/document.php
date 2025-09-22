@@ -11,20 +11,45 @@ $employeeId = $_SESSION['employee_id'] ?? null;
 $roles = $_SESSION['roles'] ?? 'Employee';
 
 // DB Connection
-include __DIR__ . '/../backend/sql/db.php';
-$conn = $empConn;
+$host = 'localhost';
+$user = 'admin_Document';
+$pass = '123';
+$db = 'admin_Document';
+
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Handle AJAX requests
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_stats') {
     header('Content-Type: application/json');
     
     $stats = [];
-    $stats['total_documents'] = $conn->query("SELECT COUNT(*) as count FROM user_documents")->fetch_assoc()['count'];
-    $stats['total_size'] = $conn->query("SELECT SUM(file_size) as total FROM user_documents")->fetch_assoc()['total'] ?: 0;
-    $stats['total_downloads'] = $conn->query("SELECT SUM(download_count) as total FROM user_documents")->fetch_assoc()['total'] ?: 0;
-    $stats['public_documents'] = $conn->query("SELECT COUNT(*) as count FROM user_documents WHERE is_public = 1")->fetch_assoc()['count'];
-    $stats['private_documents'] = $conn->query("SELECT COUNT(*) as count FROM user_documents WHERE is_public = 0")->fetch_assoc()['count'];
-    $stats['categories_count'] = $conn->query("SELECT COUNT(DISTINCT category) as count FROM user_documents")->fetch_assoc()['count'];
+    
+    // Total documents
+    $result = $conn->query("SELECT COUNT(*) as count FROM user_documents");
+    $stats['total_documents'] = $result ? $result->fetch_assoc()['count'] : 0;
+    
+    // Total size
+    $result = $conn->query("SELECT SUM(file_size) as total FROM user_documents");
+    $stats['total_size'] = $result ? ($result->fetch_assoc()['total'] ?: 0) : 0;
+    
+    // Total downloads
+    $result = $conn->query("SELECT SUM(download_count) as total FROM user_documents");
+    $stats['total_downloads'] = $result ? ($result->fetch_assoc()['total'] ?: 0) : 0;
+    
+    // Public documents
+    $result = $conn->query("SELECT COUNT(*) as count FROM user_documents WHERE is_public = 1");
+    $stats['public_documents'] = $result ? $result->fetch_assoc()['count'] : 0;
+    
+    // Private documents
+    $result = $conn->query("SELECT COUNT(*) as count FROM user_documents WHERE is_public = 0");
+    $stats['private_documents'] = $result ? $result->fetch_assoc()['count'] : 0;
+    
+    // Categories count
+    $result = $conn->query("SELECT COUNT(DISTINCT category) as count FROM user_documents");
+    $stats['categories_count'] = $result ? $result->fetch_assoc()['count'] : 0;
     
     echo json_encode($stats);
     exit();
@@ -52,7 +77,9 @@ $createTable = "CREATE TABLE IF NOT EXISTS user_documents (
     KEY idx_uploaded_at (uploaded_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
-$conn->query($createTable);
+if (!$conn->query($createTable)) {
+    error_log("Error creating user_documents table: " . $conn->error);
+}
 
 // Handle bulk actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {

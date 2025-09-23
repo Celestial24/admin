@@ -2,7 +2,7 @@
 // ================= DATABASE CONNECTION =================
 require_once '../backend/sql/facilities.php';
 
-// ================= DELETE HANDLING =================
+// ================= ACTION HANDLING =================
 $message = '';
 $messageType = '';
 
@@ -16,6 +16,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
             $stmt->execute();
             $message = "Reservation deleted successfully!";
             $messageType = "success";
+        } elseif ($action === 'create_reservation') {
+            $facilityId = (int)($_POST['facility_id'] ?? 0);
+            $reservedBy = trim($_POST['reserved_by'] ?? '');
+            $startTime = trim($_POST['start_time'] ?? '');
+            $endTime = trim($_POST['end_time'] ?? '');
+            $status = trim($_POST['status'] ?? 'Pending');
+            if ($facilityId > 0 && $reservedBy !== '' && $startTime !== '' && $endTime !== '') {
+                $stmt = $conn->prepare("INSERT INTO reservations (facility_id, reserved_by, start_time, end_time, status) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("issss", $facilityId, $reservedBy, $startTime, $endTime, $status);
+                $stmt->execute();
+                $message = "Reservation created successfully!";
+                $messageType = "success";
+            } else {
+                $message = "All fields are required.";
+                $messageType = "error";
+            }
         }
     } catch (Exception $e) {
         $message = "Error deleting record: " . $e->getMessage();
@@ -97,7 +113,13 @@ function getStatusBadge($status) {
         <i data-lucide="menu" class="w-6 h-6"></i>
       </button>
       <h2 class="text-xl font-semibold text-gray-800">Reservations</h2>
-      <?php include __DIR__ . '/../profile.php'; ?>
+      <div class="flex items-center gap-2">
+        <button id="openCreateModal" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-md">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          Add Reservation
+        </button>
+        <?php include __DIR__ . '/../profile.php'; ?>
+      </div>
     </header>
 
     <div class="flex-1 p-4 lg:p-6 overflow-y-auto">
@@ -156,6 +178,60 @@ function getStatusBadge($status) {
     </div>
   </main>
 
+  <!-- Create Reservation Modal -->
+  <div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-medium text-gray-900">Add Reservation</h3>
+        <button id="closeCreateModal" class="text-gray-500 hover:text-gray-700">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form method="POST" class="space-y-3">
+        <input type="hidden" name="action" value="create_reservation" />
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Facility</label>
+          <select name="facility_id" required class="w-full border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <?php
+              $facilities = $conn->query("SELECT id, facility_name FROM facilities ORDER BY facility_name ASC");
+              if ($facilities) {
+                while ($f = $facilities->fetch_assoc()) {
+                  echo '<option value="'.(int)$f['id'].'">'.htmlspecialchars($f['facility_name']).'</option>';
+                }
+              }
+            ?>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Start Time</label>
+            <input type="datetime-local" name="start_time" required class="w-full border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">End Time</label>
+            <input type="datetime-local" name="end_time" required class="w-full border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Reserved By</label>
+          <input type="text" name="reserved_by" required class="w-full border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Status</label>
+          <select name="status" class="w-full border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Pending</option>
+            <option>Confirmed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancelCreate" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -190,6 +266,15 @@ function getStatusBadge($status) {
       if (sidebarOverlay) {
         sidebarOverlay.addEventListener('click', () => { sidebarMobile.classList.add('hidden'); });
       }
+
+      const createModal = document.getElementById('createModal');
+      const openCreateModal = document.getElementById('openCreateModal');
+      const closeCreateModal = document.getElementById('closeCreateModal');
+      const cancelCreate = document.getElementById('cancelCreate');
+      if (openCreateModal) openCreateModal.addEventListener('click', () => createModal.classList.remove('hidden'));
+      if (closeCreateModal) closeCreateModal.addEventListener('click', () => createModal.classList.add('hidden'));
+      if (cancelCreate) cancelCreate.addEventListener('click', () => createModal.classList.add('hidden'));
+      if (createModal) createModal.addEventListener('click', (e) => { if (e.target === createModal) createModal.classList.add('hidden'); });
     });
   </script>
 

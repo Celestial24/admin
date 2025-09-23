@@ -74,19 +74,27 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
 
-        
+        <!-- 
+            
+    Legal & Contract Management Section
+    -----------------------------------
+    This toggle group provides navigation links related to legal and contract management.
+    - "Contract Result & Risk Analysis": Displays outcomes and risk evaluations for contracts.
+    - "Submission History": Shows the history of contract submissions for review and tracking.
+    The submenu is collapsible, improving sidebar organization and user experience.
+-->
 
             <!-- Legal Management (Toggle Group) -->
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="legal-submenu">
                 <span class="flex items-center gap-3">
                     <i data-lucide="gavel" class="w-5 h-5"></i>
-                    <span class="sidebar-text">Contract Management</span>
+                    <span class="sidebar-text"> Legal & Contract</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                      Contract Insights
+                    Contract Result & Risk Analysis
                 </a>
                 <a href="/admin/module-table/Contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                     Submission History

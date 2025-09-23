@@ -27,7 +27,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
-            <a href="../../user/dashboard.php" class="flex items-center gap-2">
+            <a href="/admin/user/dashboard.php" class="flex items-center gap-2">
                 <img src="../../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
                 
             </a>

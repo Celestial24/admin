@@ -87,8 +87,6 @@ $wekaConn = $conn; // Use existing connection
                 <th class="px-3 py-2">Expiry</th>
                 <th class="px-3 py-2">Weka Risk</th>
                 <th class="px-3 py-2">Confidence</th>
-                <th class="px-3 py-2">Uploaded By</th>
-                <th class="px-3 py-2">Department</th>
                 <th class="px-3 py-2">Access</th>
                 <th class="px-3 py-2">Actions</th>
               </tr>
@@ -131,8 +129,6 @@ $wekaConn = $conn; // Use existing connection
                 <div><strong>Risk Level:</strong> <span id="viewRiskLevel"></span></div>
                 <div><strong>Risk Score:</strong> <span id="viewRiskScore"></span></div>
                 <div><strong>Weka Confidence:</strong> <span id="viewConfidence"></span></div>
-                <div><strong>Uploaded By:</strong> <span id="viewUploadedBy"></span></div>
-                <div><strong>Department:</strong> <span id="viewDepartment"></span></div>
             </div>
             <div>
                 <h4 class="font-semibold mb-2">Risk Factors</h4>
@@ -279,8 +275,6 @@ $wekaConn = $conn; // Use existing connection
             </div>
           </td>
           <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${confidenceCell}</td>
-          <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${c.uploaded_by_name || 'Unknown'}</td>
-          <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${c.department || 'N/A'}</td>
           <td class="px-3 py-3 align-top text-sm text-gray-600 break-words whitespace-normal">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2">
@@ -341,8 +335,7 @@ $wekaConn = $conn; // Use existing connection
         document.getElementById('viewRiskScore').innerText = c.score;
         document.getElementById('viewConfidence').innerText = `${c.weka_confidence || 'N/A'}%`;
         document.getElementById('viewText').value = isAdmin ? (c.text || 'No text available.') : '•••••• (restricted)';
-        document.getElementById('viewUploadedBy').innerText = c.uploaded_by_name || 'Unknown';
-        document.getElementById('viewDepartment').innerText = c.department || 'N/A';
+        // removed Uploaded By and Department fields
         
         const riskFactorsUl = document.getElementById('viewRiskFactors');
         riskFactorsUl.innerHTML = '';
@@ -503,9 +496,7 @@ $wekaConn = $conn; // Use existing connection
               risk_factors: c.risk_factors || [],
               recommendations: c.recommendations || [],
               probability_percent: c.probability_percent,
-              uploaded_by: c.uploaded_by || 'N/A',
-              uploaded_by_name: c.uploaded_by_name || 'N/A', // Added for display
-              department: c.department || 'N/A'
+                // removed uploaded_by, uploaded_by_name, department from UI
             };
             
             store.contracts.push(contract);

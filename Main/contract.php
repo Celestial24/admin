@@ -61,10 +61,7 @@
         <section class="bg-white p-6 rounded shadow">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">📤 Upload Contract</h2>
 
-          <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-            <div><span class="font-medium">Uploaded By:</span> <?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown')) ?></div>
-            <div><span class="font-medium">Department:</span> <?= htmlspecialchars($_SESSION['user']['department'] ?? ($_SESSION['department'] ?? 'N/A')) ?></div>
-          </div>
+      
 
           <form
             action="../backend/weka_contract_api.php"

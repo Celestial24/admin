@@ -94,10 +94,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                     Contract Result & Risk Analysis
                 </a>
-                <a href="/admin/module-table/Contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
                     Submission History
                 </a>
             </div>

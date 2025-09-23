@@ -150,6 +150,32 @@ $wekaConn = $conn; // Use existing connection
       </div>
     </div>
 
+    <!-- Weka Analysis Modal -->
+    <div id="modalAnalysis" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
+      <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2 p-6 max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between mb-4 border-b pb-3">
+          <h3 id="analysisTitle" class="text-lg font-semibold">Weka AI Analysis</h3>
+          <button id="closeAnalysis" class="text-gray-500">✕</button>
+        </div>
+        <div class="space-y-4 overflow-y-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div><strong>Risk Level:</strong> <span id="analysisRiskLevel"></span></div>
+            <div><strong>Risk Score:</strong> <span id="analysisRiskScore"></span></div>
+            <div><strong>Weka Confidence:</strong> <span id="analysisConfidence"></span></div>
+            <div><strong>Probability of Dispute:</strong> <span id="analysisProbability"></span></div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-2">Risk Factors</h4>
+            <ul id="analysisRiskFactors" class="list-disc list-inside text-sm text-red-500 space-y-1"></ul>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-2">Recommendations</h4>
+            <ul id="analysisRecommendations" class="list-disc list-inside text-sm text-green-600 space-y-1"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
   
   <!-- ✅ Chatbot: Toggle Button + Chat Window -->
@@ -353,22 +379,30 @@ $wekaConn = $conn; // Use existing connection
       const c = store.contracts.find(x=>x.id===id);
       if(!c) return;
       
-      // Show Weka analysis details
-      let analysisText = `Weka AI Analysis for "${c.title}":\n\n`;
-      analysisText += `Risk Level: ${c.level}\n`;
-      analysisText += `Risk Score: ${c.score}/100\n`;
-      analysisText += `Weka Confidence: ${c.weka_confidence || 'N/A'}%\n`;
-      analysisText += `Probability of Dispute: ${c.probability_percent || 'N/A'}%\n\n`;
-      
-      if(c.risk_factors && c.risk_factors.length > 0) {
-        analysisText += `Risk Factors:\n${c.risk_factors.map(f => `• ${f}`).join('\n')}\n\n`;
-      }
-      
-      if(c.recommendations && c.recommendations.length > 0) {
-        analysisText += `Recommendations:\n${c.recommendations.map(r => `• ${r}`).join('\n')}`;
-      }
-      
-      alert(analysisText);
+      // Populate analysis modal
+      document.getElementById('analysisTitle').innerText = `Weka AI Analysis — ${c.title}`;
+      document.getElementById('analysisRiskLevel').innerHTML = `<span class="inline-block px-2 py-1 rounded-full text-xs ${c.level==='High'?'bg-red-100 text-red-800':c.level==='Medium'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-800'}">${c.level}</span>`;
+      document.getElementById('analysisRiskScore').innerText = `${c.score}/100`;
+      document.getElementById('analysisConfidence').innerText = `${c.weka_confidence || 'N/A'}%`;
+      document.getElementById('analysisProbability').innerText = `${c.probability_percent || 'N/A'}%`;
+
+      const rf = document.getElementById('analysisRiskFactors');
+      rf.innerHTML = '';
+      if (c.risk_factors && c.risk_factors.length) {
+        c.risk_factors.forEach(item=>{ const li=document.createElement('li'); li.textContent=item; rf.appendChild(li); });
+      } else { rf.innerHTML = '<li>No significant risk factors identified.</li>'; }
+
+      const rec = document.getElementById('analysisRecommendations');
+      rec.innerHTML = '';
+      if (c.recommendations && c.recommendations.length) {
+        c.recommendations.forEach(item=>{ const li=document.createElement('li'); li.textContent=item; rec.appendChild(li); });
+      } else { rec.innerHTML = '<li>No specific recommendations.</li>'; }
+
+      // Show modal
+      const m = document.getElementById('modalAnalysis');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+
       audit(`Analyzed contract "${c.title}" with Weka AI — Risk ${c.level} (${c.score})`);
     }
     
@@ -424,6 +458,12 @@ $wekaConn = $conn; // Use existing connection
     document.getElementById('closeView').addEventListener('click', ()=>{
         document.getElementById('modalView').classList.add('hidden');
         document.getElementById('modalView').classList.remove('flex');
+    });
+
+    document.getElementById('closeAnalysis').addEventListener('click', ()=>{
+      const m=document.getElementById('modalAnalysis');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
     });
 
     function updateAlertsCount(){ document.getElementById('alertsCount').innerText = store.alerts.length; }

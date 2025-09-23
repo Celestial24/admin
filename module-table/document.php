@@ -350,7 +350,7 @@ if ($usersResult) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Management - Admin</title>
+    <title>Document Archiver - Admin</title>
     <link rel="icon" type="image/png" href="/admin/assets/image/logo2.png">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -385,7 +385,7 @@ if ($usersResult) {
         <header class="px-6 py-4 bg-white border-b shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Document Management</h1>
+                    <h1 class="text-2xl p-6 font-bold text-gray-800">Document Management</h1>
                     <p class="text-sm text-gray-500 mt-1">Manage all user documents and files</p>
                 </div>
                 <div class="flex items-center gap-4">

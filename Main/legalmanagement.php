@@ -30,7 +30,7 @@ $wekaConn = $conn; // Use existing connection
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contract Management - Demo (HTML + Tailwind)</title>
+  <title>Contract Result</title>
   <!-- Tailwind Play CDN (for demo only) -->
   <link rel="icon" type="image/png" href="../assets/image/logo2.png" />
   <script src="https://cdn.tailwindcss.com"></script>

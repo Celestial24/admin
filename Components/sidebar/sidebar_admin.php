@@ -52,19 +52,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="facilities-submenu">
                 <span class="flex items-center gap-3">
                     <i data-lucide="building" class="w-5 h-5"></i>
-                    <span class="sidebar-text">Facilities</span>
+                    <span class="sidebar-text">Facilities Management</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                    Facilities Employee
+                    Facilities 
                 </a>
                 <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
-                    Reservation Employee
+                    Reservation 
                 </a>
                 <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
-                    Maintenance Employee
+                    Maintenance 
                 </a>
             </div>
 
@@ -80,16 +80,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="legal-submenu">
                 <span class="flex items-center gap-3">
                     <i data-lucide="gavel" class="w-5 h-5"></i>
-                    <span class="sidebar-text">Legal Management</span>
+                    <span class="sidebar-text">Contract Management</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                    Overview
+                      Contract Insights
                 </a>
                 <a href="/admin/module-table/Contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
-                    Contracts
+                    Submission History
                 </a>
             </div>
 

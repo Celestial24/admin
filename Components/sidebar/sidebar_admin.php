@@ -58,13 +58,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                    Facilities 
+                🏠 Facilities Overview
+
                 </a>
                 <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
-                    Reservation 
+                📅 Room & Facility Reservation
                 </a>
                 <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
-                    Maintenance 
+                🛠️ Maintenance Requests
                 </a>
             </div>
 
@@ -75,7 +76,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
 
         <!-- 
-            
+
     Legal & Contract Management Section
     -----------------------------------
     This toggle group provides navigation links related to legal and contract management.
@@ -110,7 +111,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <!-- Navigation -->
             <a href="/admin/Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="blocks" class="w-5 h-5"></i>
-                <span class="sidebar-text">Account User</span>
+                <span class="sidebar-text">User Management</span>
             </a>
 
         </nav>

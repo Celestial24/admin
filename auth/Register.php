@@ -207,7 +207,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       </div>
     <?php endif; ?>
 
-    <form action="register.php" method="POST" class="space-y-5" novalidate>
+    <form action="Register.php" method="POST" class="space-y-5" novalidate>
       <div>
         <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
         <select id="role" name="role" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">

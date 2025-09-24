@@ -1,7 +1,15 @@
 <?php
 include_once __DIR__ . '/../backend/sql/db.php'; // DB connection ($conn)
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/../backend/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../backend/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../backend/PHPMailer/src/SMTP.php';
+
 $errors = [];
+$infos = [];
 $success = false;
 $email = htmlspecialchars($_GET['email'] ?? '');
 
@@ -11,45 +19,105 @@ function sanitize($data) {
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = sanitize($_POST['email'] ?? '');
-    $code = trim(sanitize($_POST['verification_code'] ?? ''));
 
-    // Validate email
-    if (empty($email)) {
-        $errors[] = "Email is required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid email format.";
-    }
-
-    // Validate verification code
-    if (empty($code)) {
-        $errors[] = "Verification code is required.";
-    } elseif (!preg_match('/^\d{6}$/', $code)) {
-        $errors[] = "Verification code must be a 6-digit number.";
-    }
-
-    if (empty($errors)) {
-        // Check if the email and code match a user in DB
-        $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ?");
-        $stmt->bind_param("ss", $email, $code);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$user) {
-            $errors[] = "Invalid email or verification code.";
-        } elseif ((int)$user['is_verified'] === 1) {
-            $errors[] = "This account is already verified.";
+    // RESEND branch
+    if (isset($_POST['resend']) && $_POST['resend'] === '1') {
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Valid email is required to resend.";
         } else {
-            // Mark user as verified and clear verification code
-            $update_stmt = $conn->prepare("UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?");
-            $update_stmt->bind_param("i", $user['id']);
-            if ($update_stmt->execute()) {
-                $success = true;
+            // Fetch user
+            $stmt = $conn->prepare("SELECT id, name, receiver_email, is_verified, TIMESTAMPDIFF(SECOND, last_resend, NOW()) AS since_last FROM users WHERE email = ? LIMIT 1");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $user = $res->fetch_assoc();
+            $stmt->close();
+
+            if (!$user) {
+                $errors[] = "Email not found.";
+            } elseif ((int)$user['is_verified'] === 1) {
+                $errors[] = "This account is already verified.";
             } else {
-                $errors[] = "Something went wrong during verification. Please try again.";
+                $since = is_null($user['since_last']) ? 9999 : (int)$user['since_last'];
+                $cooldown = 60; // seconds
+                if ($since < $cooldown) {
+                    $errors[] = "Please wait " . ($cooldown - $since) . "s before resending.";
+                } else {
+                    $verification_code = random_int(100000, 999999);
+                    $upd = $conn->prepare("UPDATE users SET verification_code = ?, last_resend = NOW() WHERE id = ?");
+                    $upd->bind_param("si", $verification_code, $user['id']);
+                    if ($upd->execute()) {
+                        $upd->close();
+                        // send email
+                        $mail = new PHPMailer(true);
+                        try {
+                            $mail->isSMTP();
+                            $mail->Host = 'smtp.gmail.com';
+                            $mail->SMTPAuth = true;
+                            $mail->Username = 'atiera41001@gmail.com';
+                            $mail->Password = 'vzwt xech qbmc ejan';
+                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                            $mail->Port = 587;
+
+                            $mail->setFrom('atiera41001@gmail.com', 'Your Website Team');
+                            $mail->addAddress($user['receiver_email'] ?: $email, $user['name'] ?: $email);
+                            $mail->isHTML(false);
+                            $mail->Subject = "Your new verification code";
+                            $mail->Body = "Hello " . ($user['name'] ?: 'User') . ",\n\nHere is your new verification code: $verification_code\n\nIf you did not request this, you can ignore this email.\n\nRegards,\nYour Website Team";
+                            $mail->send();
+                            $infos[] = "Verification code resent.";
+                        } catch (Exception $e) {
+                            $errors[] = "Failed to send email. Please try again later.";
+                        }
+                    } else {
+                        $errors[] = "Could not update verification code.";
+                        $upd->close();
+                    }
+                }
             }
-            $update_stmt->close();
+        }
+    } else {
+        // VERIFY branch
+        $code = trim(sanitize($_POST['verification_code'] ?? ''));
+
+        // Validate email
+        if (empty($email)) {
+            $errors[] = "Email is required.";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Invalid email format.";
+        }
+
+        // Validate verification code
+        if (empty($code)) {
+            $errors[] = "Verification code is required.";
+        } elseif (!preg_match('/^\d{6}$/', $code)) {
+            $errors[] = "Verification code must be a 6-digit number.";
+        }
+
+        if (empty($errors)) {
+            // Check if the email and code match a user in DB
+            $stmt = $conn->prepare("SELECT id, is_verified FROM users WHERE email = ? AND verification_code = ?");
+            $stmt->bind_param("ss", $email, $code);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            $stmt->close();
+
+            if (!$user) {
+                $errors[] = "Invalid email or verification code.";
+            } elseif ((int)$user['is_verified'] === 1) {
+                $errors[] = "This account is already verified.";
+            } else {
+                // Mark user as verified and clear verification code
+                $update_stmt = $conn->prepare("UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?");
+                $update_stmt->bind_param("i", $user['id']);
+                if ($update_stmt->execute()) {
+                    $success = true;
+                } else {
+                    $errors[] = "Something went wrong during verification. Please try again.";
+                }
+                $update_stmt->close();
+            }
         }
     }
 }
@@ -93,6 +161,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </ul>
             </div>
         <?php endif; ?>
+        <?php if (!empty($infos)): ?>
+            <div class="mb-4 p-4 bg-blue-100 text-blue-700 rounded">
+                <ul class="list-disc pl-5">
+                    <?php foreach ($infos as $msg): ?>
+                        <li><?= htmlspecialchars($msg) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
         <form method="POST" class="space-y-5" novalidate>
             <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>" />
@@ -124,6 +201,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     Verify
                 </button>
             </div>
+        </form>
+
+        <form method="POST" class="mt-3">
+            <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>" />
+            <input type="hidden" name="resend" value="1" />
+            <button type="submit" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-200" <?= $success ? 'disabled' : '' ?>>Resend code</button>
         </form>
     <?php endif; ?>
 </div>

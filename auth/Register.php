@@ -273,7 +273,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       </div>
 
       <p class="text-center text-sm text-gray-600">
-        Already have an account? <a href="/admin/auth/login.php" class="text-blue-600 hover:underline">Login</a>
+        Already have an account? <a href="/auth/login.php" class="text-blue-600 hover:underline">Login</a>
       </p>
     </form>
   </div>

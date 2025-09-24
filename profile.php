@@ -19,9 +19,6 @@ else { $username = 'User'; }
   <button id="userDropdownToggle" class="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
     <img src="/admin/assets/image/logo2.png" alt="Profile" class="w-6 h-6 rounded-full object-cover" />
     <span class="capitalize"><?= htmlspecialchars($username) ?></span>
-    <?php if ($role === 'super_admin'): ?>
-      <span class="ml-1 px-2 py-0.5 text-[10px] rounded bg-purple-100 text-purple-700 border border-purple-200">SUPER</span>
-    <?php endif; ?>
     <svg id="dropdownArrow" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
     </svg>

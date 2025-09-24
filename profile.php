@@ -5,18 +5,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/backend/sql/db.php';
 
-// Set display name based on user type
+// Set display name based on role/user_type (supports super_admin)
 $username = 'User'; // default for regular users
-
-if (!empty($_SESSION['user_type'])) {
-    $user_type = $_SESSION['user_type'];
-    
-    if ($user_type === 'admin') {
-        $username = 'Admin';
-    } elseif ($user_type === 'user') {
-        $username = 'User';
-    }
-}
+$role = strtolower($_SESSION['role'] ?? ($_SESSION['user_type'] ?? 'user'));
+if ($role === 'superadmin' || $role === 'super') { $role = 'super_admin'; }
+if ($role === 'super_admin') { $username = 'Super Admin'; }
+elseif ($role === 'admin') { $username = 'Admin'; }
+else { $username = 'User'; }
 ?>
 
 <!-- User Dropdown -->
@@ -24,6 +19,9 @@ if (!empty($_SESSION['user_type'])) {
   <button id="userDropdownToggle" class="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
     <img src="/admin/assets/image/logo2.png" alt="Profile" class="w-6 h-6 rounded-full object-cover" />
     <span class="capitalize"><?= htmlspecialchars($username) ?></span>
+    <?php if ($role === 'super_admin'): ?>
+      <span class="ml-1 px-2 py-0.5 text-[10px] rounded bg-purple-100 text-purple-700 border border-purple-200">SUPER</span>
+    <?php endif; ?>
     <svg id="dropdownArrow" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
     </svg>

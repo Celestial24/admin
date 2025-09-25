@@ -3,6 +3,8 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+date_default_timezone_set('Asia/Manila');
 
 // Include database connection
 include 'sql/contract.php';
@@ -165,7 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $original = basename($_FILES['document']['name']);
             $ext = pathinfo($original, PATHINFO_EXTENSION);
             $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
-            $filename = $safeBase . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . ($ext ? ('.' . $ext) : '');
+            $rand = function_exists('random_bytes') ? bin2hex(random_bytes(4)) : substr(str_shuffle('abcdef0123456789'), 0, 8);
+            $filename = $safeBase . '_' . date('Ymd_His') . '_' . $rand . ($ext ? ('.' . $ext) : '');
             $destPath = $uploadDir . '/' . $filename;
             if (move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
                 // Public/relative path for later download

@@ -89,17 +89,19 @@ $wekaConn = $conn; // Use existing connection
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full table-auto text-left">
+          <table class="w-full table-auto text-center">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
-                <th class="px-3 py-2">Title</th>
-                <th class="px-3 py-2">Party</th>
-                <th class="px-3 py-2">Expiry</th>
-                <th class="px-3 py-2">Employee</th>
-                <th class="px-3 py-2">Weka Risk</th>
-                <th class="px-3 py-2">Confidence</th>
-                <th class="px-3 py-2">Access</th>
-                <th class="px-3 py-2">Actions</th>
+                <th class="px-3 py-2 text-center">Employee ID</th>
+                <th class="px-3 py-2 text-center">Employee</th>
+                <th class="px-3 py-2 text-center">Title</th>
+                <th class="px-3 py-2 text-center">Category</th>
+                <th class="px-3 py-2 text-center">Party</th>
+                <th class="px-3 py-2 text-center">Expiry</th>
+                <th class="px-3 py-2 text-center">Weka Risk</th>
+                <th class="px-3 py-2 text-center">Confidence</th>
+                <th class="px-3 py-2 text-center">Access</th>
+                <th class="px-3 py-2 text-center">Actions</th>
               </tr>
             </thead>
             <tbody id="contractsTableBody" class="text-sm"></tbody>
@@ -302,11 +304,21 @@ $wekaConn = $conn; // Use existing connection
       });
 
       // Wire up action buttons
+      const openWithPasswordGuard = (id, fn) => {
+        const c = store.contracts.find(x=>x.id===id);
+        if (!c) return;
+        if (c.view_password && c.view_password.trim() !== '') {
+          const input = prompt('Enter password to view:');
+          if (!input) return;
+          if (input !== c.view_password) { alert('Invalid password'); return; }
+        }
+        fn(id);
+      }
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; viewContract(id);
+        const id=e.target.dataset.id; openWithPasswordGuard(id, viewContract);
       }));
       document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; analyzeContract(id);
+        const id=e.target.dataset.id; openWithPasswordGuard(id, analyzeContract);
       }));
       document.querySelectorAll('.btnHighRisk').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; showHighRiskDetails(id);

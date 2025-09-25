@@ -130,6 +130,12 @@
               <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
               <textarea name="description" id="description" rows="3" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Optional description"></textarea>
             </div>
+
+            <div>
+              <label for="view_password" class="block text-sm font-medium text-gray-700">Protect with Password (optional)</label>
+              <input type="password" name="view_password" id="view_password" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Set a password required to view" />
+              <p class="text-xs text-gray-500 mt-1">If set, users must enter this password to open View/Analysis.</p>
+            </div>
             
             <div>
                 <label for="ocr_text" class="block text-sm font-medium text-gray-700">Contract Text (paste or summary)</label>

@@ -24,7 +24,7 @@ if (isset($_POST['action']) && $_POST['action'] === "add") {
     $stmt = $conn->prepare("INSERT INTO visitors (fullname, email, phone, address, purpose) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sssss", $fullname, $email, $phone, $address, $purpose);
     $stmt->execute();
-    header("Location: visitors.php?msg=Visitor added successfully");
+    header("Location: Visitors.php?msg=Visitor added successfully");
     exit;
 }
 
@@ -32,7 +32,7 @@ if (isset($_POST['action']) && $_POST['action'] === "add") {
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     $conn->query("DELETE FROM visitors WHERE id=$id");
-    header("Location: visitors.php?msg=Visitor deleted successfully");
+    header("Location: Visitors.php?msg=Visitor deleted successfully");
     exit;
 }
 
@@ -48,7 +48,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
     $stmt = $conn->prepare("UPDATE visitors SET fullname=?, email=?, phone=?, address=?, purpose=? WHERE id=?");
     $stmt->bind_param("sssssi", $fullname, $email, $phone, $address, $purpose, $id);
     $stmt->execute();
-    header("Location: visitors.php?msg=Visitor updated successfully");
+    header("Location: Visitors.php?msg=Visitor updated successfully");
     exit;
 }
 ?>
@@ -250,7 +250,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                 Update Visitor
               </button>
-              <a href="../user/Visitors.php" 
+              <a href="Visitors.php" 
                  class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center">
                 Cancel
               </a>
@@ -302,8 +302,8 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                                   <td class='px-6 py-4 text-sm text-gray-900'>".htmlspecialchars($row['purpose'])."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{$row['created_at']}</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm font-medium'>
-                                      <a href='../user/Visitors.php?edit={$row['id']}' class='text-blue-600 hover:text-blue-900 mr-3'>Edit</a>
-                                      <a href='../user/Visitors.php?delete={$row['id']}' onclick='return confirm(\"Delete this visitor?\")' class='text-red-600 hover:text-red-900'>Delete</a>
+                                      <a href='Visitors.php?edit={$row['id']}' class='text-blue-600 hover:text-blue-900 mr-3'>Edit</a>
+                                      <a href='Visitors.php?delete={$row['id']}' onclick='return confirm(\"Delete this visitor?\")' class='text-red-600 hover:text-red-900'>Delete</a>
                                   </td>
                                 </tr>";
                       }

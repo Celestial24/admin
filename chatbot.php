@@ -79,6 +79,10 @@ if ($leaveResult) {
     <div class="p-3 border-t border-gray-200 bg-white flex gap-2">
       <input id="userInput" type="text" placeholder="Ask me anything..."
              class="flex-1 rounded-lg px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button id="clearBtn"
+              class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm">
+        Clear
+      </button>
       <button id="sendBtn"
               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
         Send
@@ -94,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatContent = document.getElementById('chatContent');
   const userInput = document.getElementById('userInput');
   const sendBtn = document.getElementById('sendBtn');
+  const clearBtn = document.getElementById('clearBtn');
 
   // Toggle chatbot open/close
   toggleBtn.addEventListener('click', () => {
@@ -176,11 +181,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Clear chat functionality
+  clearBtn.addEventListener("click", () => {
+    localStorage.removeItem('chatHistory');
+    chatContent.innerHTML = '';
+  });
+
   sendBtn.addEventListener("click", sendMessage);
   userInput.addEventListener("keypress", e => {
     if (e.key === "Enter") sendMessage();
   });
 
+  // Clear chat history on page load
+  localStorage.removeItem('chatHistory');
   loadChatHistory();
 });
 </script>

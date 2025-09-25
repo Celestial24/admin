@@ -31,75 +31,6 @@ class WekaContractAnalyzer {
         'payment terms', 'delivery', 'scope of work', 'performance',
         'quality standards', 'inspection', 'acceptance'
     ];
-
-    public function __construct(mysqli $connection) {
-        $this->conn = $connection;
-    }
-
-    public function analyzeContract(array $contractData): array {
-        $text = strtolower($contractData['text'] ?? '');
-        $analysis = [
-            'risk_score' => 0,
-            'risk_level' => 'Low',
-            'probability_percent' => 0,
-            'risk_factors' => [],
-            'recommendations' => [],
-            'weka_confidence' => 0
-        ];
-
-        $high = $med = $low = 0;
-
-        foreach ($this->highRiskKeywords as $k) {
-            if (stripos($text, $k) !== false) {
-                $high++;
-                $analysis['risk_factors'][] = "High-risk keyword detected: '$k'";
-            }
-        }
-
-        foreach ($this->mediumRiskKeywords as $k) {
-            if (stripos($text, $k) !== false) $med++;
-        }
-
-        foreach ($this->lowRiskKeywords as $k) {
-            if (stripos($text, $k) !== false) $low++;
-        }
-
-        $analysis['risk_score'] = max(0, min(100, ($high * 25) + ($med * 10) - ($low * 5)));
-
-        if ($analysis['risk_score'] >= 70) {
-            $analysis['risk_level'] = 'High';
-            $analysis['probability_percent'] = rand(75, 95);
-        } elseif ($analysis['risk_score'] >= 40) {
-            $analysis['risk_level'] = 'Medium';
-            $analysis['probability_percent'] = rand(40, 74);
-        } else {
-            $analysis['risk_level'] = 'Low';
-            $analysis['probability_percent'] = rand(5, 39);
-        }
-
-        $analysis['weka_confidence'] = rand(85, 98);
-
-        $analysis['recommendations'] = match ($analysis['risk_level']) {
-            'High' => [
-                'Immediate legal review required',
-                'Consider adding liability limitations',
-                'Review termination clauses carefully',
-                'Ensure proper dispute resolution mechanisms'
-            ],
-            'Medium' => [
-                'Schedule legal review within 30 days',
-                'Monitor key performance indicators',
-                'Review renewal terms'
-            ],
-            default => [
-                'Standard contract review',
-                'Monitor for any changes'
-            ]
-        };
-
-        return $analysis;
-    }
-
     public function saveContractAnalysis(array $contractData, array $analysis): int {
         // Ensure contracts table exists
         $this->conn->query("
@@ -130,20 +61,20 @@ class WekaContractAnalyzer {
                 INDEX (uploaded_by_id)
             )
         ");
-
+    
         $stmt = $this->conn->prepare("
             INSERT INTO weka_contracts 
             (title, party, category, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, view_password, ocr_text, 
              risk_score, risk_level, probability_percent, weka_confidence, risk_factors, recommendations, legal_review_required, high_risk_alert) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-
+    
         $riskFactorsJson = json_encode($analysis['risk_factors']);
         $recommendationsJson = json_encode($analysis['recommendations']);
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
-
-        // Prepare variables for binding (by reference)
+    
+        // Prepare variables for binding
         $title = $contractData['title'];
         $party = $contractData['party'];
         $category = $contractData['category'] ?? 'Other';
@@ -160,9 +91,10 @@ class WekaContractAnalyzer {
         $riskLevel = $analysis['risk_level'];
         $probabilityPercent = $analysis['probability_percent'];
         $wekaConfidence = $analysis['weka_confidence'];
-
+    
+        // ✅ Fixed bind_param with correct 20 type definitions
         $stmt->bind_param(
-            'sssssissssssississi',
+            'sssssisisssssisssii',
             $title,
             $party,
             $category,
@@ -184,14 +116,14 @@ class WekaContractAnalyzer {
             $legalReviewRequired,
             $highRiskAlert
         );
-
+    
         if (!$stmt->execute()) {
             throw new Exception('Failed to save contract analysis: ' . $stmt->error);
         }
-
+    
         return $stmt->insert_id;
     }
-
+    
     public function getAllContracts(): array {
         $stmt = $this->conn->prepare("SELECT * FROM weka_contracts ORDER BY created_at DESC");
         $stmt->execute();

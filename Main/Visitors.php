@@ -198,7 +198,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
       <?php if (!isset($_GET['edit'])): ?>
       <div class="flex items-center justify-between">
         
-        <button id="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" style="positon:absolute; right: 10%; top: 10px;">Add Visitor</button>
+        <button id="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" style="positon:absolute; left: 10%; top: 10px;">Add Visitor</button>
       </div>
 
       <div id="createModal" class="fixed inset-0 z-50 hidden">

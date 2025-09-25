@@ -27,7 +27,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
-            <a href="/admin/user/dashboard.php" class="flex items-center gap-2">
+            <a href="javascript:void(0)" class="flex items-center gap-2" aria-label="Logo">
                 <img src="../../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
                 
             </a>
@@ -39,7 +39,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <!-- Navigation Links -->
         <nav class="flex-1 px-2 py-4 space-y-2">
             <!-- Dashboard -->
-            <a href="/admin/user/dashboard.php" 
+            <a href="/admin/Main/Dashboard.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'dashboard.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="home" class="w-5 h-5"></i>
                 <span class="sidebar-text">Dashboard</span>
@@ -100,7 +100,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
 
             <!-- Visitor Logs -->
-            <a href="/admin/user/Visitors.php" 
+            <a href="/admin/Main/Visitors.php" 
                class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>

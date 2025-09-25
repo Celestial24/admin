@@ -276,7 +276,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
       <!-- Visitors Dashboard -->
       <div class="mt-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-gray-900">Visitors Dashboard</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Visitors List</h2>
           <div class="flex items-center gap-3">
             <div class="relative">
               <input id="visitorSearch" type="text" placeholder="Search visitors..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
@@ -318,7 +318,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['phone'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['address'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['purpose'])."</td>
-                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>{$row['created_at']}</td>
+                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".date('g:ia', strtotime($row['created_at']))."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-center'>
                                       <a href='Visitors.php?edit={$row['id']}' class='text-blue-600 hover:text-blue-900 mr-3'>Edit</a>
                                       <button type='button' data-id='{$row['id']}' class='openDeleteModal text-red-600 hover:text-red-900'>Delete</button>

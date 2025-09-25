@@ -40,7 +40,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <nav class="flex-1 px-2 py-4 space-y-2">
             <!-- Dashboard -->
             <a href="/admin/Main/Dashboard.php" 
-               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'dashboard.php' ? 'bg-gray-700' : '' ?>">
+               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Dashboard.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="home" class="w-5 h-5"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
@@ -65,7 +65,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                 <!-- Reservation (Employees only) -->
                 <a href="/admin/Views/modules/reservation.php" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation_module.php' ? 'bg-gray-700' : '' ?>">
+                   class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span class="sidebar-text text-sm">Facilities Reservations</span>
                 </a>
@@ -101,7 +101,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <!-- Visitor Logs -->
             <a href="/admin/Main/Visitors.php" 
-               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitors.php' ? 'bg-gray-700' : '' ?>">
+               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
@@ -110,7 +110,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <!-- Document Archiver -->
             <a href="/admin/Main/document.php" 
-               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-graWhoy-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
+               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="folder-kanban" class="w-5 h-5"></i>
                 <span class="sidebar-text">Document Archiver</span>
             </a>

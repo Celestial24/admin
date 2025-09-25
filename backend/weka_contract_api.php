@@ -143,24 +143,42 @@ class WekaContractAnalyzer {
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
 
+        // Prepare variables for binding (by reference)
+        $title = $contractData['title'];
+        $party = $contractData['party'];
+        $category = $contractData['category'] ?? 'Other';
+        $employeeName = $contractData['employee_name'];
+        $employeeId = $contractData['employee_id'];
+        $uploadedById = $contractData['uploaded_by_id'];
+        $uploadedByName = $contractData['uploaded_by_name'];
+        $department = $contractData['department'];
+        $description = $contractData['description'];
+        $documentPath = $contractData['document_path'];
+        $viewPassword = ($contractData['view_password'] === '') ? null : $contractData['view_password'];
+        $ocrText = $contractData['ocr_text'];
+        $riskScore = $analysis['risk_score'];
+        $riskLevel = $analysis['risk_level'];
+        $probabilityPercent = $analysis['probability_percent'];
+        $wekaConfidence = $analysis['weka_confidence'];
+
         $stmt->bind_param(
-            'ssssissssssisiissii',
-            $contractData['title'],
-            $contractData['party'],
-            $contractData['category'] ?? 'Other',
-            $contractData['employee_name'],
-            $contractData['employee_id'],
-            $contractData['uploaded_by_id'],
-            $contractData['uploaded_by_name'],
-            $contractData['department'],
-            $contractData['description'],
-            $contractData['document_path'],
-            $contractData['view_password'] ?? null,
-            $contractData['ocr_text'],
-            $analysis['risk_score'],
-            $analysis['risk_level'],
-            $analysis['probability_percent'],
-            $analysis['weka_confidence'],
+            'sssssissssssississi',
+            $title,
+            $party,
+            $category,
+            $employeeName,
+            $employeeId,
+            $uploadedById,
+            $uploadedByName,
+            $department,
+            $description,
+            $documentPath,
+            $viewPassword,
+            $ocrText,
+            $riskScore,
+            $riskLevel,
+            $probabilityPercent,
+            $wekaConfidence,
             $riskFactorsJson,
             $recommendationsJson,
             $legalReviewRequired,

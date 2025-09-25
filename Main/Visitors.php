@@ -318,7 +318,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['phone'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['address'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['purpose'])."</td>
-                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".date('g:ia', strtotime($row['created_at']))."</td>
+                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".date('M j, g:ia', strtotime($row['created_at']))."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-center'>
                                       <a href='Visitors.php?edit={$row['id']}' class='text-blue-600 hover:text-blue-900 mr-3'>Edit</a>
                                       <button type='button' data-id='{$row['id']}' class='openDeleteModal text-red-600 hover:text-red-900'>Delete</button>

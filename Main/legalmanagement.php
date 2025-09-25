@@ -109,6 +109,93 @@ $wekaConn = $conn; // Use existing connection
     </div>
   </main>
 
+  <!-- Modal for Viewing Contract Details -->
+  <div id="viewModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 modal-backdrop transition-opacity" aria-hidden="true"></div>
+      <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+      <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
+          <div class="sm:flex sm:items-start">
+            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+              <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4" id="modal-title">Contract Details</h3>
+              
+              <!-- Contract Basic Info -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                  <p id="modalEmployeeId" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                  <p id="modalEmployeeName" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <p id="modalTitle" class="text-sm text-gray-900 bg-gray-50 p-2 rounded font-medium"></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <p id="modalCategory" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+                  <p id="modalParty" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                  <p id="modalExpiry" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                </div>
+              </div>
+
+              <!-- Risk Analysis -->
+              <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-900 mb-2">Risk Analysis</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Weka Risk Level</label>
+                    <p id="modalRiskLevel" class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                      <!-- Dynamic risk badge -->
+                    </p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confidence</label>
+                    <p id="modalConfidence" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Set Password Section (Admin Only) -->
+              <div id="passwordSection" class="hidden mb-6">
+                <h4 class="text-md font-semibold text-gray-900 mb-2">Set View Password</h4>
+                <p class="text-sm text-gray-600 mb-3">Set a password to protect access to this contract's full details.</p>
+                <div class="flex gap-2">
+                  <input type="password" id="passwordInput" placeholder="Enter password" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                  <button id="setPasswordBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Set Password</button>
+                </div>
+                <p id="currentPassword" class="text-xs text-gray-500 mt-2">Current: None set</p>
+              </div>
+
+              <!-- Reveal Text Button (For protected text) -->
+              <div id="revealTextSection" class="mb-4 hidden">
+                <button id="revealTextBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">Reveal Full Text</button>
+              </div>
+
+              <!-- Full Contract Text (Optional, blurred if no password) -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR Extracted)</label>
+                <div id="modalContractText" class="text-sm text-gray-900 bg-gray-50 p-3 rounded max-h-40 overflow-y-auto blur-protected">Full text is protected. Use the button above to reveal.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+          <button id="closeModalBtn" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
     <script>
     // In-memory data store
     const store = {
@@ -130,7 +217,9 @@ $wekaConn = $conn; // Use existing connection
         weka_confidence: 92,
         employee_id: 'EMP001',
         employee_name: 'John Doe',
-        category: 'Service'
+        category: 'Service',
+        text: 'This is a sample contract text for service agreement between ABC Corp and the company. It includes terms like payment, duration, etc. Risky clauses: Unlimited liability, no termination.',
+        view_password: null // No password initially
       },
       {
         id: '2',
@@ -142,7 +231,9 @@ $wekaConn = $conn; // Use existing connection
         weka_confidence: 78,
         employee_id: 'EMP002',
         employee_name: 'Jane Smith',
-        category: 'Confidentiality'
+        category: 'Confidentiality',
+        text: 'Non-disclosure agreement sample text. Parties agree to keep information confidential for 2 years. Includes penalties for breach.',
+        view_password: null // No password initially
       }
     ];
 
@@ -179,123 +270,4 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3">${c.expiry || '—'}</td>
           <td class="px-3 py-3">
             <div class="inline-block px-3 py-1 rounded ${c.level === 'High' ? 'risk-high' : c.level === 'Medium' ? 'risk-medium' : 'risk-low'}">
-              ${c.level} (${c.score}) ${c.level === 'High' ? '<span class="ml-1 text-xs">⚠️</span>' : ''}
-            </div>
-          </td>
-          <td class="px-3 py-3 text-sm">${confidenceCell}</td>
-          <td class="px-3 py-3">
-            <div class="flex justify-center gap-2">
-              <button class="btnView px-2 py-1 border rounded text-xs bg-blue-500 text-white hover:bg-blue-600" data-id="${c.id}" ${accessAllowed ? '' : 'disabled'}>${accessAllowed ? 'View' : 'Restricted'}</button>
-              ${isAdmin ? `<button class="btnArchive px-2 py-1 border rounded text-xs bg-red-500 text-white hover:bg-red-600" data-id="${c.id}">Archive</button>` : ''}
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Wire up action buttons
-      attachActionListeners();
-      console.log('Attached listeners to', document.querySelectorAll('.btnView, .btnArchive').length, 'buttons'); // Debug log
-    }
-
-    // Attaches all event listeners for the table buttons
-    function attachActionListeners() {
-      document.querySelectorAll('.btnView').forEach(b => {
-        b.addEventListener('click', e => {
-          console.log('View button clicked:', e.target.dataset.id); // Debug log
-          const id = e.target.dataset.id;
-          viewContract(id);
-        });
-      });
-
-      document.querySelectorAll('.btnArchive').forEach(b => {
-        b.addEventListener('click', e => {
-          console.log('Archive button clicked:', e.target.dataset.id); // Debug log
-          const id = e.target.dataset.id;
-          archiveContract(id);
-        });
-      });
-    }
-    
-    function viewContract(id) {
-        console.log('Viewing contract:', id); // Debug log
-        alert(`Viewing details for contract ID: ${id}`);
-    }
-
-    function archiveContract(id) {
-        console.log('Archiving contract:', id); // Debug log
-        if (confirm('Are you sure you want to archive this contract?')) {
-            const idx = store.contracts.findIndex(c => c.id === id);
-            if (idx === -1) return;
-            
-            const [contract] = store.contracts.splice(idx, 1);
-            store.archived.push(contract);
-            audit(`Archived contract "${contract.title}"`);
-            renderContracts(document.getElementById('contractSearch').value);
-        }
-    }
-    
-    function audit(msg) {
-        const ul = document.getElementById('auditTrail');
-        store.audit.unshift({ when: new Date().toLocaleString(), msg });
-        
-        const li = document.createElement('li');
-        li.className = 'text-xs text-gray-600';
-        li.innerText = `${store.audit[0].when} — ${store.audit[0].msg}`;
-        ul.insertBefore(li, ul.firstChild);
-        if (ul.children.length > 10) {
-            ul.removeChild(ul.lastChild);
-        }
-    }
-    
-    // Load contracts from the backend API
-    async function loadWekaContracts() {
-      try {
-        console.log('Fetching contracts from API...'); // Debug log
-        const response = await fetch('../backend/weka_contract_api.php');
-        const result = await response.json();
-        
-        if (result.success && Array.isArray(result.contracts)) {
-          store.contracts = result.contracts.map(c => ({
-            id: c.id.toString(),
-            title: c.title,
-            party: c.party,
-            expiry: c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : '',
-            text: c.ocr_text || '',
-            access: ['Manager', 'Employee'], // Default access
-            score: c.risk_score,
-            level: c.risk_level,
-            weka_confidence: c.weka_confidence,
-            employee_id: c.employee_id,
-            employee_name: c.employee_name,
-            category: c.category
-          }));
-          
-          audit(`Loaded ${result.contracts.length} contracts from database`);
-          console.log('API loaded successfully:', store.contracts.length, 'contracts'); // Debug log
-        } else {
-            throw new Error(result.message || 'Failed to load contracts');
-        }
-      } catch (error) {
-        console.error('Error loading contracts:', error); // Debug log
-        // Fallback to demo data
-        store.contracts = demoContracts.map(c => ({ ...c, access: ['Manager', 'Employee'] }));
-        audit(`API failed. Loaded ${demoContracts.length} demo contracts for testing.`);
-        console.log('Using demo data:', store.contracts); // Debug log
-      } finally {
-        renderContracts('');
-      }
-    }
-
-    // Initial load and search event
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM loaded. Role:', window.APP_ROLE); // Debug log
-        loadWekaContracts();
-        document.getElementById('contractSearch').addEventListener('input', e => {
-            renderContracts(e.target.value);
-        });
-    });
-
-  </script>
-</body>
-</html>
+              ${c.level} (${c.score}) ${c.level === 'High' ? '<span class="ml-1

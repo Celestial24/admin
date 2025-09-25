@@ -214,22 +214,22 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
             </div>
             <div class="p-6">
               <form id="createVisitorForm" name="visitorForm" method="POST" onsubmit="return validateForm()" class="space-y-4">
-                <input type="hidden" name="action" value="add">
-                <input type="text" name="fullname" placeholder="Full Name" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <input type="email" name="email" placeholder="Email" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <input type="text" name="phone" placeholder="Phone Number" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <input type="text" name="address" placeholder="Address" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <textarea name="purpose" placeholder="Purpose of Visit" required 
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24 resize-none"></textarea>
+            <input type="hidden" name="action" value="add">
+            <input type="text" name="fullname" placeholder="Full Name" required 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="email" name="email" placeholder="Email" required 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="text" name="phone" placeholder="Phone Number" required 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="text" name="address" placeholder="Address" required 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <textarea name="purpose" placeholder="Purpose of Visit" required 
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24 resize-none"></textarea>
                 <div class="flex justify-end space-x-3 pt-2">
                   <button type="button" id="cancelCreate" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Cancel</button>
                   <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button>
                 </div>
-              </form>
+          </form>
             </div>
           </div>
         </div>
@@ -288,9 +288,9 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
               </span>
             </div>
-            <div class="text-sm text-gray-500">
-              <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
-              All Visitors
+          <div class="text-sm text-gray-500">
+            <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
+            All Visitors
             </div>
           </div>
         </div>
@@ -315,7 +315,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                   $result = $conn->query("SELECT * FROM visitors ORDER BY created_at DESC");
                   if ($result->num_rows > 0) {
                       while ($row = $result->fetch_assoc()) {
-                          echo "<tr class='hover:bg-gray-50'> 
+                          echo "<tr class='hover:bg-gray-50'>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center'>{$row['id']}</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['fullname'])."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['email'])."</td>

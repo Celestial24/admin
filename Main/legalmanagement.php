@@ -296,8 +296,8 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2 justify-center">
               <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}">${accessAllowed?'View Details':'Restricted'}</button>
-              ${isAdmin?`<button class="btnEdit px-2 py-1 border rounded text-xs" data-id="${c.id}">Update</button>`:''}
-              ${isAdmin?`<button class="btnDelete px-2 py-1 border rounded text-xs text-red-700 border-red-300" data-id="${c.id}">Delete</button>`:''}
+              ${accessAllowed?`<button class=\"btnAnalyze px-2 py-1 border rounded text-xs\" data-id=\"${c.id}\">Weka Analysis</button>`:''}
+              ${c.level==='High'&&isAdmin?`<button class=\"btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs\" data-id=\"${c.id}\">High Risk</button>`:''}
             </div>
           </td>
         `;
@@ -312,33 +312,6 @@ $wekaConn = $conn; // Use existing connection
         if (!pwd) return;
         // Simple demo check; replace with server-side verification if needed
         if (pwd === 'admin123') { viewContract(id); } else { alert('Invalid password'); }
-      }));
-      document.querySelectorAll('.btnDelete').forEach(b=> b.addEventListener('click', async e=>{
-        const id=e.target.dataset.id; if(!confirm('Delete this contract?')) return;
-        try {
-          const res = await fetch(`../backend/weka_contract_api.php?action=delete&id=${id}`);
-          const json = await res.json();
-          if(json.success){ audit(`Deleted contract ID ${id}`); renderContracts(''); }
-          else alert(json.message||'Delete failed');
-        } catch(err){ alert('Network error'); }
-      }));
-      document.querySelectorAll('.btnEdit').forEach(b=> b.addEventListener('click', async e=>{
-        const id=e.target.dataset.id;
-        const title = prompt('New Title (leave blank to keep)');
-        const party = prompt('New Party (leave blank to keep)');
-        const category = prompt('New Category (leave blank to keep)');
-        const employee_name = prompt('New Employee Name (leave blank to keep)');
-        const form = new FormData(); form.append('action','update'); form.append('id',id);
-        if(title) form.append('title',title);
-        if(party) form.append('party',party);
-        if(category) form.append('category',category);
-        if(employee_name) form.append('employee_name',employee_name);
-        try{
-          const res = await fetch('../backend/weka_contract_api.php',{method:'POST',body:form});
-          const json = await res.json();
-          if(json.success){ audit(`Updated contract ID ${id}`); renderContracts(''); }
-          else alert(json.message||'Update failed');
-        }catch(err){ alert('Network error'); }
       }));
       document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; analyzeContract(id);

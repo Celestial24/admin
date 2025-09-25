@@ -77,10 +77,10 @@
 
             <div>
               <label for="employeeName" class="block text-sm font-medium text-gray-700">
-                Employee Name <span class="text-red-500">*</span>
+                Employee Full Name <span class="text-red-500">*</span>
               </label>
-              <input type="text" name="employee_name" id="employeeName" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee name" value="<?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? '')) ?>" />
-              <p class="text-red-500 text-xs mt-1 hidden" id="employeeNameError">Employee Name is required.</p>
+              <input type="text" name="employee_name" id="employeeName" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Enter employee full name" value="<?= htmlspecialchars($_SESSION['user']['name'] ?? ($_SESSION['name'] ?? '')) ?>" />
+              <p class="text-red-500 text-xs mt-1 hidden" id="employeeNameError">Employee Full Name is required.</p>
             </div>
 
             <div>

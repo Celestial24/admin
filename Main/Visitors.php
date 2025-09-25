@@ -32,7 +32,7 @@ if (isset($_POST['action']) && $_POST['action'] === "add") {
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     $conn->query("DELETE FROM visitors WHERE id=$id");
-    header("Location: Visitors.php?msg=Visitor deleted successfully");
+    header("Location: Visitors.php?msg=Visitor deleted successfully&type=deleted");
     exit;
 }
 
@@ -48,7 +48,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
     $stmt = $conn->prepare("UPDATE visitors SET fullname=?, email=?, phone=?, address=?, purpose=? WHERE id=?");
     $stmt->bind_param("sssssi", $fullname, $email, $phone, $address, $purpose, $id);
     $stmt->execute();
-    header("Location: Visitors.php?msg=Visitor updated successfully");
+    header("Location: Visitors.php?msg=Visitor updated successfully&type=updated");
     exit;
 }
 ?>
@@ -109,14 +109,22 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
       display: inline-block;
     }
     
-    /* Success message */
-    .success {
-      background: #d4edda;
-      color: #155724;
+    /* Alert messages */
+    .alert {
       padding: 10px 15px;
-      border-left: 5px solid #28a745;
+      border-left: 5px solid;
       border-radius: 5px;
       margin-bottom: 15px;
+    }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border-color: #28a745;
+    }
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border-color: #dc3545;
     }
     
     /* Table styles */
@@ -192,32 +200,49 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
 
     <!-- Main Content -->
     <main class="p-6">
-      <?php if (isset($_GET['msg'])) echo "<p class='success'>".$_GET['msg']."</p>"; ?>
+      <?php 
+        if (isset($_GET['msg'])) {
+          $type = isset($_GET['type']) ? $_GET['type'] : '';
+          $cls = $type === 'deleted' ? 'alert alert-danger' : 'alert alert-success';
+          echo "<p class='".$cls."'>".htmlspecialchars($_GET['msg'])."</p>";
+        }
+      ?>
 
-      <!-- Add Visitor Form -->
+      <!-- Add Visitor (Modal Trigger + Modal) -->
       <?php if (!isset($_GET['edit'])): ?>
-      <div class="form-container">
-        <div class="form-wrapper">
-          <h2>Add New Visitor</h2>
-          <?php if (isset($_GET['msg'])) echo "<p class='success'>".$_GET['msg']."</p>"; ?>
-          
-          <form name="visitorForm" method="POST" onsubmit="return validateForm()" class="space-y-4">
-            <input type="hidden" name="action" value="add">
-            <input type="text" name="fullname" placeholder="Full Name" required 
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <input type="email" name="email" placeholder="Email" required 
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <input type="text" name="phone" placeholder="Phone Number" required 
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <input type="text" name="address" placeholder="Address" required 
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <textarea name="purpose" placeholder="Purpose of Visit" required 
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24 resize-none"></textarea>
-            <button type="submit" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-              Add Visitor
-            </button>
-          </form>
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-900">Add New Visitor</h2>
+        <button id="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">Add Visitor</button>
+      </div>
+
+      <div id="createModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+          <div class="bg-white rounded-lg shadow-lg w-full max-w-lg">
+            <div class="px-6 py-4 border-b flex items-center justify-between">
+              <h3 class="text-lg font-semibold">New Visitor</h3>
+              <button id="closeCreateModal" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="p-6">
+              <form id="createVisitorForm" name="visitorForm" method="POST" onsubmit="return validateForm()" class="space-y-4">
+                <input type="hidden" name="action" value="add">
+                <input type="text" name="fullname" placeholder="Full Name" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="email" name="email" placeholder="Email" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="text" name="phone" placeholder="Phone Number" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="text" name="address" placeholder="Address" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <textarea name="purpose" placeholder="Purpose of Visit" required 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24 resize-none"></textarea>
+                <div class="flex justify-end space-x-3 pt-2">
+                  <button type="button" id="cancelCreate" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
       <?php endif; ?>
@@ -324,6 +349,17 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
     if (typeof lucide !== "undefined") {
       lucide.createIcons();
     }
+    // Create modal controls
+    document.addEventListener('DOMContentLoaded', function() {
+      const createModal = document.getElementById('createModal');
+      const openCreateModal = document.getElementById('openCreateModal');
+      const closeCreateModal = document.getElementById('closeCreateModal');
+      const cancelCreate = document.getElementById('cancelCreate');
+      if (openCreateModal) openCreateModal.addEventListener('click', () => createModal.classList.remove('hidden'));
+      if (closeCreateModal) closeCreateModal.addEventListener('click', () => createModal.classList.add('hidden'));
+      if (cancelCreate) cancelCreate.addEventListener('click', () => createModal.classList.add('hidden'));
+      if (createModal) createModal.addEventListener('click', (e) => { if (e.target === createModal) createModal.classList.add('hidden'); });
+    });
   </script>
 </body>
 </html>

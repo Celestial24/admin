@@ -3,8 +3,6 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-date_default_timezone_set('Asia/Manila');
 
 // Include database connection
 include 'sql/contract.php';
@@ -54,7 +52,6 @@ class WekaContractAnalyzer {
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             party VARCHAR(255) NOT NULL,
-            category VARCHAR(100) NOT NULL DEFAULT 'Other',
             employee_name VARCHAR(255) NOT NULL,
             employee_id VARCHAR(100) NOT NULL,
             uploaded_by_id INT NULL,
@@ -81,33 +78,29 @@ class WekaContractAnalyzer {
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_id INT NULL");
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_name VARCHAR(255) NULL");
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS department VARCHAR(255) NULL");
-        $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS category VARCHAR(100) NULL");
-        @ $this->conn->query("UPDATE weka_contracts SET category = 'Other' WHERE category IS NULL");
-        @ $this->conn->query("ALTER TABLE weka_contracts MODIFY COLUMN category VARCHAR(100) NOT NULL DEFAULT 'Other'");
 
         // Insert contract analysis
         $stmt = $this->conn->prepare("
             INSERT INTO weka_contracts 
-            (title, party, category, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, ocr_text, 
+            (title, party, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, ocr_text, 
              risk_score, risk_level, probability_percent, weka_confidence, risk_factors, recommendations, legal_review_required, high_risk_alert) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $riskFactorsJson = json_encode($analysis['risk_factors']);
         $recommendationsJson = json_encode($analysis['recommendations']);
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
-        $stmt->bind_param('sssssisssssisiissii',
+        $stmt->bind_param('ssssisssssisiissii',
             $contractData['title'],
             $contractData['party'],
-            $contractData['category'],
             $contractData['employee_name'],
             $contractData['employee_id'],
             $contractData['uploaded_by_id'],
             $contractData['uploaded_by_name'],
             $contractData['department'],
-            $contractData['description'] ?? '',
-            $contractData['document_path'] ?? '',
-            $contractData['ocr_text'] ?? '',
+            $contractData['description'],
+            $contractData['document_path'],
+            $contractData['ocr_text'],
             $analysis['risk_score'],
             $analysis['risk_level'],
             $analysis['probability_percent'],
@@ -132,69 +125,16 @@ class WekaContractAnalyzer {
         }
         return $contracts;
     }
-
-    public function deleteContractById($id) {
-        $stmt = $this->conn->prepare("DELETE FROM weka_contracts WHERE id = ?");
-        $stmt->bind_param('i', $id);
-        if (!$stmt->execute()) {
-            throw new Exception('Failed to delete contract: ' . $stmt->error);
-        }
-        return $stmt->affected_rows > 0;
-    }
-
-    public function updateContract($id, $fields) {
-        $columns = [];
-        $values = [];
-        $types = '';
-        $allowed = ['title','party','category','employee_name'];
-        foreach ($allowed as $col) {
-            if (isset($fields[$col])) {
-                $columns[] = "$col = ?";
-                $values[] = $fields[$col];
-                $types .= 's';
-            }
-        }
-        if (empty($columns)) {
-            throw new Exception('No updatable fields provided');
-        }
-        $sql = "UPDATE weka_contracts SET " . implode(', ', $columns) . ", updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $this->conn->prepare($sql);
-        $types .= 'i';
-        $values[] = $id;
-        $stmt->bind_param($types, ...$values);
-        if (!$stmt->execute()) {
-            throw new Exception('Failed to update contract: ' . $stmt->error);
-        }
-        return true;
-    }
 }
 
 // Handle different request methods
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $analyzer = new WekaContractAnalyzer($conn);
-        // Update flow
-        if (isset($_POST['action']) && $_POST['action'] === 'update') {
-            $id = intval($_POST['id'] ?? 0);
-            if ($id <= 0) throw new Exception('Invalid contract id');
-            $fields = [
-                'title' => isset($_POST['title']) ? trim($_POST['title']) : null,
-                'party' => isset($_POST['party']) ? trim($_POST['party']) : null,
-                'category' => isset($_POST['category']) ? trim($_POST['category']) : null,
-                'employee_name' => isset($_POST['employee_name']) ? trim($_POST['employee_name']) : null,
-            ];
-            // Remove nulls
-            $fields = array_filter($fields, fn($v) => $v !== null);
-            $analyzer->updateContract($id, $fields);
-            echo json_encode(['success'=>true,'message'=>'Contract updated successfully']);
-            exit;
-        }
-
-        // Create/Analyze flow: Get contract data from POST (now includes uploader)
+        // Get contract data from POST (now includes uploader)
         $contractData = [
             'title' => trim($_POST['title'] ?? ''),
             'party' => trim($_POST['party'] ?? ''),
-            'category' => trim($_POST['category'] ?? ''),
             'employee_name' => trim($_POST['employee_name'] ?? ''),
             'employee_id' => trim($_POST['employee_id'] ?? ''),
             'uploaded_by_id' => intval($_POST['uploaded_by_id'] ?? 0) ?: null,
@@ -215,8 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $original = basename($_FILES['document']['name']);
             $ext = pathinfo($original, PATHINFO_EXTENSION);
             $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
-            $rand = function_exists('random_bytes') ? bin2hex(random_bytes(4)) : substr(str_shuffle('abcdef0123456789'),0,8);
-            $filename = $safeBase . '_' . date('Ymd_His') . '_' . $rand . ($ext ? ('.' . $ext) : '');
+            $filename = $safeBase . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . ($ext ? ('.' . $ext) : '');
             $destPath = $uploadDir . '/' . $filename;
             if (move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
                 // Public/relative path for later download
@@ -224,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $contractData['document_path'] = $relative;
             }
         }
-        if (empty($contractData['title']) || empty($contractData['party']) || empty($contractData['category']) || empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
+        if (empty($contractData['title']) || empty($contractData['party']) || empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
             throw new Exception('Required fields are missing');
         }
         $analysis = $analyzer->analyzeContract($contractData);
@@ -247,15 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $analyzer = new WekaContractAnalyzer($conn);
         $action = $_GET['action'] ?? 'all';
-        if ($action === 'delete') {
-            $id = intval($_GET['id'] ?? 0);
-            if ($id <= 0) throw new Exception('Invalid contract id');
-            $analyzer->deleteContractById($id);
-            echo json_encode(['success'=>true,'message'=>'Deleted successfully']);
-        } else {
-            $contracts = $analyzer->getAllContracts();
-            echo json_encode(['success'=>true,'contracts'=>$contracts,'count'=>count($contracts)]);
-        }
+        $contracts = $analyzer->getAllContracts();
+        echo json_encode(['success'=>true,'contracts'=>$contracts,'count'=>count($contracts)]);
     } catch (Exception $e) {
         echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
     }

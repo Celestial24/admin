@@ -89,19 +89,17 @@ $wekaConn = $conn; // Use existing connection
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full table-auto text-center">
+          <table class="w-full table-auto text-left">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
-                <th class="px-3 py-2 text-center">ID</th>
-                <th class="px-3 py-2 text-center">Employee Full Name</th>
-                <th class="px-3 py-2 text-center">Title</th>
-                <th class="px-3 py-2 text-center">Category</th>
-                <th class="px-3 py-2 text-center">Party</th>
-                <th class="px-3 py-2 text-center">Expiry</th>
-                <th class="px-3 py-2 text-center">Weka Risk</th>
-                <th class="px-3 py-2 text-center">Confidence</th>
-                <th class="px-3 py-2 text-center">Access</th>
-                <th class="px-3 py-2 text-center">Actions</th>
+                <th class="px-3 py-2">Title</th>
+                <th class="px-3 py-2">Party</th>
+                <th class="px-3 py-2">Expiry</th>
+                <th class="px-3 py-2">Employee</th>
+                <th class="px-3 py-2">Weka Risk</th>
+                <th class="px-3 py-2">Confidence</th>
+                <th class="px-3 py-2">Access</th>
+                <th class="px-3 py-2">Actions</th>
               </tr>
             </thead>
             <tbody id="contractsTableBody" class="text-sm"></tbody>
@@ -270,7 +268,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (String(c.id).padStart(3,'0')+c.title+c.category+c.party+(c.employee_name||'')+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (c.title+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -278,14 +276,12 @@ $wekaConn = $conn; // Use existing connection
         const accessAllowed = (c.access.map(a=>a.trim()).includes(role)) || isAdmin;
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
-        const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
+        const employee = c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${String(c.id).padStart(3,'0')}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
               ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}
@@ -294,10 +290,11 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${confidenceCell}</td>
           <td class="px-3 py-3 align-top text-sm text-gray-600 break-words whitespace-normal">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
-            <div class="flex gap-2 justify-center">
-              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}">${accessAllowed?'View Details':'Restricted'}</button>
-              ${accessAllowed?`<button class=\"btnAnalyze px-2 py-1 border rounded text-xs\" data-id=\"${c.id}\">Weka Analysis</button>`:''}
-              ${c.level==='High'&&isAdmin?`<button class=\"btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs\" data-id=\"${c.id}\">High Risk</button>`:''}
+            <div class="flex gap-2">
+              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>
+              ${accessAllowed?`<button class="btnAnalyze px-2 py-1 border rounded text-xs" data-id="${c.id}">Weka Analysis</button>`:''}
+              ${c.level==='High'&&isAdmin?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
+              ${isAdmin?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
             </div>
           </td>
         `;
@@ -306,12 +303,7 @@ $wekaConn = $conn; // Use existing connection
 
       // Wire up action buttons
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; 
-        if (${isAdmin}) { viewContract(id); return; }
-        const pwd = prompt('Enter password to view contract:');
-        if (!pwd) return;
-        // Simple demo check; replace with server-side verification if needed
-        if (pwd === 'admin123') { viewContract(id); } else { alert('Invalid password'); }
+        const id=e.target.dataset.id; viewContract(id);
       }));
       document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; analyzeContract(id);

@@ -45,8 +45,9 @@ $wekaConn = $conn; // Use existing connection
     .blur-protected { filter: blur(6px); pointer-events: none; user-select: none; }
   </style>
   <script>
-    // Expose current role to JS
+    // Expose current role and employee name to JS
     window.APP_ROLE = <?php echo json_encode($userRole ?: 'Employee'); ?>;
+    window.APP_EMPLOYEE_NAME = <?php echo json_encode($employeeName ?: 'Employee'); ?>;
   </script>
 </head>
 <body class="flex h-screen bg-gray-100 text-gray-800">
@@ -62,10 +63,6 @@ $wekaConn = $conn; // Use existing connection
     <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
       <h1 class="text-2xl font-semibold"> Contract Result & Risk Analysis</h1>
       <div class="flex items-center gap-3">
-        <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm">
-          <i data-lucide="user" class="w-4 h-4"></i>
-          <span><?php echo htmlspecialchars($employeeName); ?></span>
-        </div>
         <?php include __DIR__ . '/../profile.php'; ?>
         <a href="contract.php" id="btnOpenUpload" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Upload Contract</a>
         <button id="btnAlerts" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Alerts <span id="alertsCount" class="ml-2 inline-block bg-white text-red-600 px-2 rounded-full text-sm">0</span></button>
@@ -98,6 +95,7 @@ $wekaConn = $conn; // Use existing connection
                 <th class="px-3 py-2">Title</th>
                 <th class="px-3 py-2">Party</th>
                 <th class="px-3 py-2">Expiry</th>
+                <th class="px-3 py-2">Employee</th>
                 <th class="px-3 py-2">Weka Risk</th>
                 <th class="px-3 py-2">Confidence</th>
                 <th class="px-3 py-2">Access</th>
@@ -270,7 +268,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (c.title+c.party+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (c.title+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -278,10 +276,12 @@ $wekaConn = $conn; // Use existing connection
         const accessAllowed = (c.access.map(a=>a.trim()).includes(role)) || isAdmin;
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
+        const employee = c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
               ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}

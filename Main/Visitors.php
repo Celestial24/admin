@@ -312,12 +312,11 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <?php
-                  $result = $conn->query("SELECT * FROM visitors ORDER BY id DESC");
+                  $result = $conn->query("SELECT * FROM visitors ORDER BY created_at DESC");
                   if ($result->num_rows > 0) {
-                      $counter = 1;
                       while ($row = $result->fetch_assoc()) {
-                          echo "<tr class='hover:bg-gray-50'>
-                                  <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center'>".$counter."</td>
+                          echo "<tr class='hover:bg-gray-50'> 
+                                  <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center'>{$row['id']}</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['fullname'])."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['email'])."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['phone'])."</td>
@@ -329,7 +328,6 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                                       <button type='button' data-id='{$row['id']}' class='openDeleteModal text-red-600 hover:text-red-900'>Delete</button>
                                   </td>
                                 </tr>";
-                          $counter++;
                       }
                   } else {
                       echo "<tr><td colspan='8' class='px-6 py-4 text-center text-gray-500'>No visitors yet.</td></tr>";

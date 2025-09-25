@@ -196,9 +196,8 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
 
       <!-- Add Visitor (Modal Trigger + Modal) -->
       <?php if (!isset($_GET['edit'])): ?>
-      <div class="flex items-center justify-between">
-        
-        <button id="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200" style="positon:absolute; left: 10%; top: 10px;">Add Visitor</button>
+      <div class="flex justify-end mb-4">
+        <button id="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">Add Visitor</button>
       </div>
 
       <div id="createModal" class="fixed inset-0 z-50 hidden">
@@ -277,7 +276,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
       <!-- Visitors Dashboard -->
       <div class="mt-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-gray-900">Employee List</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Visitors Dashboard</h2>
           <div class="flex items-center gap-3">
             <div class="relative">
               <input id="visitorSearch" type="text" placeholder="Search visitors..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />

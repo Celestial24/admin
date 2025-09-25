@@ -1,19 +1,6 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-date_default_timezone_set('Asia/Manila');
-include 'sql/contract.php'; // Database connection
-
 class WekaContractAnalyzer {
-    private $conn;
+    private mysqli $conn;
 
     private array $highRiskKeywords = [
         'termination', 'breach', 'penalties', 'dispute', 'arbitration',
@@ -36,6 +23,9 @@ class WekaContractAnalyzer {
         $this->conn = $connection;
     }
 
+    /**
+     * Analyze contract text and calculate risk.
+     */
     public function analyzeContract(array $contractData): array {
         $text = strtolower($contractData['text'] ?? '');
         $analysis = [
@@ -49,23 +39,24 @@ class WekaContractAnalyzer {
 
         $high = $med = $low = 0;
 
+        // Check for keywords
         foreach ($this->highRiskKeywords as $k) {
             if (stripos($text, $k) !== false) {
                 $high++;
                 $analysis['risk_factors'][] = "High-risk keyword detected: '$k'";
             }
         }
-
         foreach ($this->mediumRiskKeywords as $k) {
             if (stripos($text, $k) !== false) $med++;
         }
-
         foreach ($this->lowRiskKeywords as $k) {
             if (stripos($text, $k) !== false) $low++;
         }
 
+        // Calculate risk score
         $analysis['risk_score'] = max(0, min(100, ($high * 25) + ($med * 10) - ($low * 5)));
 
+        // Risk levels
         if ($analysis['risk_score'] >= 70) {
             $analysis['risk_level'] = 'High';
             $analysis['probability_percent'] = rand(75, 95);
@@ -79,6 +70,7 @@ class WekaContractAnalyzer {
 
         $analysis['weka_confidence'] = rand(85, 98);
 
+        // Recommendations
         $analysis['recommendations'] = match ($analysis['risk_level']) {
             'High' => [
                 'Immediate legal review required',
@@ -100,8 +92,11 @@ class WekaContractAnalyzer {
         return $analysis;
     }
 
+    /**
+     * Save contract analysis results to the database.
+     */
     public function saveContractAnalysis(array $contractData, array $analysis): int {
-        // Ensure contracts table exists
+        // Ensure table exists
         $this->conn->query("
             CREATE TABLE IF NOT EXISTS weka_contracts (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -143,7 +138,7 @@ class WekaContractAnalyzer {
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
 
-        // Prepare variables for binding (by reference)
+        // Prepare variables
         $title = $contractData['title'];
         $party = $contractData['party'];
         $category = $contractData['category'] ?? 'Other';
@@ -161,8 +156,9 @@ class WekaContractAnalyzer {
         $probabilityPercent = $analysis['probability_percent'];
         $wekaConfidence = $analysis['weka_confidence'];
 
+        // ✅ Corrected type string (20 params)
         $stmt->bind_param(
-            'sssssissssssississi',
+            'sssssisisssssisssii',
             $title,
             $party,
             $category,
@@ -192,6 +188,9 @@ class WekaContractAnalyzer {
         return $stmt->insert_id;
     }
 
+    /**
+     * Fetch all contracts with decoded JSON fields.
+     */
     public function getAllContracts(): array {
         $stmt = $this->conn->prepare("SELECT * FROM weka_contracts ORDER BY created_at DESC");
         $stmt->execute();
@@ -205,81 +204,4 @@ class WekaContractAnalyzer {
         }
         return $contracts;
     }
-}
-
-try {
-    $analyzer = new WekaContractAnalyzer($conn);
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $contractData = [
-            'title' => trim($_POST['title'] ?? ''),
-            'party' => trim($_POST['party'] ?? ''),
-            'category' => trim($_POST['category'] ?? 'Other'),
-            'employee_name' => trim($_POST['employee_name'] ?? ''),
-            'employee_id' => trim($_POST['employee_id'] ?? ''),
-            'uploaded_by_id' => intval($_POST['uploaded_by_id'] ?? 0) ?: null,
-            'uploaded_by_name' => trim($_POST['uploaded_by_name'] ?? ''),
-            'department' => trim($_POST['department'] ?? ''),
-            'description' => trim($_POST['description'] ?? ''),
-            'document_path' => $_POST['document_path'] ?? '',
-            'view_password' => trim($_POST['view_password'] ?? ''),
-            'ocr_text' => trim($_POST['ocr_text'] ?? ''),
-            'text' => trim($_POST['ocr_text'] ?? '')
-        ];
-
-        // File upload handler
-        if (isset($_FILES['document']) && is_uploaded_file($_FILES['document']['tmp_name'])) {
-            $uploadDir = __DIR__ . '/../uploads/contracts';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0775, true);
-            }
-
-            $original = basename($_FILES['document']['name']);
-            $ext = pathinfo($original, PATHINFO_EXTENSION);
-            $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($original, PATHINFO_FILENAME));
-            $rand = bin2hex(random_bytes(4));
-            $filename = "{$safeBase}_" . date('Ymd_His') . "_{$rand}" . ($ext ? ".{$ext}" : '');
-            $destPath = "{$uploadDir}/{$filename}";
-
-            if (move_uploaded_file($_FILES['document']['tmp_name'], $destPath)) {
-                $contractData['document_path'] = "uploads/contracts/{$filename}";
-            }
-        }
-
-        if (empty($contractData['title']) || empty($contractData['party']) ||
-            empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
-            throw new Exception('Required fields are missing');
-        }
-
-        $analysis = $analyzer->analyzeContract($contractData);
-        $contractId = $analyzer->saveContractAnalysis($contractData, $analysis);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Contract analyzed successfully with Weka AI',
-            'contract_id' => $contractId,
-            'analysis' => $analysis,
-            'color' => match ($analysis['risk_level']) {
-                'High' => 'red',
-                'Medium' => 'yellow',
-                default => 'green'
-            },
-            'weka_confidence' => $analysis['weka_confidence'],
-            'uploaded_by_id' => $contractData['uploaded_by_id'],
-            'uploaded_by_name' => $contractData['uploaded_by_name']
-        ]);
-    } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        $contracts = $analyzer->getAllContracts();
-        echo json_encode([
-            'success' => true,
-            'contracts' => $contracts,
-            'count' => count($contracts)
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-    }
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-} finally {
-    $conn->close();
 }

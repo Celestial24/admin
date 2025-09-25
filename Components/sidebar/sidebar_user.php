@@ -45,12 +45,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span class="sidebar-text">Dashboard</span>
             </a>
 
-            <!-- Profile -->
-            <a href="../../user/profile.php" 
-               class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'profile.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="user" class="w-5 h-5"></i>
-                <span class="sidebar-text">Profile</span>
-            </a>
+  
 
             <!-- Facilities Toggle Button -->
             <button id="facilityToggle" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 w-full text-left">

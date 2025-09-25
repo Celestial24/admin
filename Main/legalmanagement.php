@@ -89,19 +89,19 @@ $wekaConn = $conn; // Use existing connection
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full table-auto text-left">
+          <table class="w-full table-auto text-center">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
-                <th class="px-3 py-2">Employee Full Name</th>
-                <th class="px-3 py-2">Employee ID</th>
-                <th class="px-3 py-2">Title</th>
-                <th class="px-3 py-2">Category</th>
-                <th class="px-3 py-2">Party</th>
-                <th class="px-3 py-2">Expiry</th>
-                <th class="px-3 py-2">Weka Risk</th>
-                <th class="px-3 py-2">Confidence</th>
-                <th class="px-3 py-2">Access</th>
-                <th class="px-3 py-2">Actions</th>
+                <th class="px-3 py-2 text-center">Employee Full Name</th>
+                <th class="px-3 py-2 text-center">ID</th>
+                <th class="px-3 py-2 text-center">Title</th>
+                <th class="px-3 py-2 text-center">Category</th>
+                <th class="px-3 py-2 text-center">Party</th>
+                <th class="px-3 py-2 text-center">Expiry</th>
+                <th class="px-3 py-2 text-center">Weka Risk</th>
+                <th class="px-3 py-2 text-center">Confidence</th>
+                <th class="px-3 py-2 text-center">Access</th>
+                <th class="px-3 py-2 text-center">Actions</th>
               </tr>
             </thead>
             <tbody id="contractsTableBody" class="text-sm"></tbody>
@@ -270,7 +270,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (c.title+c.category+c.party+(c.employee_name||'')+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (String(c.id).padStart(3,'0')+c.title+c.category+c.party+(c.employee_name||'')+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -281,7 +281,7 @@ $wekaConn = $conn; // Use existing connection
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.employee_id || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${String(c.id).padStart(3,'0')}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>

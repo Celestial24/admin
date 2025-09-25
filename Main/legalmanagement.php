@@ -92,8 +92,8 @@ $wekaConn = $conn; // Use existing connection
           <table class="w-full table-auto text-center">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
-                <th class="px-3 py-2 text-center">Employee Full Name</th>
                 <th class="px-3 py-2 text-center">ID</th>
+                <th class="px-3 py-2 text-center">Employee Full Name</th>
                 <th class="px-3 py-2 text-center">Title</th>
                 <th class="px-3 py-2 text-center">Category</th>
                 <th class="px-3 py-2 text-center">Party</th>
@@ -280,8 +280,8 @@ $wekaConn = $conn; // Use existing connection
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${String(c.id).padStart(3,'0')}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
@@ -294,11 +294,10 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top text-sm break-words whitespace-normal">${confidenceCell}</td>
           <td class="px-3 py-3 align-top text-sm text-gray-600 break-words whitespace-normal">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
-            <div class="flex gap-2">
-              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>
-              ${accessAllowed?`<button class="btnAnalyze px-2 py-1 border rounded text-xs" data-id="${c.id}">Weka Analysis</button>`:''}
-              ${c.level==='High'&&isAdmin?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
-              ${isAdmin?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
+            <div class="flex gap-2 justify-center">
+              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}">${accessAllowed?'View Details':'Restricted'}</button>
+              ${isAdmin?`<button class="btnEdit px-2 py-1 border rounded text-xs" data-id="${c.id}">Update</button>`:''}
+              ${isAdmin?`<button class="btnDelete px-2 py-1 border rounded text-xs text-red-700 border-red-300" data-id="${c.id}">Delete</button>`:''}
             </div>
           </td>
         `;
@@ -307,7 +306,39 @@ $wekaConn = $conn; // Use existing connection
 
       // Wire up action buttons
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; viewContract(id);
+        const id=e.target.dataset.id; 
+        if (${isAdmin}) { viewContract(id); return; }
+        const pwd = prompt('Enter password to view contract:');
+        if (!pwd) return;
+        // Simple demo check; replace with server-side verification if needed
+        if (pwd === 'admin123') { viewContract(id); } else { alert('Invalid password'); }
+      }));
+      document.querySelectorAll('.btnDelete').forEach(b=> b.addEventListener('click', async e=>{
+        const id=e.target.dataset.id; if(!confirm('Delete this contract?')) return;
+        try {
+          const res = await fetch(`../backend/weka_contract_api.php?action=delete&id=${id}`);
+          const json = await res.json();
+          if(json.success){ audit(`Deleted contract ID ${id}`); renderContracts(''); }
+          else alert(json.message||'Delete failed');
+        } catch(err){ alert('Network error'); }
+      }));
+      document.querySelectorAll('.btnEdit').forEach(b=> b.addEventListener('click', async e=>{
+        const id=e.target.dataset.id;
+        const title = prompt('New Title (leave blank to keep)');
+        const party = prompt('New Party (leave blank to keep)');
+        const category = prompt('New Category (leave blank to keep)');
+        const employee_name = prompt('New Employee Name (leave blank to keep)');
+        const form = new FormData(); form.append('action','update'); form.append('id',id);
+        if(title) form.append('title',title);
+        if(party) form.append('party',party);
+        if(category) form.append('category',category);
+        if(employee_name) form.append('employee_name',employee_name);
+        try{
+          const res = await fetch('../backend/weka_contract_api.php',{method:'POST',body:form});
+          const json = await res.json();
+          if(json.success){ audit(`Updated contract ID ${id}`); renderContracts(''); }
+          else alert(json.message||'Update failed');
+        }catch(err){ alert('Network error'); }
       }));
       document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; analyzeContract(id);

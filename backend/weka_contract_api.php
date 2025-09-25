@@ -130,13 +130,65 @@ class WekaContractAnalyzer {
         }
         return $contracts;
     }
+
+    public function deleteContractById($id) {
+        $stmt = $this->conn->prepare("DELETE FROM weka_contracts WHERE id = ?");
+        $stmt->bind_param('i', $id);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to delete contract: ' . $stmt->error);
+        }
+        return $stmt->affected_rows > 0;
+    }
+
+    public function updateContract($id, $fields) {
+        $columns = [];
+        $values = [];
+        $types = '';
+        $allowed = ['title','party','category','employee_name'];
+        foreach ($allowed as $col) {
+            if (isset($fields[$col])) {
+                $columns[] = "$col = ?";
+                $values[] = $fields[$col];
+                $types .= 's';
+            }
+        }
+        if (empty($columns)) {
+            throw new Exception('No updatable fields provided');
+        }
+        $sql = "UPDATE weka_contracts SET " . implode(', ', $columns) . ", updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $types .= 'i';
+        $values[] = $id;
+        $stmt->bind_param($types, ...$values);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update contract: ' . $stmt->error);
+        }
+        return true;
+    }
 }
 
 // Handle different request methods
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $analyzer = new WekaContractAnalyzer($conn);
-        // Get contract data from POST (now includes uploader)
+        // Update flow
+        if (isset($_POST['action']) && $_POST['action'] === 'update') {
+            $id = intval($_POST['id'] ?? 0);
+            if ($id <= 0) throw new Exception('Invalid contract id');
+            $fields = [
+                'title' => isset($_POST['title']) ? trim($_POST['title']) : null,
+                'party' => isset($_POST['party']) ? trim($_POST['party']) : null,
+                'category' => isset($_POST['category']) ? trim($_POST['category']) : null,
+                'employee_name' => isset($_POST['employee_name']) ? trim($_POST['employee_name']) : null,
+            ];
+            // Remove nulls
+            $fields = array_filter($fields, fn($v) => $v !== null);
+            $analyzer->updateContract($id, $fields);
+            echo json_encode(['success'=>true,'message'=>'Contract updated successfully']);
+            exit;
+        }
+
+        // Create/Analyze flow: Get contract data from POST (now includes uploader)
         $contractData = [
             'title' => trim($_POST['title'] ?? ''),
             'party' => trim($_POST['party'] ?? ''),
@@ -192,8 +244,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $analyzer = new WekaContractAnalyzer($conn);
         $action = $_GET['action'] ?? 'all';
-        $contracts = $analyzer->getAllContracts();
-        echo json_encode(['success'=>true,'contracts'=>$contracts,'count'=>count($contracts)]);
+        if ($action === 'delete') {
+            $id = intval($_GET['id'] ?? 0);
+            if ($id <= 0) throw new Exception('Invalid contract id');
+            $analyzer->deleteContractById($id);
+            echo json_encode(['success'=>true,'message'=>'Deleted successfully']);
+        } else {
+            $contracts = $analyzer->getAllContracts();
+            echo json_encode(['success'=>true,'contracts'=>$contracts,'count'=>count($contracts)]);
+        }
     } catch (Exception $e) {
         echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
     }

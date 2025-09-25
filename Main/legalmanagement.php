@@ -18,8 +18,9 @@ if (!$hasStructuredSession) {
     exit();
 }
 
-// Current user role
+// Current user role and name
 $userRole = $_SESSION['user']['role'] ?? ($_SESSION['role'] ?? 'Employee');
+$employeeName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Employee');
 
 // Create DB connection for Weka integration
 include '../backend/sql/db.php';
@@ -61,6 +62,10 @@ $wekaConn = $conn; // Use existing connection
     <div class="flex items-center justify-between border-b pb-4 px-6 py-4 bg-white">
       <h1 class="text-2xl font-semibold"> Contract Result & Risk Analysis</h1>
       <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm">
+          <i data-lucide="user" class="w-4 h-4"></i>
+          <span><?php echo htmlspecialchars($employeeName); ?></span>
+        </div>
         <?php include __DIR__ . '/../profile.php'; ?>
         <a href="contract.php" id="btnOpenUpload" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Upload Contract</a>
         <button id="btnAlerts" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Alerts <span id="alertsCount" class="ml-2 inline-block bg-white text-red-600 px-2 rounded-full text-sm">0</span></button>
@@ -75,7 +80,15 @@ $wekaConn = $conn; // Use existing connection
       <section class="col-span-1 lg:col-span-3 bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-semibold">Contracts</h2>
-          <div class="text-sm text-gray-500">Showing <span id="countContracts">0</span> contracts</div>
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <input id="contractSearch" type="text" placeholder="Search contracts..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
+              <span class="absolute left-3 top-2.5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              </span>
+            </div>
+            <div class="text-sm text-gray-500">Showing <span id="countContracts">0</span> contracts</div>
+          </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -545,6 +558,14 @@ $wekaConn = $conn; // Use existing connection
 
     // Load Weka contracts on page load
     loadWekaContracts();
+
+    // Wire up search bar
+    const contractSearch = document.getElementById('contractSearch');
+    if (contractSearch) {
+      contractSearch.addEventListener('input', (e) => {
+        renderContracts(e.target.value || '');
+      });
+    }
   </script>
 </body>
 </html>

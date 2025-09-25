@@ -142,6 +142,9 @@ $wekaConn = $conn; // Use existing connection
                 <div><strong>Risk Level:</strong> <span id="viewRiskLevel"></span></div>
                 <div><strong>Risk Score:</strong> <span id="viewRiskScore"></span></div>
                 <div><strong>Weka Confidence:</strong> <span id="viewConfidence"></span></div>
+                <div><strong>Employee ID:</strong> <span id="viewEmployeeId"></span></div>
+                <div><strong>Employee:</strong> <span id="viewEmployeeName"></span></div>
+                <div><strong>Category:</strong> <span id="viewCategory"></span></div>
             </div>
             <div>
                 <h4 class="font-semibold mb-2">Risk Factors</h4>
@@ -360,6 +363,9 @@ $wekaConn = $conn; // Use existing connection
         document.getElementById('viewRiskScore').innerText = c.score;
         document.getElementById('viewConfidence').innerText = `${c.weka_confidence || 'N/A'}%`;
         document.getElementById('viewText').value = isAdmin ? (c.text || 'No text available.') : '•••••• (restricted)';
+        document.getElementById('viewEmployeeId').innerText = `Employee ${String(c.id).padStart(3,'0')}`;
+        document.getElementById('viewEmployeeName').innerText = c.employee_name || c.uploaded_by_name || '—';
+        document.getElementById('viewCategory').innerText = c.category || '—';
         // removed Uploaded By and Department fields
         
         const riskFactorsUl = document.getElementById('viewRiskFactors');

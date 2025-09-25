@@ -52,6 +52,7 @@ class WekaContractAnalyzer {
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             party VARCHAR(255) NOT NULL,
+            category VARCHAR(100) NOT NULL DEFAULT 'Other',
             employee_name VARCHAR(255) NOT NULL,
             employee_id VARCHAR(100) NOT NULL,
             uploaded_by_id INT NULL,
@@ -78,21 +79,25 @@ class WekaContractAnalyzer {
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_id INT NULL");
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS uploaded_by_name VARCHAR(255) NULL");
         $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS department VARCHAR(255) NULL");
+        $this->conn->query("ALTER TABLE weka_contracts ADD COLUMN IF NOT EXISTS category VARCHAR(100) NULL");
+        @ $this->conn->query("UPDATE weka_contracts SET category = 'Other' WHERE category IS NULL");
+        @ $this->conn->query("ALTER TABLE weka_contracts MODIFY COLUMN category VARCHAR(100) NOT NULL DEFAULT 'Other'");
 
         // Insert contract analysis
         $stmt = $this->conn->prepare("
             INSERT INTO weka_contracts 
-            (title, party, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, ocr_text, 
+            (title, party, category, employee_name, employee_id, uploaded_by_id, uploaded_by_name, department, description, document_path, ocr_text, 
              risk_score, risk_level, probability_percent, weka_confidence, risk_factors, recommendations, legal_review_required, high_risk_alert) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $riskFactorsJson = json_encode($analysis['risk_factors']);
         $recommendationsJson = json_encode($analysis['recommendations']);
         $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
-        $stmt->bind_param('ssssisssssisiissii',
+        $stmt->bind_param('sssssisssssisiissii',
             $contractData['title'],
             $contractData['party'],
+            $contractData['category'],
             $contractData['employee_name'],
             $contractData['employee_id'],
             $contractData['uploaded_by_id'],
@@ -135,6 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contractData = [
             'title' => trim($_POST['title'] ?? ''),
             'party' => trim($_POST['party'] ?? ''),
+            'category' => trim($_POST['category'] ?? ''),
             'employee_name' => trim($_POST['employee_name'] ?? ''),
             'employee_id' => trim($_POST['employee_id'] ?? ''),
             'uploaded_by_id' => intval($_POST['uploaded_by_id'] ?? 0) ?: null,
@@ -163,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $contractData['document_path'] = $relative;
             }
         }
-        if (empty($contractData['title']) || empty($contractData['party']) || empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
+        if (empty($contractData['title']) || empty($contractData['party']) || empty($contractData['category']) || empty($contractData['employee_name']) || empty($contractData['employee_id'])) {
             throw new Exception('Required fields are missing');
         }
         $analysis = $analyzer->analyzeContract($contractData);

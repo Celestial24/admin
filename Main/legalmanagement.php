@@ -94,6 +94,7 @@ $wekaConn = $conn; // Use existing connection
               <tr>
                 <th class="px-3 py-2">Employee</th>
                 <th class="px-3 py-2">Title</th>
+                <th class="px-3 py-2">Category</th>
                 <th class="px-3 py-2">Party</th>
                 <th class="px-3 py-2">Expiry</th>
                 <th class="px-3 py-2">Weka Risk</th>
@@ -268,7 +269,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (c.title+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (c.title+c.category+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -280,6 +281,7 @@ $wekaConn = $conn; // Use existing connection
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">

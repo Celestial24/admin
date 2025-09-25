@@ -118,8 +118,37 @@ $wekaConn = $conn; // Use existing connection
       audit: []
     };
 
+    // Demo data for fallback (remove once backend works)
+    const demoContracts = [
+      {
+        id: '1',
+        title: 'Sample Service Agreement',
+        party: 'ABC Corp',
+        expiry: '2024-12-31',
+        score: 0.85,
+        level: 'High',
+        weka_confidence: 92,
+        employee_id: 'EMP001',
+        employee_name: 'John Doe',
+        category: 'Service'
+      },
+      {
+        id: '2',
+        title: 'NDA Contract',
+        party: 'XYZ Ltd',
+        expiry: '2025-06-15',
+        score: 0.45,
+        level: 'Medium',
+        weka_confidence: 78,
+        employee_id: 'EMP002',
+        employee_name: 'Jane Smith',
+        category: 'Confidentiality'
+      }
+    ];
+
     // Render function for contracts table
     function renderContracts(filter = '') {
+      console.log('Rendering contracts with filter:', filter); // Debug log
       const tbody = document.getElementById('contractsTableBody');
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
@@ -135,7 +164,8 @@ $wekaConn = $conn; // Use existing connection
         const tr = document.createElement('tr');
         tr.className = 'border-t';
         
-        const accessAllowed = (c.access || []).map(a => a.trim()).includes(role) || isAdmin;
+        // Temporarily force access for testing (remove in production)
+        const accessAllowed = true; // Override: (c.access || []).map(a => a.trim()).includes(role) || isAdmin;
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
@@ -155,8 +185,8 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 text-sm">${confidenceCell}</td>
           <td class="px-3 py-3">
             <div class="flex justify-center gap-2">
-              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed ? '' : 'disabled'}>${accessAllowed ? 'View' : 'Restricted'}</button>
-              ${isAdmin ? `<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>` : ''}
+              <button class="btnView px-2 py-1 border rounded text-xs bg-blue-500 text-white hover:bg-blue-600" data-id="${c.id}" ${accessAllowed ? '' : 'disabled'}>${accessAllowed ? 'View' : 'Restricted'}</button>
+              ${isAdmin ? `<button class="btnArchive px-2 py-1 border rounded text-xs bg-red-500 text-white hover:bg-red-600" data-id="${c.id}">Archive</button>` : ''}
             </div>
           </td>
         `;
@@ -165,27 +195,35 @@ $wekaConn = $conn; // Use existing connection
 
       // Wire up action buttons
       attachActionListeners();
+      console.log('Attached listeners to', document.querySelectorAll('.btnView, .btnArchive').length, 'buttons'); // Debug log
     }
 
     // Attaches all event listeners for the table buttons
     function attachActionListeners() {
-      document.querySelectorAll('.btnView').forEach(b => b.addEventListener('click', e => {
-        const id = e.target.dataset.id;
-        viewContract(id);
-      }));
+      document.querySelectorAll('.btnView').forEach(b => {
+        b.addEventListener('click', e => {
+          console.log('View button clicked:', e.target.dataset.id); // Debug log
+          const id = e.target.dataset.id;
+          viewContract(id);
+        });
+      });
 
-      document.querySelectorAll('.btnArchive').forEach(b => b.addEventListener('click', e => {
-        const id = e.target.dataset.id;
-        archiveContract(id);
-      }));
+      document.querySelectorAll('.btnArchive').forEach(b => {
+        b.addEventListener('click', e => {
+          console.log('Archive button clicked:', e.target.dataset.id); // Debug log
+          const id = e.target.dataset.id;
+          archiveContract(id);
+        });
+      });
     }
     
     function viewContract(id) {
-        // This function shows the main details modal (no changes needed here)
+        console.log('Viewing contract:', id); // Debug log
         alert(`Viewing details for contract ID: ${id}`);
     }
 
     function archiveContract(id) {
+        console.log('Archiving contract:', id); // Debug log
         if (confirm('Are you sure you want to archive this contract?')) {
             const idx = store.contracts.findIndex(c => c.id === id);
             if (idx === -1) return;
@@ -213,6 +251,7 @@ $wekaConn = $conn; // Use existing connection
     // Load contracts from the backend API
     async function loadWekaContracts() {
       try {
+        console.log('Fetching contracts from API...'); // Debug log
         const response = await fetch('../backend/weka_contract_api.php');
         const result = await response.json();
         
@@ -233,12 +272,16 @@ $wekaConn = $conn; // Use existing connection
           }));
           
           audit(`Loaded ${result.contracts.length} contracts from database`);
+          console.log('API loaded successfully:', store.contracts.length, 'contracts'); // Debug log
         } else {
             throw new Error(result.message || 'Failed to load contracts');
         }
       } catch (error) {
-        console.error('Error loading contracts:', error);
-        audit('Failed to load contracts from database. Using demo data.');
+        console.error('Error loading contracts:', error); // Debug log
+        // Fallback to demo data
+        store.contracts = demoContracts.map(c => ({ ...c, access: ['Manager', 'Employee'] }));
+        audit(`API failed. Loaded ${demoContracts.length} demo contracts for testing.`);
+        console.log('Using demo data:', store.contracts); // Debug log
       } finally {
         renderContracts('');
       }
@@ -246,6 +289,7 @@ $wekaConn = $conn; // Use existing connection
 
     // Initial load and search event
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded. Role:', window.APP_ROLE); // Debug log
         loadWekaContracts();
         document.getElementById('contractSearch').addEventListener('input', e => {
             renderContracts(e.target.value);

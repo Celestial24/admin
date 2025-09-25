@@ -28,7 +28,7 @@
 
     <header class="px-6 py-4 bg-white border-b shadow">
       <h1 class="text-2xl font-bold text-gray-800">Contract </h1>
-      <p class="text-sm text-gray-500 mt-1">Powered by Weka AI Engine</p>
+      <p class="text-sm text-gray-500 mt-1">Weka AI model will be trained on uploaded contracts for analysis.</p>
     </header>
 
     <main class="flex-1 overflow-y-auto px-6 py-6 bg-gray-100">
@@ -94,6 +94,20 @@
             <div>
               <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
               <input type="text" name="department" id="department" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="e.g., HR, Legal" value="<?= htmlspecialchars($_SESSION['user']['department'] ?? ($_SESSION['department'] ?? '')) ?>" />
+            </div>
+
+            <div>
+              <label for="category" class="block text-sm font-medium text-gray-700">Contract Category <span class="text-red-500">*</span></label>
+              <select name="category" id="category" required class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500">
+                <option value="">Select a category</option>
+                <option value="Employment">Employment</option>
+                <option value="Supplier">Supplier</option>
+                <option value="Lease">Lease</option>
+                <option value="NDA">NDA</option>
+                <option value="Service">Service</option>
+                <option value="Other">Other</option>
+              </select>
+              <p class="text-red-500 text-xs mt-1 hidden" id="categoryError">Category is required.</p>
             </div>
 
             <div>
@@ -178,6 +192,7 @@
   const inputs = {
     employeeName: { input: document.getElementById('employeeName'), error: document.getElementById('employeeNameError'), msg: 'Employee Name is required.' },
     employeeId: { input: document.getElementById('employeeId'), error: document.getElementById('employeeIdError'), msg: 'Employee ID is required.' },
+    category: { input: document.getElementById('category'), error: document.getElementById('categoryError'), msg: 'Category is required.' },
     party: { input: document.getElementById('party'), error: document.getElementById('partyError'), msg: 'Contracting Party is required.' },
     title: { input: document.getElementById('title'), error: document.getElementById('titleError'), msg: 'Contract Title is required.' },
   };

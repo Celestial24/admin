@@ -361,12 +361,20 @@
         method: 'POST',
         body: formData,
       });
-      const result = await response.json();
+      const raw = await response.text();
+      let result;
+      try {
+        result = JSON.parse(raw);
+      } catch (_) {
+        // Backend returned non-JSON (likely a PHP error or HTML). Show it to the user.
+        handleError(raw || 'Server returned a non-JSON response.');
+        return;
+      }
 
-      if (result.success) {
+      if (result && result.success) {
         updateUIAfterResponse(result);
       } else {
-        handleError(result.message || 'An error occurred during analysis.');
+        handleError((result && result.message) || 'An error occurred during analysis.');
       }
     } catch (error) {
       console.error('Submission Error:', error);

@@ -273,7 +273,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (c.title+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (("employee "+String(c.id).padStart(3,'0'))+(c.employee_name||'')+(c.uploaded_by_name||'')+(c.title||'')+(c.category||'')+(c.party||'')+(c.text||'')).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -281,12 +281,14 @@ $wekaConn = $conn; // Use existing connection
         const accessAllowed = (c.access.map(a=>a.trim()).includes(role)) || isAdmin;
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
-        const employee = c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
+        const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
+          <td class="px-3 py-3 align-top break-words whitespace-normal">Employee ${String(c.id).padStart(3,'0')}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
               ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}

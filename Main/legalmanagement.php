@@ -92,10 +92,10 @@ $wekaConn = $conn; // Use existing connection
           <table class="w-full table-auto text-left">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
+                <th class="px-3 py-2">Employee</th>
                 <th class="px-3 py-2">Title</th>
                 <th class="px-3 py-2">Party</th>
                 <th class="px-3 py-2">Expiry</th>
-                <th class="px-3 py-2">Employee</th>
                 <th class="px-3 py-2">Weka Risk</th>
                 <th class="px-3 py-2">Confidence</th>
                 <th class="px-3 py-2">Access</th>
@@ -278,10 +278,10 @@ $wekaConn = $conn; // Use existing connection
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         const employee = c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">
             <div class="inline-block px-3 py-1 rounded ${c.level==='High'?'risk-high':c.level==='Medium'?'risk-medium':'risk-low'}">
               ${c.level} (${c.score}) ${c.level==='High'?'<span class="ml-1 text-xs">⚠️</span>':''}

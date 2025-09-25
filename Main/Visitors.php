@@ -1,6 +1,8 @@
 <?php
 // Start session
 session_start();
+// Ensure consistent local timezone for all date/time operations
+date_default_timezone_set('Asia/Manila');
 
 // Database connection
 $host = 'localhost';
@@ -12,6 +14,8 @@ $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+// Align MySQL session timezone with application timezone
+@$conn->query("SET time_zone = '+08:00'");
 
 // ================== ADD VISITOR ==================
 if (isset($_POST['action']) && $_POST['action'] === "add") {
@@ -318,7 +322,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
                                   <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".htmlspecialchars($row['phone'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['address'])."</td>
                                   <td class='px-6 py-4 text-sm text-gray-900 text-center'>".htmlspecialchars($row['purpose'])."</td>
-                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".date('M j, Y, g:ia', strtotime($row['created_at']))."</td>
+                                  <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center'>".date('M j, Y, g:ia', strtotime($row['created_at'].' +08:00'))."</td>
                                   <td class='px-6 py-4 whitespace-nowrap text-sm font-medium text-center'>
                                       <a href='Visitors.php?edit={$row['id']}' class='text-blue-600 hover:text-blue-900 mr-3'>Edit</a>
                                       <button type='button' data-id='{$row['id']}' class='openDeleteModal text-red-600 hover:text-red-900'>Delete</button>

@@ -92,7 +92,7 @@ $wekaConn = $conn; // Use existing connection
           <table class="w-full table-auto text-left">
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
-                <th class="px-3 py-2">Employee</th>
+                <th class="px-3 py-2">Employee Full Name</th>
                 <th class="px-3 py-2">Title</th>
                 <th class="px-3 py-2">Category</th>
                 <th class="px-3 py-2">Party</th>
@@ -269,7 +269,7 @@ $wekaConn = $conn; // Use existing connection
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Employee';
       const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (c.title+c.category+c.party+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
+      const list = store.contracts.filter(c => (c.title+c.category+c.party+(c.employee_name||'')+(c.uploaded_by_name||'')+c.text).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
@@ -277,7 +277,7 @@ $wekaConn = $conn; // Use existing connection
         const accessAllowed = (c.access.map(a=>a.trim()).includes(role)) || isAdmin;
         const maskedParty = isAdmin ? c.party : '••••••';
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
-        const employee = c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
+        const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>

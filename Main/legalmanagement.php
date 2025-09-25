@@ -93,6 +93,7 @@ $wekaConn = $conn; // Use existing connection
             <thead class="text-xs text-gray-500 uppercase">
               <tr>
                 <th class="px-3 py-2">Employee Full Name</th>
+                <th class="px-3 py-2">Employee ID</th>
                 <th class="px-3 py-2">Title</th>
                 <th class="px-3 py-2">Category</th>
                 <th class="px-3 py-2">Party</th>
@@ -280,6 +281,7 @@ $wekaConn = $conn; // Use existing connection
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">${employee}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.employee_id || '—'}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>

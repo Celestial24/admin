@@ -181,7 +181,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
   <?php include '../Components/sidebar/sidebar_admin.php'; ?>
 
   <!-- Main Content Area -->
-  <div class="flex-1 min-h-screen overflow-auto">
+  <div class="flex-1 min-h-screen overflow-auto ml-64">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div class="flex items-center justify-between">

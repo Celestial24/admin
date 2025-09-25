@@ -23,7 +23,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 </style>
 
 <!-- Sidebar Container -->
-<div id="sidebar" class="bg-gray-800 text-white w-64 min-h-screen flex flex-col overflow-hidden">
+<div id="sidebar" class="fixed inset-y-0 left-0 bg-gray-800 text-white w-64 h-screen flex flex-col overflow-hidden z-50">
 
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">

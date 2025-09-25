@@ -140,11 +140,6 @@ $wekaConn = $conn; // Use existing connection
         const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         
-        // ✅ FIX: Added a "Show Password" button for admins if password exists
-        const showPasswordButton = (isAdmin && c.view_password)
-            ? `<button class="btnShowPass px-2 py-1 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded text-xs" data-id="${c.id}">Show Pass</button>`
-            : '';
-
         tr.innerHTML = `
           <td class="px-3 py-3">${c.employee_id || 'N/A'}</td>
           <td class="px-3 py-3">${employee}</td>
@@ -161,7 +156,6 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3">
             <div class="flex justify-center gap-2">
               <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed ? '' : 'disabled'}>${accessAllowed ? 'View' : 'Restricted'}</button>
-              ${showPasswordButton}
               ${isAdmin ? `<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>` : ''}
             </div>
           </td>
@@ -173,37 +167,11 @@ $wekaConn = $conn; // Use existing connection
       attachActionListeners();
     }
 
-    // Function to handle showing password
-    function showContractPassword(id) {
-        const contract = store.contracts.find(c => c.id === id);
-        if (!contract || !contract.view_password) {
-            alert('No password set for this contract.');
-            return;
-        }
-
-        const enteredPassword = prompt('To reveal the contract password, please enter it again:');
-        
-        if (enteredPassword === null) return; // User cancelled prompt
-
-        if (enteredPassword === contract.view_password) {
-            alert(`Success! The password for "${contract.title}" is: ${contract.view_password}`);
-            audit(`Password viewed for contract "${contract.title}"`);
-        } else {
-            alert('Incorrect password. Access denied.');
-        }
-    }
-
     // Attaches all event listeners for the table buttons
     function attachActionListeners() {
       document.querySelectorAll('.btnView').forEach(b => b.addEventListener('click', e => {
         const id = e.target.dataset.id;
         viewContract(id);
-      }));
-      
-      // ✅ FIX: Add event listener for the new "Show Password" button
-      document.querySelectorAll('.btnShowPass').forEach(b => b.addEventListener('click', e => {
-        const id = e.target.dataset.id;
-        showContractPassword(id);
       }));
 
       document.querySelectorAll('.btnArchive').forEach(b => b.addEventListener('click', e => {
@@ -259,7 +227,6 @@ $wekaConn = $conn; // Use existing connection
             score: c.risk_score,
             level: c.risk_level,
             weka_confidence: c.weka_confidence,
-            view_password: c.view_password, // ✅ Make sure password is included
             employee_id: c.employee_id,
             employee_name: c.employee_name,
             category: c.category

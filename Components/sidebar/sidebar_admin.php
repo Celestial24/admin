@@ -97,16 +97,27 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                     Contract Result & Risk Analysis
                 </a>
-                <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'contract.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
                     Submission History
                 </a>
             </div>
 
-            <!-- Document Archiver -->
-            <a href="/admin/module-table/document.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="folder-kanban" class="w-5 h-5"></i>
-                <span class="sidebar-text">Document Archiver</span>
-            </a>
+            <!-- Document Archiver (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="archiver-submenu">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+                    <span class="sidebar-text">Document Archiver</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
+            </button>
+            <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
+                    Archive Browser
+                </a>
+                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
+                    Submission History
+                </a>
+            </div>
 
             <!-- Navigation -->
             <a href="/admin/Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">

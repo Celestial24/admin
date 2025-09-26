@@ -217,13 +217,25 @@ class WekaContractAnalyzer {
     }
 
     /**
-     * Retrieves all contracts from the database.
+     * Retrieves all contracts from the database with essential display fields.
      */
     public function getAllContracts(): array {
-        $stmt = $this->conn->prepare("SELECT id, title, party, category, risk_level, created_at FROM weka_contracts ORDER BY created_at DESC");
+        $stmt = $this->conn->prepare("SELECT 
+            id, title, party, category, employee_name, uploaded_by_name, department,
+            ocr_text, risk_score, risk_level, probability_percent, weka_confidence,
+            risk_factors, recommendations, created_at
+        FROM weka_contracts ORDER BY created_at DESC");
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+
+        $contracts = [];
+        while ($row = $result->fetch_assoc()) {
+            // Decode JSON fields if stored as JSON/LONGTEXT JSON
+            $row['risk_factors'] = json_decode($row['risk_factors'], true);
+            $row['recommendations'] = json_decode($row['recommendations'], true);
+            $contracts[] = $row;
+        }
+        return $contracts;
     }
     
     /**

@@ -300,6 +300,8 @@ $wekaConn = $conn; // Use existing connection
             <div class="flex gap-2">
               <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>
               ${accessAllowed?`<button class="btnAnalyze px-2 py-1 border rounded text-xs" data-id="${c.id}">Weka Analysis</button>`:''}
+              ${accessAllowed?`<button class="btnEdit px-2 py-1 bg-blue-100 text-blue-700 border border-blue-300 rounded text-xs" data-id="${c.id}">Edit</button>`:''}
+              ${accessAllowed?`<button class="btnDelete px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">Delete</button>`:''}
               ${c.level==='High'&&isAdmin?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
               ${isAdmin?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
             </div>
@@ -309,13 +311,33 @@ $wekaConn = $conn; // Use existing connection
       });
 
       // Wire up action buttons
-      const openWithPasswordGuard = (id, fn) => {
+      const openWithPasswordGuard = async (id, fn) => {
         const c = store.contracts.find(x=>x.id===id);
         if (!c) return;
+        
+        // Check if contract has password protection
         if (c.view_password && c.view_password.trim() !== '') {
-          const input = prompt('Enter password to view:');
-          if (!input) return;
-          if (input !== c.view_password) { alert('Invalid password'); return; }
+          const password = prompt('Enter password to access this contract:');
+          if (!password) return;
+          
+          // Verify password with API
+          try {
+            const response = await fetch('../backend/weka_contract_api.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: `action=verify_password&contract_id=${id}&password=${encodeURIComponent(password)}`
+            });
+            const result = await response.json();
+            
+            if (!result.success) {
+              alert('Invalid password. Access denied.');
+              return;
+            }
+          } catch (error) {
+            console.error('Password verification error:', error);
+            alert('Error verifying password. Please try again.');
+            return;
+          }
         }
         fn(id);
       }
@@ -324,6 +346,12 @@ $wekaConn = $conn; // Use existing connection
       }));
       document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; openWithPasswordGuard(id, analyzeContract);
+      }));
+      document.querySelectorAll('.btnEdit').forEach(b=> b.addEventListener('click', e=>{
+        const id=e.target.dataset.id; openWithPasswordGuard(id, editContract);
+      }));
+      document.querySelectorAll('.btnDelete').forEach(b=> b.addEventListener('click', e=>{
+        const id=e.target.dataset.id; openWithPasswordGuard(id, deleteContract);
       }));
       document.querySelectorAll('.btnHighRisk').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; showHighRiskDetails(id);
@@ -463,6 +491,151 @@ $wekaConn = $conn; // Use existing connection
       store.archived.push(c);
       audit(`Archived contract "${c.title}"`);
       renderContracts('');
+    }
+
+    async function editContract(id){
+      const c = store.contracts.find(x=>x.id===id);
+      if(!c) return;
+      
+      // Create edit form
+      const editForm = document.createElement('div');
+      editForm.className = 'fixed inset-0 flex items-center justify-center modal-backdrop';
+      editForm.innerHTML = `
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2 p-6 max-h-[90vh] flex flex-col">
+          <div class="flex items-center justify-between mb-4 border-b pb-3">
+            <h3 class="text-lg font-semibold">Edit Contract</h3>
+            <button id="closeEdit" class="text-gray-500">✕</button>
+          </div>
+          <form id="editContractForm" class="space-y-4 overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input type="text" name="title" value="${c.title}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+                <input type="text" name="party" value="${c.party}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="Other" ${c.category === 'Other' ? 'selected' : ''}>Other</option>
+                  <option value="Employment" ${c.category === 'Employment' ? 'selected' : ''}>Employment</option>
+                  <option value="Supplier" ${c.category === 'Supplier' ? 'selected' : ''}>Supplier</option>
+                  <option value="Lease" ${c.category === 'Lease' ? 'selected' : ''}>Lease</option>
+                  <option value="Service" ${c.category === 'Service' ? 'selected' : ''}>Service</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                <input type="text" name="employee_name" value="${c.employee_name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                <input type="text" name="employee_id" value="${c.employee_id || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <input type="text" name="department" value="${c.department || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${c.description || ''}</textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">View Password (leave empty to remove)</label>
+              <input type="password" name="view_password" placeholder="Enter new password or leave empty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR)</label>
+              <textarea name="ocr_text" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${c.text || ''}</textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" id="cancelEdit" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.body.appendChild(editForm);
+      
+      // Handle form submission
+      document.getElementById('editContractForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const contractData = {
+          title: formData.get('title'),
+          party: formData.get('party'),
+          category: formData.get('category'),
+          employee_name: formData.get('employee_name'),
+          employee_id: formData.get('employee_id'),
+          department: formData.get('department'),
+          description: formData.get('description'),
+          view_password: formData.get('view_password'),
+          ocr_text: formData.get('ocr_text')
+        };
+        
+        try {
+          const response = await fetch('../backend/weka_contract_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=update&contract_id=${id}&${Object.entries(contractData).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            alert('Contract updated successfully!');
+            document.body.removeChild(editForm);
+            loadWekaContracts(); // Reload contracts
+            audit(`Updated contract "${contractData.title}"`);
+          } else {
+            alert('Error updating contract: ' + result.message);
+          }
+        } catch (error) {
+          console.error('Update error:', error);
+          alert('Error updating contract. Please try again.');
+        }
+      });
+      
+      // Handle close buttons
+      document.getElementById('closeEdit').addEventListener('click', () => {
+        document.body.removeChild(editForm);
+      });
+      document.getElementById('cancelEdit').addEventListener('click', () => {
+        document.body.removeChild(editForm);
+      });
+    }
+
+    async function deleteContract(id){
+      const c = store.contracts.find(x=>x.id===id);
+      if(!c) return;
+      
+      if (!confirm(`Are you sure you want to delete the contract "${c.title}"? This action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=delete&contract_id=${id}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Contract deleted successfully!');
+          loadWekaContracts(); // Reload contracts
+          audit(`Deleted contract "${c.title}"`);
+        } else {
+          alert('Error deleting contract: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting contract. Please try again.');
+      }
     }
 
     function audit(msg){

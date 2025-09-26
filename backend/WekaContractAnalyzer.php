@@ -204,4 +204,164 @@ class WekaContractAnalyzer {
         }
         return $contracts;
     }
+
+    /**
+     * Verify password for contract access.
+     */
+    public function verifyContractPassword(int $contractId, string $password): bool {
+        $stmt = $this->conn->prepare("SELECT view_password FROM weka_contracts WHERE id = ?");
+        $stmt->bind_param('i', $contractId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            // If no password is set, allow access
+            if (empty($row['view_password'])) {
+                return true;
+            }
+            // Verify password
+            return $row['view_password'] === $password;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Get contract by ID with password verification.
+     */
+    public function getContractById(int $contractId, string $password = null): ?array {
+        $stmt = $this->conn->prepare("SELECT * FROM weka_contracts WHERE id = ?");
+        $stmt->bind_param('i', $contractId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            // Check if password is required
+            if (!empty($row['view_password'])) {
+                if ($password === null || $row['view_password'] !== $password) {
+                    return null; // Password required but not provided or incorrect
+                }
+            }
+            
+            $row['risk_factors'] = json_decode($row['risk_factors'], true);
+            $row['recommendations'] = json_decode($row['recommendations'], true);
+            return $row;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Update contract information.
+     */
+    public function updateContract(int $contractId, array $contractData, string $password = null): bool {
+        // First verify password if required
+        if (!$this->verifyContractPassword($contractId, $password)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("
+            UPDATE weka_contracts 
+            SET title = ?, party = ?, category = ?, employee_name = ?, employee_id = ?, 
+                department = ?, description = ?, view_password = ?, ocr_text = ?, 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+
+        $title = $contractData['title'];
+        $party = $contractData['party'];
+        $category = $contractData['category'] ?? 'Other';
+        $employeeName = $contractData['employee_name'];
+        $employeeId = $contractData['employee_id'];
+        $department = $contractData['department'];
+        $description = $contractData['description'];
+        $viewPassword = ($contractData['view_password'] === '') ? null : $contractData['view_password'];
+        $ocrText = $contractData['ocr_text'];
+
+        $stmt->bind_param('sssssssssi', 
+            $title, $party, $category, $employeeName, $employeeId, 
+            $department, $description, $viewPassword, $ocrText, $contractId
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update contract: ' . $stmt->error);
+        }
+
+        // Re-analyze the contract if OCR text was updated
+        if (isset($contractData['ocr_text']) && !empty($contractData['ocr_text'])) {
+            $analysis = $this->analyzeContract($contractData);
+            $this->updateContractAnalysis($contractId, $analysis);
+        }
+
+        return true;
+    }
+
+    /**
+     * Update contract analysis results.
+     */
+    public function updateContractAnalysis(int $contractId, array $analysis): bool {
+        $stmt = $this->conn->prepare("
+            UPDATE weka_contracts 
+            SET risk_score = ?, risk_level = ?, probability_percent = ?, 
+                weka_confidence = ?, risk_factors = ?, recommendations = ?, 
+                legal_review_required = ?, high_risk_alert = ?, 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+
+        $riskFactorsJson = json_encode($analysis['risk_factors']);
+        $recommendationsJson = json_encode($analysis['recommendations']);
+        $legalReviewRequired = $analysis['risk_level'] === 'High' ? 1 : 0;
+        $highRiskAlert = $analysis['risk_level'] === 'High' ? 1 : 0;
+
+        $stmt->bind_param('isisssii', 
+            $analysis['risk_score'], $analysis['risk_level'], $analysis['probability_percent'],
+            $analysis['weka_confidence'], $riskFactorsJson, $recommendationsJson,
+            $legalReviewRequired, $highRiskAlert, $contractId
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update contract analysis: ' . $stmt->error);
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete contract with password verification.
+     */
+    public function deleteContract(int $contractId, string $password = null): bool {
+        // First verify password if required
+        if (!$this->verifyContractPassword($contractId, $password)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("DELETE FROM weka_contracts WHERE id = ?");
+        $stmt->bind_param('i', $contractId);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to delete contract: ' . $stmt->error);
+        }
+
+        return true;
+    }
+
+    /**
+     * Set or update password for a contract.
+     */
+    public function setContractPassword(int $contractId, string $newPassword, string $currentPassword = null): bool {
+        // Verify current password if one exists
+        if (!$this->verifyContractPassword($contractId, $currentPassword)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("UPDATE weka_contracts SET view_password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmt->bind_param('si', $newPassword, $contractId);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update contract password: ' . $stmt->error);
+        }
+
+        return true;
+    }
 }

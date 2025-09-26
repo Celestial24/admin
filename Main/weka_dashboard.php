@@ -301,9 +301,35 @@ include '../backend/sql/contract.php';
             updateRecentContracts();
         }
 
-        window.viewContractDetails = (contractId) => {
+        window.viewContractDetails = async (contractId) => {
             const contract = contractsData.find(c => c.id == contractId);
             if (!contract) return;
+            
+            // Check if password is required
+            if (contract.view_password && contract.view_password.trim() !== '') {
+                const password = prompt('Enter password to view contract details:');
+                if (!password) return;
+                
+                // Verify password with API
+                try {
+                    const response = await fetch('../backend/weka_contract_api.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=verify_password&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+                    });
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        alert('Invalid password. Access denied.');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Password verification error:', error);
+                    alert('Error verifying password. Please try again.');
+                    return;
+                }
+            }
+            
             let details = `--- Contract Analysis Details ---\n\n` +
                           `Title: ${contract.title}\nParty: ${contract.party}\n` +
                           `Risk Level: ${contract.risk_level} (Score: ${contract.risk_score}/100)\n` +

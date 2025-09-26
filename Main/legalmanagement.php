@@ -537,8 +537,67 @@ $wekaConn = $conn; // Use existing connection
         showPasswordModal(currentContract.id, 'edit');
       } else {
         // No password required, proceed with edit
-        editContract(currentContract.id);
+        showEditForm(currentContract);
       }
+    }
+
+    // Show edit form modal
+    function showEditForm(contract) {
+      const content = `
+        <form id="editContractForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input type="text" name="title" value="${contract.title || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+              <input type="text" name="party" value="${contract.party || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="Other" ${contract.category === 'Other' ? 'selected' : ''}>Other</option>
+                <option value="Employment" ${contract.category === 'Employment' ? 'selected' : ''}>Employment</option>
+                <option value="Supplier" ${contract.category === 'Supplier' ? 'selected' : ''}>Supplier</option>
+                <option value="Lease" ${contract.category === 'Lease' ? 'selected' : ''}>Lease</option>
+                <option value="Service" ${contract.category === 'Service' ? 'selected' : ''}>Service</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+              <input type="text" name="employee_name" value="${contract.employee_name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+              <input type="text" name="employee_id" value="${contract.employee_id || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <input type="text" name="department" value="${contract.department || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${contract.description || ''}</textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">View Password (leave empty to remove)</label>
+            <input type="password" name="view_password" placeholder="Enter new password or leave empty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR)</label>
+            <textarea name="ocr_text" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${contract.text || ''}</textarea>
+          </div>
+        </form>
+      `;
+      
+      const actions = `
+        <button onclick="closeModal('universalModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button onclick="saveContractEdit()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Changes</button>
+      `;
+      
+      showUniversalModal('Edit Contract', content, actions);
     }
 
     // Delete contract from view
@@ -569,6 +628,38 @@ $wekaConn = $conn; // Use existing connection
       }
     }
 
+    // Show change password form
+    function showChangePasswordForm(contractId) {
+      const content = `
+        <form id="changePasswordForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <input type="password" id="currentPasswordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter current password" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <input type="password" id="newPasswordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter new password" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <input type="password" id="confirmPasswordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Confirm new password" required>
+          </div>
+          <div class="text-xs text-gray-500">
+            <p>• Leave new password empty to remove password protection</p>
+            <p>• Password must be at least 6 characters long</p>
+          </div>
+        </form>
+      `;
+      
+      const actions = `
+        <button onclick="closeModal('universalModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button onclick="changePassword()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Change Password</button>
+      `;
+      
+      currentContractId = contractId;
+      showUniversalModal('Change Password', content, actions);
+    }
+
     // Edit contract with password
     async function editContractWithPassword(contractId, password) {
       try {
@@ -576,7 +667,7 @@ $wekaConn = $conn; // Use existing connection
         const result = await response.json();
         
         if (result.success) {
-          editContract(contractId);
+          showEditForm(result.contract);
         } else {
           alert('Error loading contract for editing.');
         }
@@ -611,28 +702,16 @@ $wekaConn = $conn; // Use existing connection
 
     // Update password with current password
     async function updatePasswordWithPassword(contractId, currentPassword) {
-      const newPassword = prompt('Enter new password (leave empty to remove password):');
-      if (newPassword === null) return; // User cancelled
+      // Pre-fill the current password in the form
+      showChangePasswordForm(contractId);
       
-      try {
-        const response = await fetch('../backend/weka_contract_api.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `action=set_password&contract_id=${contractId}&new_password=${encodeURIComponent(newPassword)}&current_password=${encodeURIComponent(currentPassword)}`
-        });
-        const result = await response.json();
-        
-        if (result.success) {
-          alert('Password updated successfully!');
-          closeModal('modalView');
-          loadWekaContracts(); // Reload contracts
-        } else {
-          alert('Error updating password: ' + result.message);
+      // Set the current password after the modal is shown
+      setTimeout(() => {
+        const currentPasswordInput = document.getElementById('currentPasswordInput');
+        if (currentPasswordInput) {
+          currentPasswordInput.value = currentPassword;
         }
-      } catch (error) {
-        console.error('Error updating password:', error);
-        alert('Error updating password. Please try again.');
-      }
+      }, 100);
     }
 
     // Set contract password (when no current password)
@@ -681,6 +760,99 @@ $wekaConn = $conn; // Use existing connection
       } catch (error) {
         console.error('Error setting password:', error);
         alert('Error setting password. Please try again.');
+      }
+    }
+
+    // Save contract edit
+    async function saveContractEdit() {
+      const form = document.getElementById('editContractForm');
+      const formData = new FormData(form);
+      
+      const contractData = {
+        title: formData.get('title'),
+        party: formData.get('party'),
+        category: formData.get('category'),
+        employee_name: formData.get('employee_name'),
+        employee_id: formData.get('employee_id'),
+        department: formData.get('department'),
+        description: formData.get('description'),
+        view_password: formData.get('view_password'),
+        ocr_text: formData.get('ocr_text')
+      };
+      
+      // Validate required fields
+      if (!contractData.title || !contractData.party) {
+        alert('Title and Party are required fields.');
+        return;
+      }
+      
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=update&contract_id=${currentContract.id}&${Object.entries(contractData).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Contract updated successfully!');
+          closeModal('universalModal');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error updating contract: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error updating contract:', error);
+        alert('Error updating contract. Please try again.');
+      }
+    }
+
+    // Change password function
+    async function changePassword() {
+      const currentPassword = document.getElementById('currentPasswordInput').value;
+      const newPassword = document.getElementById('newPasswordInput').value;
+      const confirmPassword = document.getElementById('confirmPasswordInput').value;
+      
+      // Validate inputs
+      if (!currentPassword) {
+        alert('Please enter current password.');
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        alert('New passwords do not match.');
+        return;
+      }
+      
+      if (newPassword && newPassword.length < 6) {
+        alert('New password must be at least 6 characters long.');
+        return;
+      }
+      
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=set_password&contract_id=${currentContractId}&new_password=${encodeURIComponent(newPassword)}&current_password=${encodeURIComponent(currentPassword)}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          if (newPassword) {
+            alert('Password changed successfully!');
+          } else {
+            alert('Password removed successfully!');
+          }
+          closeModal('universalModal');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error changing password: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error changing password:', error);
+        alert('Error changing password. Please try again.');
       }
     }
     

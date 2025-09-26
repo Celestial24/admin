@@ -68,22 +68,20 @@ if ($username === '' || $password === '') {
 // Try admin first (including Super Admin role)
 $admin = checkAdmin($conn, $username, $password);
 if ($admin) {
-    $adminRole = strtolower($admin['role'] ?? 'admin');
+    $adminRoleRaw = strtolower(trim($admin['role'] ?? 'admin'));
+    // Normalize possible variants for Super Admin
+    $superAliases = ['super_admin','superadmin','super admin','super'];
+    $isSuper = in_array($adminRoleRaw, $superAliases, true);
 
-    // Normalize possible variants
-    if ($adminRole === 'superadmin') { $adminRole = 'super_admin'; }
-    if ($adminRole === 'super') { $adminRole = 'super_admin'; }
-
-    $_SESSION['user_type'] = ($adminRole === 'super_admin') ? 'super_admin' : 'admin';
-    $_SESSION['role'] = $_SESSION['user_type'];
+    $_SESSION['role'] = $isSuper ? 'super_admin' : 'admin';
+    $_SESSION['user_type'] = $_SESSION['role'];
     $_SESSION['user_id'] = $admin['id'];
     $_SESSION['name'] = $admin['name'] ?? $admin['username'] ?? 'Admin';
     $_SESSION['email'] = $admin['email'] ?? '';
 
-    $isSuper = ($adminRole === 'super_admin');
     echo json_encode([
         'success' => true,
-        'role' => $isSuper ? 'super_admin' : 'admin',
+        'role' => $_SESSION['role'],
         'greeting' => $isSuper ? 'Super Admin' : 'Admin',
         'name' => $_SESSION['name'],
         'redirectUrl' => $isSuper ? '../Main/super_Dashboard.php' : '../Main/Dashboard.php'
@@ -98,6 +96,7 @@ if ($user === 'not_verified') {
     exit;
 }
 if ($user) {
+    $_SESSION['role'] = 'user';
     $_SESSION['user_type'] = 'user';
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? '';

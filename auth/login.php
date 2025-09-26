@@ -69,9 +69,11 @@ if ($result['success']) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
-    $roleRaw = strtolower($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user'));
-    if ($roleRaw === 'superadmin' || $roleRaw === 'super') { $roleRaw = 'super_admin'; }
+    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user')));
+    $superAliases = ['super_admin','superadmin','super admin','super'];
+    if (in_array($roleRaw, $superAliases, true)) { $roleRaw = 'super_admin'; }
     $_SESSION['role'] = $roleRaw;
+    $_SESSION['user_type'] = $roleRaw;
 
     // Redirect based on role
     if ($roleRaw === 'super_admin') {

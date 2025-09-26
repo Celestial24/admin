@@ -90,6 +90,79 @@ $userName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown User');
     </main>
   </div>
 
+  <!-- View Contract Modal -->
+  <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-6 border-b">
+        <h3 class="text-lg font-semibold">Contract Details</h3>
+        <button onclick="closeModal('viewModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <div id="viewContent" class="p-6 space-y-4">
+        <!-- Content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Contract Modal -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-6 border-b">
+        <h3 class="text-lg font-semibold">Edit Contract</h3>
+        <button onclick="closeModal('editModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <form id="editForm" class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+            <input type="text" name="party" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="Other">Other</option>
+              <option value="Employment">Employment</option>
+              <option value="Supplier">Supplier</option>
+              <option value="Lease">Lease</option>
+              <option value="Service">Service</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+            <input type="text" name="employee_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+            <input type="text" name="employee_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+            <input type="text" name="department" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">View Password (leave empty to remove)</label>
+          <input type="password" name="view_password" placeholder="Enter new password or leave empty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR)</label>
+          <textarea name="ocr_text" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onclick="closeModal('editModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 <script>
 const tbody = document.getElementById('tbody');
 const searchEl = document.getElementById('search');
@@ -142,10 +215,10 @@ async function load(){
         <td class="px-4 py-3">${date}</td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2">
-            <a href="/admin/Main/legalmanagement.php" title="Open" class="text-blue-600 hover:text-blue-800">Open</a>
+            <button onclick="viewContract(${c.id})" class="text-blue-600 hover:text-blue-800" title="View Details">Open</button>
             <span class="text-gray-300">|</span>
-            <button class="text-green-600 hover:text-green-800" title="Approve" disabled>✓</button>
-            <button class="text-red-600 hover:text-red-800" title="Decline" disabled>✕</button>
+            <button onclick="editContract(${c.id})" class="text-green-600 hover:text-green-800" title="Edit Contract">✓</button>
+            <button onclick="deleteContract(${c.id})" class="text-red-600 hover:text-red-800" title="Delete Contract">✕</button>
           </div>
         </td>`;
       tbody.appendChild(tr);
@@ -154,6 +227,246 @@ async function load(){
     tbody.innerHTML='<tr><td class="px-4 py-3" colspan="7">Error loading data.</td></tr>';
   }
 }
+
+// Modal functions
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.add('hidden');
+  document.getElementById(modalId).classList.remove('flex');
+}
+
+function openModal(modalId) {
+  document.getElementById(modalId).classList.remove('hidden');
+  document.getElementById(modalId).classList.add('flex');
+}
+
+// Password verification helper
+async function verifyPassword(contractId, password) {
+  try {
+    const response = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=verify_password&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+    });
+    const result = await response.json();
+    return result.success;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
+}
+
+// View contract function
+async function viewContract(contractId) {
+  try {
+    // Check if password is required
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
+    const result = await response.json();
+    
+    if (!result.success && result.password_required) {
+      const password = prompt('Enter password to view this contract:');
+      if (!password) return;
+      
+      const isValid = await verifyPassword(contractId, password);
+      if (!isValid) {
+        alert('Invalid password. Access denied.');
+        return;
+      }
+      
+      // Retry with password
+      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+      const resultWithPassword = await responseWithPassword.json();
+      
+      if (resultWithPassword.success) {
+        displayContractDetails(resultWithPassword.contract);
+      } else {
+        alert('Error loading contract details.');
+      }
+    } else if (result.success) {
+      displayContractDetails(result.contract);
+    } else {
+      alert('Error loading contract details.');
+    }
+  } catch (error) {
+    console.error('Error viewing contract:', error);
+    alert('Error loading contract details.');
+  }
+}
+
+// Display contract details in modal
+function displayContractDetails(contract) {
+  const content = document.getElementById('viewContent');
+  const riskClass = {
+    'High': 'bg-red-100 text-red-800',
+    'Medium': 'bg-yellow-100 text-yellow-800',
+    'Low': 'bg-green-100 text-green-800'
+  }[contract.risk_level] || 'bg-gray-100 text-gray-800';
+  
+  content.innerHTML = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div><strong>Title:</strong> ${contract.title}</div>
+      <div><strong>Party:</strong> ${contract.party}</div>
+      <div><strong>Category:</strong> ${contract.category || 'Other'}</div>
+      <div><strong>Employee Name:</strong> ${contract.employee_name || 'N/A'}</div>
+      <div><strong>Employee ID:</strong> ${contract.employee_id || 'N/A'}</div>
+      <div><strong>Department:</strong> ${contract.department || 'N/A'}</div>
+      <div><strong>Risk Level:</strong> <span class="inline-block px-2 py-1 rounded-full text-xs ${riskClass}">${contract.risk_level}</span></div>
+      <div><strong>Risk Score:</strong> ${contract.risk_score}/100</div>
+      <div><strong>Weka Confidence:</strong> ${contract.weka_confidence}%</div>
+      <div><strong>Probability of Dispute:</strong> ${contract.probability_percent}%</div>
+      <div><strong>Created:</strong> ${new Date(contract.created_at).toLocaleString()}</div>
+      <div><strong>Updated:</strong> ${new Date(contract.updated_at).toLocaleString()}</div>
+    </div>
+    <div>
+      <strong>Description:</strong>
+      <p class="mt-1 text-gray-700">${contract.description || 'No description provided.'}</p>
+    </div>
+    ${contract.risk_factors && contract.risk_factors.length > 0 ? `
+    <div>
+      <strong>Risk Factors:</strong>
+      <ul class="mt-1 list-disc list-inside text-red-600 space-y-1">
+        ${contract.risk_factors.map(factor => `<li>${factor}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    ${contract.recommendations && contract.recommendations.length > 0 ? `
+    <div>
+      <strong>Recommendations:</strong>
+      <ul class="mt-1 list-disc list-inside text-green-600 space-y-1">
+        ${contract.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    <div>
+      <strong>Contract Text (OCR):</strong>
+      <div class="mt-1 p-3 bg-gray-50 rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">${contract.ocr_text || 'No OCR text available.'}</div>
+    </div>
+  `;
+  
+  openModal('viewModal');
+}
+
+// Edit contract function
+async function editContract(contractId) {
+  try {
+    // Get contract data first
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
+    const result = await response.json();
+    
+    if (!result.success && result.password_required) {
+      const password = prompt('Enter password to edit this contract:');
+      if (!password) return;
+      
+      const isValid = await verifyPassword(contractId, password);
+      if (!isValid) {
+        alert('Invalid password. Access denied.');
+        return;
+      }
+      
+      // Retry with password
+      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+      const resultWithPassword = await responseWithPassword.json();
+      
+      if (resultWithPassword.success) {
+        populateEditForm(resultWithPassword.contract, contractId);
+      } else {
+        alert('Error loading contract for editing.');
+      }
+    } else if (result.success) {
+      populateEditForm(result.contract, contractId);
+    } else {
+      alert('Error loading contract for editing.');
+    }
+  } catch (error) {
+    console.error('Error editing contract:', error);
+    alert('Error loading contract for editing.');
+  }
+}
+
+// Populate edit form
+function populateEditForm(contract, contractId) {
+  const form = document.getElementById('editForm');
+  form.contractId = contractId; // Store contract ID for submission
+  
+  // Populate form fields
+  form.elements.title.value = contract.title || '';
+  form.elements.party.value = contract.party || '';
+  form.elements.category.value = contract.category || 'Other';
+  form.elements.employee_name.value = contract.employee_name || '';
+  form.elements.employee_id.value = contract.employee_id || '';
+  form.elements.department.value = contract.department || '';
+  form.elements.description.value = contract.description || '';
+  form.elements.view_password.value = ''; // Don't show current password
+  form.elements.ocr_text.value = contract.ocr_text || '';
+  
+  openModal('editModal');
+}
+
+// Delete contract function
+async function deleteContract(contractId) {
+  if (!confirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=delete&contract_id=${contractId}`
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Contract deleted successfully!');
+      load(); // Reload the table
+    } else {
+      alert('Error deleting contract: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error deleting contract:', error);
+    alert('Error deleting contract. Please try again.');
+  }
+}
+
+// Handle edit form submission
+document.getElementById('editForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const contractId = form.contractId;
+  
+  const formData = new FormData(form);
+  const contractData = {
+    title: formData.get('title'),
+    party: formData.get('party'),
+    category: formData.get('category'),
+    employee_name: formData.get('employee_name'),
+    employee_id: formData.get('employee_id'),
+    department: formData.get('department'),
+    description: formData.get('description'),
+    view_password: formData.get('view_password'),
+    ocr_text: formData.get('ocr_text')
+  };
+  
+  try {
+    const response = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=update&contract_id=${contractId}&${Object.entries(contractData).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Contract updated successfully!');
+      closeModal('editModal');
+      load(); // Reload the table
+    } else {
+      alert('Error updating contract: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Update error:', error);
+    alert('Error updating contract. Please try again.');
+  }
+});
 
 clearBtn.addEventListener('click', ()=>{ searchEl.value=''; statusEl.value=''; typeEl.value=''; load(); });
 refreshBtn.addEventListener('click', load);

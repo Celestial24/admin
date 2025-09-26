@@ -461,7 +461,7 @@ function showPinForm($error = '') {
     <title>Document Archiver</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="assets/image/logo2.png">
+    <link rel="icon" type="image/png" href="../assets/image/logo2.png">
     <script>
         tailwind.config = {
             theme: {
@@ -475,7 +475,10 @@ function showPinForm($error = '') {
         }
     </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen flex bg-gray-50">
+    <?php include '../Components/sidebar/sidebar_admin.php'; ?>
+
+    <div class="flex-1 min-h-screen overflow-auto">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -825,5 +828,6 @@ function showPinForm($error = '') {
             });
         }, 5000);
     </script>
+</div>
 </body>
 </html>

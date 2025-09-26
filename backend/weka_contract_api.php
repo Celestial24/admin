@@ -203,8 +203,14 @@ class WekaContractAnalyzer {
             if (empty($row['view_password'])) {
                 return true;
             }
-            // 🔒 SECURITY: Use password_verify to compare the provided password against the stored hash.
-            return password_verify($password, $row['view_password']);
+            $stored = (string)$row['view_password'];
+            // 🔒 SECURITY: Prefer secure hash verification when value is a bcrypt/argon hash.
+            $looksHashed = preg_match('/^\$2y\$|^\$argon2/', $stored) === 1;
+            if ($looksHashed) {
+                return password_verify($password, $stored);
+            }
+            // Legacy support: fall back to plain-text comparison for old records
+            return hash_equals($stored, $password);
         }
         
         return false; // Contract not found

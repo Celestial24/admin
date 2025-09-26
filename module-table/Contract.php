@@ -113,7 +113,10 @@ $userName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown User');
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input type="password" id="passwordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
+          <div class="relative">
+            <input type="password" id="passwordInput" class="w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
+            <button type="button" id="togglePwd" class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700" tabindex="-1" aria-label="Toggle password visibility">👁️</button>
+          </div>
         </div>
         <div class="flex justify-end gap-3">
           <button onclick="closeModal('passwordModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -778,6 +781,16 @@ searchEl.addEventListener('input', load);
 statusEl.addEventListener('change', load);
 typeEl.addEventListener('change', load);
 load();
+</script>
+
+<script>
+// Eye toggle for password field
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='togglePwd'){
+    const input = document.getElementById('passwordInput');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+});
 </script>
 </body>
 </html>

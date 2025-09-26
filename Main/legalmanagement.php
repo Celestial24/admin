@@ -286,7 +286,7 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top break-words whitespace-normal">Employee ${String(c.id).padStart(3,'0')}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.employee_name || '—'}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || 'Other'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.expiry || '—'}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">
@@ -374,8 +374,8 @@ $wekaConn = $conn; // Use existing connection
         document.getElementById('viewConfidence').innerText = `${c.weka_confidence || 'N/A'}%`;
         document.getElementById('viewText').value = isAdmin ? (c.text || 'No text available.') : '•••••• (restricted)';
         document.getElementById('viewEmployeeId').innerText = `Employee ${String(c.id).padStart(3,'0')}`;
-        document.getElementById('viewEmployeeName').innerText = '—';
-        document.getElementById('viewCategory').innerText = c.category || '—';
+        document.getElementById('viewEmployeeName').innerText = c.employee_name || '—';
+        document.getElementById('viewCategory').innerText = c.category || 'Other';
         // removed Uploaded By and Department fields
         
         const riskFactorsUl = document.getElementById('viewRiskFactors');
@@ -673,6 +673,7 @@ $wekaConn = $conn; // Use existing connection
               id: c.id.toString(),
               title: c.title,
               party: c.party,
+              category: c.category, // Include category from database
               expiry: c.created_at ? new Date(c.created_at).toISOString().slice(0,10) : '',
               text: c.ocr_text || '',
               access: ['Manager', 'Employee'], // Default access

@@ -117,6 +117,26 @@ $wekaConn = $conn; // Use existing connection
   </main>
 
     <!-- Modals (hidden by default) -->
+    <!-- Password Modal -->
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl w-96 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Enter Password</h3>
+          <button onclick="closeModal('passwordModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" id="passwordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeModal('passwordModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button onclick="verifyPasswordAndProceed()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Verify</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Alerts Modal -->
     <div id="modalAlerts" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
       <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 p-6">
@@ -137,7 +157,16 @@ $wekaConn = $conn; // Use existing connection
         </div>
         <div class="space-y-4 overflow-y-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div><strong>Party:</strong> <span id="viewParty"></span></div>
+                <div class="flex items-center gap-2">
+                    <strong>Party:</strong> 
+                    <span id="viewParty"></span>
+                    <button id="togglePartyVisibility" onclick="togglePartyVisibility()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                </div>
                 <div><strong>Expiry Date:</strong> <span id="viewExpiry"></span></div>
                 <div><strong>Risk Level:</strong> <span id="viewRiskLevel"></span></div>
                 <div><strong>Risk Score:</strong> <span id="viewRiskScore"></span></div>
@@ -158,6 +187,28 @@ $wekaConn = $conn; // Use existing connection
                 <h4 class="font-semibold mb-2">Full Contract Text</h4>
                 <textarea id="viewText" rows="8" readonly class="w-full p-2 border rounded bg-gray-50 text-xs whitespace-pre-wrap break-words"></textarea>
             </div>
+        </div>
+        <div class="mt-6 pt-4 border-t bg-gray-50 -mx-6 -mb-6 px-6 py-4">
+          <div class="flex justify-end gap-3">
+            <button onclick="editContractFromView()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Edit
+            </button>
+            <button onclick="deleteContractFromView()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Delete
+            </button>
+            <button onclick="updatePasswordFromView()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              Update Password
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -342,6 +393,249 @@ $wekaConn = $conn; // Use existing connection
 
       renderAudit();
     }
+
+    // Global variables for password modal
+    let currentContractId = null;
+    let pendingAction = null;
+    let currentContract = null;
+
+    // Password verification helper
+    async function verifyPassword(contractId, password) {
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=verify_password&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+        });
+        const result = await response.json();
+        return result.success;
+      } catch (error) {
+        console.error('Password verification error:', error);
+        return false;
+      }
+    }
+
+    // Show password modal
+    function showPasswordModal(contractId, action) {
+      currentContractId = contractId;
+      pendingAction = action;
+      document.getElementById('passwordInput').value = '';
+      openModal('passwordModal');
+    }
+
+    // Open modal helper
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+      document.getElementById(modalId).classList.add('flex');
+    }
+
+    // Close modal helper
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      document.getElementById(modalId).classList.remove('flex');
+    }
+
+    // Verify password and proceed with action
+    async function verifyPasswordAndProceed() {
+      const password = document.getElementById('passwordInput').value;
+      if (!password) {
+        alert('Please enter a password');
+        return;
+      }
+      
+      const isValid = await verifyPassword(currentContractId, password);
+      if (isValid) {
+        closeModal('passwordModal');
+        if (pendingAction === 'view') {
+          await viewContractWithPassword(currentContractId, password);
+        } else if (pendingAction === 'edit') {
+          await editContractWithPassword(currentContractId, password);
+        } else if (pendingAction === 'delete') {
+          await deleteContractWithPassword(currentContractId, password);
+        } else if (pendingAction === 'updatePassword') {
+          await updatePasswordWithPassword(currentContractId, password);
+        }
+      } else {
+        alert('Invalid password. Access denied.');
+      }
+    }
+
+    // View contract with password
+    async function viewContractWithPassword(contractId, password) {
+      try {
+        const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          currentContract = result.contract;
+          displayContractDetails(result.contract);
+        } else {
+          alert('Error loading contract details.');
+        }
+      } catch (error) {
+        console.error('Error viewing contract:', error);
+        alert('Error loading contract details.');
+      }
+    }
+
+    // Toggle party visibility
+    function togglePartyVisibility() {
+      const partyElement = document.getElementById('viewParty');
+      const toggleButton = document.getElementById('togglePartyVisibility');
+      
+      if (partyElement.textContent === '••••••') {
+        // Show actual party name
+        partyElement.textContent = currentContract ? currentContract.party : 'Unknown';
+        // Change icon to eye with slash
+        toggleButton.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+          </svg>
+        `;
+      } else {
+        // Hide party name
+        partyElement.textContent = '••••••';
+        // Change icon back to eye
+        toggleButton.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+        `;
+      }
+    }
+
+    // Edit contract from view
+    async function editContractFromView() {
+      if (!currentContract) return;
+      
+      if (currentContract.view_password && currentContract.view_password.trim() !== '') {
+        showPasswordModal(currentContract.id, 'edit');
+      } else {
+        // No password required, proceed with edit
+        editContract(currentContract.id);
+      }
+    }
+
+    // Delete contract from view
+    async function deleteContractFromView() {
+      if (!currentContract) return;
+      
+      if (!confirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
+        return;
+      }
+      
+      if (currentContract.view_password && currentContract.view_password.trim() !== '') {
+        showPasswordModal(currentContract.id, 'delete');
+      } else {
+        // No password required, proceed with delete
+        deleteContract(currentContract.id);
+      }
+    }
+
+    // Update password from view
+    async function updatePasswordFromView() {
+      if (!currentContract) return;
+      
+      const newPassword = prompt('Enter new password (leave empty to remove password):');
+      if (newPassword === null) return; // User cancelled
+      
+      if (currentContract.view_password && currentContract.view_password.trim() !== '') {
+        showPasswordModal(currentContract.id, 'updatePassword');
+      } else {
+        // No current password, set new one
+        await setContractPassword(currentContract.id, newPassword);
+      }
+    }
+
+    // Edit contract with password
+    async function editContractWithPassword(contractId, password) {
+      try {
+        const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          editContract(contractId);
+        } else {
+          alert('Error loading contract for editing.');
+        }
+      } catch (error) {
+        console.error('Error editing contract:', error);
+        alert('Error loading contract for editing.');
+      }
+    }
+
+    // Delete contract with password
+    async function deleteContractWithPassword(contractId, password) {
+      try {
+        const deleteResponse = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=delete&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+        });
+        const deleteResult = await deleteResponse.json();
+        
+        if (deleteResult.success) {
+          alert('Contract deleted successfully!');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error deleting contract: ' + deleteResult.message);
+        }
+      } catch (error) {
+        console.error('Error deleting contract:', error);
+        alert('Error deleting contract. Please try again.');
+      }
+    }
+
+    // Update password with current password
+    async function updatePasswordWithPassword(contractId, currentPassword) {
+      const newPassword = prompt('Enter new password (leave empty to remove password):');
+      if (newPassword === null) return; // User cancelled
+      
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=set_password&contract_id=${contractId}&new_password=${encodeURIComponent(newPassword)}&current_password=${encodeURIComponent(currentPassword)}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Password updated successfully!');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error updating password: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error updating password:', error);
+        alert('Error updating password. Please try again.');
+      }
+    }
+
+    // Set contract password (when no current password)
+    async function setContractPassword(contractId, newPassword) {
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=set_password&contract_id=${contractId}&new_password=${encodeURIComponent(newPassword)}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Password set successfully!');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error setting password: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error setting password:', error);
+        alert('Error setting password. Please try again.');
+      }
+    }
     
     function renderAudit(){
       const ul = document.getElementById('auditTrail');
@@ -358,9 +652,20 @@ $wekaConn = $conn; // Use existing connection
         const c = store.contracts.find(x=>x.id===id);
         if(!c) return;
         
+        // Check if password is required
+        if (c.view_password && c.view_password.trim() !== '') {
+          showPasswordModal(id, 'view');
+        } else {
+          // No password required, show contract directly
+          displayContractDetails(c);
+        }
+    }
+
+    // Display contract details in modal
+    function displayContractDetails(c) {
+        currentContract = c;
         const role = window.APP_ROLE || 'Admin';
         const isAdmin = role === 'Admin';
-        // Removed access check - allow all users to view contracts
 
         // Populate Modal
         document.getElementById('viewModalTitle').innerText = c.title;
@@ -373,7 +678,6 @@ $wekaConn = $conn; // Use existing connection
         document.getElementById('viewEmployeeId').innerText = `Employee ${String(c.id).padStart(3,'0')}`;
         document.getElementById('viewEmployeeName').innerText = c.employee_name || '—';
         document.getElementById('viewCategory').innerText = c.category || 'Other';
-        // removed Uploaded By and Department fields
         
         const riskFactorsUl = document.getElementById('viewRiskFactors');
         riskFactorsUl.innerHTML = '';
@@ -400,8 +704,7 @@ $wekaConn = $conn; // Use existing connection
         }
 
         // Show Modal
-        document.getElementById('modalView').classList.remove('hidden');
-        document.getElementById('modalView').classList.add('flex');
+        openModal('modalView');
 
         audit(`Viewed details for contract "${c.title}" by ${role}`);
     }

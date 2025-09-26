@@ -69,9 +69,10 @@ if ($result['success']) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
-    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user')));
+    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'admin')));
     $superAliases = ['super_admin','superadmin','super admin','super'];
     if (in_array($roleRaw, $superAliases, true)) { $roleRaw = 'super_admin'; }
+    else { $roleRaw = 'admin'; }
     $_SESSION['role'] = $roleRaw;
     $_SESSION['user_type'] = $roleRaw;
 
@@ -81,7 +82,7 @@ if ($result['success']) {
     } elseif ($roleRaw === 'admin') {
         header("Location: ../Main/Dashboard.php");
     } else {
-        header("Location: ../user/dashboard.php");
+        header("Location: ../Main/Dashboard.php");
     }
     exit;
 } else {

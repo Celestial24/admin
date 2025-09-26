@@ -46,7 +46,8 @@ $wekaConn = $conn; // Use existing connection
   </style>
   <script>
     // Expose current role and employee name to JS
-    window.APP_ROLE = <?php echo json_encode($userRole ?: 'Employee'); ?>;
+    // Only Admin and Super Admin are supported
+    window.APP_ROLE = <?php echo json_encode(($userRole === 'super_admin' || strtolower($userRole) === 'superadmin' || strtolower($userRole) === 'super') ? 'Super Admin' : 'Admin'); ?>;
     window.APP_EMPLOYEE_NAME = <?php echo json_encode($employeeName ?: 'Employee'); ?>;
   </script>
 </head>

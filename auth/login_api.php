@@ -96,17 +96,19 @@ if ($user === 'not_verified') {
     exit;
 }
 if ($user) {
-    $_SESSION['role'] = 'user';
-    $_SESSION['user_type'] = 'user';
+    // System now supports only Admin and Super Admin.
+    // Treat any regular user as Admin for access purposes.
+    $_SESSION['role'] = 'admin';
+    $_SESSION['user_type'] = 'admin';
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
     echo json_encode([
         'success' => true,
-        'role' => 'user',
-        'greeting' => 'User',
+        'role' => 'admin',
+        'greeting' => 'Admin',
         'name' => $_SESSION['name'],
-        'redirectUrl' => '../user/dashboard.php'
+        'redirectUrl' => '../Main/Dashboard.php'
     ]);
     exit;
 }

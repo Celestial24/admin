@@ -7,11 +7,10 @@ require_once __DIR__ . '/backend/sql/db.php';
 
 // Set display name based on role/user_type (supports super_admin)
 $username = 'User'; // default for regular users
-$role = strtolower($_SESSION['role'] ?? ($_SESSION['user_type'] ?? 'user'));
+$role = strtolower($_SESSION['role'] ?? ($_SESSION['user_type'] ?? 'admin'));
 if ($role === 'superadmin' || $role === 'super') { $role = 'super_admin'; }
 if ($role === 'super_admin') { $username = 'Super Admin'; }
-elseif ($role === 'admin') { $username = 'Admin'; }
-else { $username = 'User'; }
+else { $username = 'Admin'; }
 ?>
 
 <!-- User Dropdown -->

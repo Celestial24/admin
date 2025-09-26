@@ -103,6 +103,19 @@ $userName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown User');
     </div>
   </div>
 
+  <!-- Analysis Modal -->
+  <div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-6 border-b">
+        <h3 class="text-lg font-semibold">Weka AI Analysis</h3>
+        <button onclick="closeModal('analysisModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <div id="analysisContent" class="p-6 space-y-4">
+        <!-- Analysis content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Contract Modal -->
   <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto">
@@ -209,13 +222,15 @@ async function load(){
           <div class="text-xs text-blue-600 mt-1">${c.id?('LD-'+String(c.id).padStart(4,'0')):''}</div>
         </td>
         <td class="px-4 py-3">${docType(c)}</td>
-        <td class="px-4 py-3">${c.uploaded_by_name||'Unknown'}</td>
+        <td class="px-4 py-3">—</td>
         <td class="px-4 py-3">${c.department||'N/A'}</td>
         <td class="px-4 py-3">${statusChip(c.risk_level||'Low')}</td>
         <td class="px-4 py-3">${date}</td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2">
             <button onclick="viewContract(${c.id})" class="text-blue-600 hover:text-blue-800" title="View Details">Open</button>
+            <span class="text-gray-300">|</span>
+            <button onclick="viewAnalysis(${c.id})" class="text-purple-600 hover:text-purple-800" title="View Analysis">Analysis</button>
             <span class="text-gray-300">|</span>
             <button onclick="editContract(${c.id})" class="text-green-600 hover:text-green-800" title="Edit Contract">✓</button>
             <button onclick="deleteContract(${c.id})" class="text-red-600 hover:text-red-800" title="Delete Contract">✕</button>
@@ -253,6 +268,124 @@ async function verifyPassword(contractId, password) {
     console.error('Password verification error:', error);
     return false;
   }
+}
+
+// View Analysis function
+async function viewAnalysis(contractId) {
+  try {
+    // Check if password is required
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
+    const result = await response.json();
+    
+    if (!result.success && result.password_required) {
+      const password = prompt('Enter password to view analysis:');
+      if (!password) return;
+      
+      const isValid = await verifyPassword(contractId, password);
+      if (!isValid) {
+        alert('Invalid password. Access denied.');
+        return;
+      }
+      
+      // Retry with password
+      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+      const resultWithPassword = await responseWithPassword.json();
+      
+      if (resultWithPassword.success) {
+        displayAnalysisDetails(resultWithPassword.contract);
+      } else {
+        alert('Error loading analysis details.');
+      }
+    } else if (result.success) {
+      displayAnalysisDetails(result.contract);
+    } else {
+      alert('Error loading analysis details.');
+    }
+  } catch (error) {
+    console.error('Error viewing analysis:', error);
+    alert('Error loading analysis details.');
+  }
+}
+
+// Display analysis details in modal
+function displayAnalysisDetails(contract) {
+  const content = document.getElementById('analysisContent');
+  const riskClass = {
+    'High': 'bg-red-100 text-red-800',
+    'Medium': 'bg-yellow-100 text-yellow-800',
+    'Low': 'bg-green-100 text-green-800'
+  }[contract.risk_level] || 'bg-gray-100 text-gray-800';
+  
+  content.innerHTML = `
+    <div class="mb-4">
+      <h4 class="text-lg font-semibold text-gray-800">${contract.title}</h4>
+      <p class="text-sm text-gray-600">Party: ${contract.party}</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h5 class="font-semibold text-gray-700 mb-2">Risk Assessment</h5>
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Risk Level:</span>
+            <span class="inline-block px-2 py-1 rounded-full text-xs ${riskClass}">${contract.risk_level}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Risk Score:</span>
+            <span class="font-semibold">${contract.risk_score}/100</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Weka Confidence:</span>
+            <span class="font-semibold text-blue-600">${contract.weka_confidence}%</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Dispute Probability:</span>
+            <span class="font-semibold">${contract.probability_percent}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h5 class="font-semibold text-gray-700 mb-2">Contract Info</h5>
+        <div class="space-y-2 text-sm">
+          <div><strong>Category:</strong> ${contract.category || 'Other'}</div>
+          <div><strong>Department:</strong> ${contract.department || 'N/A'}</div>
+          <div><strong>Employee ID:</strong> ${contract.employee_id || 'N/A'}</div>
+          <div><strong>Created:</strong> ${new Date(contract.created_at).toLocaleDateString()}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${contract.risk_factors && contract.risk_factors.length > 0 ? `
+    <div class="mb-4">
+      <h5 class="font-semibold text-red-700 mb-2">⚠️ Risk Factors Identified</h5>
+      <ul class="list-disc list-inside text-sm text-red-600 space-y-1 bg-red-50 p-3 rounded">
+        ${contract.risk_factors.map(factor => `<li>${factor}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    
+    ${contract.recommendations && contract.recommendations.length > 0 ? `
+    <div class="mb-4">
+      <h5 class="font-semibold text-green-700 mb-2">💡 AI Recommendations</h5>
+      <ul class="list-disc list-inside text-sm text-green-600 space-y-1 bg-green-50 p-3 rounded">
+        ${contract.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+    
+    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+      <h5 class="font-semibold text-blue-700 mb-2">📋 Analysis Summary</h5>
+      <p class="text-sm text-blue-600">
+        This contract has been analyzed by Weka AI with ${contract.weka_confidence}% confidence. 
+        ${contract.risk_level === 'High' ? 'Immediate legal review is recommended due to high-risk factors.' : 
+          contract.risk_level === 'Medium' ? 'Standard review process is recommended.' : 
+          'This contract appears to be low-risk and follows standard practices.'}
+      </p>
+    </div>
+  `;
+  
+  openModal('analysisModal');
 }
 
 // View contract function
@@ -367,7 +500,7 @@ async function editContract(contractId) {
       const resultWithPassword = await responseWithPassword.json();
       
       if (resultWithPassword.success) {
-        populateEditForm(resultWithPassword.contract, contractId);
+        populateEditForm(resultWithPassword.contract, contractId, password);
       } else {
         alert('Error loading contract for editing.');
       }
@@ -383,9 +516,10 @@ async function editContract(contractId) {
 }
 
 // Populate edit form
-function populateEditForm(contract, contractId) {
+function populateEditForm(contract, contractId, password = null) {
   const form = document.getElementById('editForm');
   form.contractId = contractId; // Store contract ID for submission
+  form.currentPassword = password; // Store password for submission
   
   // Populate form fields
   form.elements.title.value = contract.title || '';
@@ -407,19 +541,35 @@ async function deleteContract(contractId) {
     return;
   }
   
+  // Check if password is required
   try {
-    const response = await fetch('../backend/weka_contract_api.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=delete&contract_id=${contractId}`
-    });
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
     
-    if (result.success) {
+    let password = '';
+    if (!result.success && result.password_required) {
+      password = prompt('Enter password to delete this contract:');
+      if (!password) return;
+      
+      const isValid = await verifyPassword(contractId, password);
+      if (!isValid) {
+        alert('Invalid password. Access denied.');
+        return;
+      }
+    }
+    
+    const deleteResponse = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=delete&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+    });
+    const deleteResult = await deleteResponse.json();
+    
+    if (deleteResult.success) {
       alert('Contract deleted successfully!');
       load(); // Reload the table
     } else {
-      alert('Error deleting contract: ' + result.message);
+      alert('Error deleting contract: ' + deleteResult.message);
     }
   } catch (error) {
     console.error('Error deleting contract:', error);
@@ -433,6 +583,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
   
   const form = e.target;
   const contractId = form.contractId;
+  const currentPassword = form.currentPassword || '';
   
   const formData = new FormData(form);
   const contractData = {
@@ -451,7 +602,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const response = await fetch('../backend/weka_contract_api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=update&contract_id=${contractId}&${Object.entries(contractData).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
+      body: `action=update&contract_id=${contractId}&password=${encodeURIComponent(currentPassword)}&${Object.entries(contractData).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
     });
     const result = await response.json();
     

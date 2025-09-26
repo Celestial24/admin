@@ -179,7 +179,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
   <!-- Main Content Area -->
   <div class="flex-1 min-h-screen overflow-auto">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+    <header class="bg-white shadow-sm border-b border-gray-200 px-3 py-4">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-gray-900">Visitor Management</h1>
@@ -195,7 +195,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
     </header>
 
     <!-- Main Content -->
-    <main class="p-6">
+    <main class="pl-3 pr-6 py-4">
       <?php if (isset($_GET['msg'])) echo "<p class='success'>".$_GET['msg']."</p>"; ?>
 
       <!-- Add Visitor (Modal Trigger + Modal) -->
@@ -278,7 +278,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
       ?>
 
       <!-- Visitors Dashboard -->
-      <div class="mt-8">
+      <div class="mt-4">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-semibold text-gray-900">Visitors List</h2>
           <div class="flex items-center gap-3">

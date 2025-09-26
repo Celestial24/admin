@@ -137,6 +137,27 @@ $wekaConn = $conn; // Use existing connection
       </div>
     </div>
 
+    <!-- New Password Modal -->
+    <div id="newPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl w-96 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Set New Password</h3>
+          <button onclick="closeModal('newPasswordModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <input type="password" id="newPasswordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter new password (leave empty to remove)">
+            <p class="text-xs text-gray-500 mt-1">Leave empty to remove password protection</p>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeModal('newPasswordModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button onclick="setNewPassword()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Set Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Alerts Modal -->
     <div id="modalAlerts" class="fixed inset-0 hidden items-center justify-center modal-backdrop">
       <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 p-6">
@@ -350,6 +371,7 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2">
               <button class="btnView px-2 py-1 border rounded text-xs hover:bg-blue-50 cursor-pointer" data-id="${c.id}">Views</button>
+              <button class="btnRestricted px-2 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-200 cursor-pointer" data-id="${c.id}">Restricted</button>
             </div>
           </td>
         `;
@@ -370,6 +392,9 @@ $wekaConn = $conn; // Use existing connection
       }
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; openWithPasswordGuard(id, viewContract);
+      }));
+      document.querySelectorAll('.btnRestricted').forEach(b=> b.addEventListener('click', e=>{
+        const id=e.target.dataset.id; showPasswordModal(id, 'view');
       }));
 
       renderAudit();
@@ -402,6 +427,13 @@ $wekaConn = $conn; // Use existing connection
       pendingAction = action;
       document.getElementById('passwordInput').value = '';
       openModal('passwordModal');
+    }
+
+    // Show new password modal
+    function showNewPasswordModal(contractId) {
+      currentContractId = contractId;
+      document.getElementById('newPasswordInput').value = '';
+      openModal('newPasswordModal');
     }
 
     // Open modal helper
@@ -518,14 +550,11 @@ $wekaConn = $conn; // Use existing connection
     async function updatePasswordFromView() {
       if (!currentContract) return;
       
-      const newPassword = prompt('Enter new password (leave empty to remove password):');
-      if (newPassword === null) return; // User cancelled
-      
       if (currentContract.view_password && currentContract.view_password.trim() !== '') {
         showPasswordModal(currentContract.id, 'updatePassword');
       } else {
-        // No current password, set new one
-        await setContractPassword(currentContract.id, newPassword);
+        // No current password, show new password modal
+        showNewPasswordModal(currentContract.id);
       }
     }
 
@@ -607,6 +636,32 @@ $wekaConn = $conn; // Use existing connection
         
         if (result.success) {
           alert('Password set successfully!');
+          closeModal('modalView');
+          loadWekaContracts(); // Reload contracts
+        } else {
+          alert('Error setting password: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error setting password:', error);
+        alert('Error setting password. Please try again.');
+      }
+    }
+
+    // Set new password from modal
+    async function setNewPassword() {
+      const newPassword = document.getElementById('newPasswordInput').value;
+      
+      try {
+        const response = await fetch('../backend/weka_contract_api.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=set_password&contract_id=${currentContractId}&new_password=${encodeURIComponent(newPassword)}`
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Password set successfully!');
+          closeModal('newPasswordModal');
           closeModal('modalView');
           loadWekaContracts(); // Reload contracts
         } else {

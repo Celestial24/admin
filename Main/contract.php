@@ -163,6 +163,7 @@
             </div>
 
             <p id="responseMessage" class="text-center font-semibold mt-4"></p>
+            <pre id="debugMessage" class="hidden mt-2 p-2 bg-gray-50 text-xs text-gray-700 rounded overflow-x-auto"></pre>
 
             <div id="ocrResultContainer" class="hidden pt-4">
               <label class="block text-sm font-medium text-gray-700 mb-1">📄 Extracted OCR Text</label>
@@ -193,6 +194,7 @@
   const probabilityPercent = document.getElementById('probabilityPercent');
   const progressBar = document.getElementById('progressBar');
   const riskFactorsList = document.getElementById('riskFactorsList');
+  const debugMessage = document.getElementById('debugMessage');
   
   // --- Form Input and Error Elements ---
   const inputs = {
@@ -329,6 +331,10 @@
     responseMessage.classList.add('text-red-600');
     viewAnalysisBtn.classList.add('opacity-50', 'pointer-events-none');
     updateProgressBar(0);
+    debugMessage.classList.remove('hidden');
+    if (typeof message === 'string') {
+      debugMessage.textContent = message;
+    }
   }
 
   // --- Event Listeners ---
@@ -342,6 +348,8 @@
     ocrResultContainer.classList.add('hidden');
     viewAnalysisBtn.classList.add('opacity-50', 'pointer-events-none');
     responseMessage.textContent = '';
+    debugMessage.textContent = '';
+    debugMessage.classList.add('hidden');
     riskFactorsList.innerHTML = '<li>Upload a contract to begin...</li>';
     riskFactorsList.className = 'list-disc list-inside text-sm text-red-400 space-y-1';
   });
@@ -371,6 +379,11 @@
         return;
       }
 
+      if (!response.ok) {
+        handleError(`HTTP ${response.status} ${response.statusText}: ${result.message || raw}`);
+        return;
+      }
+
       if (result && result.success) {
         updateUIAfterResponse(result);
       } else {
@@ -378,7 +391,7 @@
       }
     } catch (error) {
       console.error('Submission Error:', error);
-      handleError('A network or server error occurred.');
+      handleError(`Network error: ${error && error.message ? error.message : error}`);
     } finally {
       setLoadingState(false);
     }

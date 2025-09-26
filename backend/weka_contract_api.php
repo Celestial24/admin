@@ -509,7 +509,18 @@ try {
                         'image/png',
                         'image/jpeg'
                     ];
-                    $fileMimeType = mime_content_type($_FILES['document']['tmp_name']);
+                    // Determine MIME type with fallback when mime_content_type is disabled
+                    $fileMimeType = function_exists('mime_content_type')
+                        ? mime_content_type($_FILES['document']['tmp_name'])
+                        : (function() {
+                            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+                            if ($finfo) {
+                                $type = @finfo_file($finfo, $_FILES['document']['tmp_name']);
+                                @finfo_close($finfo);
+                                return $type ?: 'application/octet-stream';
+                            }
+                            return 'application/octet-stream';
+                        })();
 
                     if (!in_array($fileExtension, $allowedExtensions) || !in_array($fileMimeType, $allowedMimeTypes)) {
                         throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');

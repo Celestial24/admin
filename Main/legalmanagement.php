@@ -118,16 +118,16 @@ $wekaConn = $conn; // Use existing connection
 
     <!-- Modals (hidden by default) -->
     <!-- Universal Modal -->
-    <div id="universalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl w-96 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 id="modalTitle" class="text-lg font-semibold">Modal Title</h3>
-          <button onclick="closeModal('universalModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+    <div id="universalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+          <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">Modal Title</h3>
+          <button onclick="closeModal('universalModal')" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">✕</button>
         </div>
-        <div id="modalContent" class="space-y-4">
+        <div id="modalContent" class="p-6 overflow-y-auto">
           <!-- Content will be dynamically loaded here -->
         </div>
-        <div id="modalActions" class="flex justify-end gap-3 mt-6">
+        <div id="modalActions" class="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
           <!-- Action buttons will be dynamically loaded here -->
         </div>
       </div>
@@ -544,60 +544,91 @@ $wekaConn = $conn; // Use existing connection
     // Show edit form modal
     function showEditForm(contract) {
       const content = `
-        <form id="editContractForm" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input type="text" name="title" value="${contract.title || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="max-h-96 overflow-y-auto">
+          <form id="editContractForm" class="space-y-6">
+            <!-- Basic Information Section -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Basic Information</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input type="text" name="title" value="${contract.title || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Party *</label>
+                  <input type="text" name="party" value="${contract.party || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value="Other" ${contract.category === 'Other' ? 'selected' : ''}>Other</option>
+                    <option value="Employment" ${contract.category === 'Employment' ? 'selected' : ''}>Employment</option>
+                    <option value="Supplier" ${contract.category === 'Supplier' ? 'selected' : ''}>Supplier</option>
+                    <option value="Lease" ${contract.category === 'Lease' ? 'selected' : ''}>Lease</option>
+                    <option value="Service" ${contract.category === 'Service' ? 'selected' : ''}>Service</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <input type="text" name="department" value="${contract.department || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
-              <input type="text" name="party" value="${contract.party || ''}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+            <!-- Employee Information Section -->
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h4 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Employee Information</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                  <input type="text" name="employee_name" value="${contract.employee_name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                  <input type="text" name="employee_id" value="${contract.employee_id || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="Other" ${contract.category === 'Other' ? 'selected' : ''}>Other</option>
-                <option value="Employment" ${contract.category === 'Employment' ? 'selected' : ''}>Employment</option>
-                <option value="Supplier" ${contract.category === 'Supplier' ? 'selected' : ''}>Supplier</option>
-                <option value="Lease" ${contract.category === 'Lease' ? 'selected' : ''}>Lease</option>
-                <option value="Service" ${contract.category === 'Service' ? 'selected' : ''}>Service</option>
-              </select>
+
+            <!-- Contract Details Section -->
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h4 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Contract Details</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter contract description...">${contract.description || ''}</textarea>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR)</label>
+                  <textarea name="ocr_text" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter contract text content...">${contract.text || ''}</textarea>
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
-              <input type="text" name="employee_name" value="${contract.employee_name || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+            <!-- Security Section -->
+            <div class="bg-yellow-50 p-4 rounded-lg">
+              <h4 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Security Settings</h4>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">View Password</label>
+                <input type="password" name="view_password" placeholder="Enter new password or leave empty to remove" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <p class="text-xs text-gray-500 mt-1">Leave empty to remove password protection</p>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-              <input type="text" name="employee_id" value="${contract.employee_id || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-              <input type="text" name="department" value="${contract.department || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${contract.description || ''}</textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">View Password (leave empty to remove)</label>
-            <input type="password" name="view_password" placeholder="Enter new password or leave empty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contract Text (OCR)</label>
-            <textarea name="ocr_text" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">${contract.text || ''}</textarea>
-          </div>
-        </form>
+          </form>
+        </div>
       `;
       
       const actions = `
-        <button onclick="closeModal('universalModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-        <button onclick="saveContractEdit()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Changes</button>
+        <button onclick="closeModal('universalModal')" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+        <button onclick="saveContractEdit()" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Save Changes
+        </button>
       `;
       
-      showUniversalModal('Edit Contract', content, actions);
+      showUniversalModal('Edit Contract Details', content, actions);
     }
 
     // Delete contract from view

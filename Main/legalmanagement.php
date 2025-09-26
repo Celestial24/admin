@@ -119,7 +119,7 @@ $wekaConn = $conn; // Use existing connection
     <!-- Modals (hidden by default) -->
     <!-- Universal Modal -->
     <div id="universalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div id="universalCard" class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
           <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">Modal Title</h3>
           <button onclick="closeModal('universalModal')" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">✕</button>
@@ -393,10 +393,20 @@ $wekaConn = $conn; // Use existing connection
     }
 
     // Show universal modal
-    function showUniversalModal(title, content, actions) {
+    function showUniversalModal(title, content, actions, size) {
       document.getElementById('modalTitle').textContent = title;
       document.getElementById('modalContent').innerHTML = content;
       document.getElementById('modalActions').innerHTML = actions;
+      // Resize card based on requested size
+      const card = document.getElementById('universalCard');
+      if (card){
+        card.classList.remove('max-w-4xl','max-w-2xl','max-w-xl','max-w-lg','max-w-md');
+        if (size === 'sm') card.classList.add('max-w-md');
+        else if (size === 'md') card.classList.add('max-w-lg');
+        else if (size === 'lg') card.classList.add('max-w-xl');
+        else if (size === 'xl') card.classList.add('max-w-2xl');
+        else card.classList.add('max-w-4xl');
+      }
       openModal('universalModal');
     }
 
@@ -417,7 +427,8 @@ $wekaConn = $conn; // Use existing connection
         <button onclick="verifyPasswordAndProceed()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Verify</button>
       `;
       
-      showUniversalModal('Enter Password', content, actions);
+      // Use small width for password prompt
+      showUniversalModal('Enter Password', content, actions, 'sm');
     }
 
     // Show new password modal

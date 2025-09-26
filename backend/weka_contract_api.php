@@ -299,10 +299,20 @@ class WekaContractAnalyzer {
         $legalReviewRequired = $analysis['risk_level'] === self::RISK_HIGH ? 1 : 0;
         $highRiskAlert = $analysis['risk_level'] === self::RISK_HIGH ? 1 : 0;
 
-        $stmt->bind_param('isisssii', 
-            $analysis['risk_score'], $analysis['risk_level'], $analysis['probability_percent'],
-            $analysis['weka_confidence'], $riskFactorsJson, $recommendationsJson,
-            $legalReviewRequired, $highRiskAlert, $contractId
+        // Correct types and count for 9 parameters:
+        // i (risk_score), s (risk_level), i (probability_percent), i (weka_confidence),
+        // s (risk_factors JSON), s (recommendations JSON), i (legal_review_required),
+        // i (high_risk_alert), i (contractId)
+        $stmt->bind_param('isiissiii',
+            $analysis['risk_score'],
+            $analysis['risk_level'],
+            $analysis['probability_percent'],
+            $analysis['weka_confidence'],
+            $riskFactorsJson,
+            $recommendationsJson,
+            $legalReviewRequired,
+            $highRiskAlert,
+            $contractId
         );
 
         if (!$stmt->execute()) {

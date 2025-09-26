@@ -174,7 +174,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
 </head>
 <body class="min-h-screen flex bg-gray-50">
   <!-- Include Sidebar -->
-  <?php include '../Components/sidebar/sidebar_user.php'; ?>
+  <?php include '../Components/sidebar/sidebar_admin.php'; ?>
 
   <!-- Main Content Area -->
   <div class="flex-1 min-h-screen overflow-auto">

@@ -377,16 +377,12 @@ $wekaConn = $conn; // Use existing connection
     let pendingAction = null;
     let currentContract = null;
 
-    // Password verification helper
+    // Password verification helper (use get_contract with password)
     async function verifyPassword(contractId, password) {
       try {
-        const response = await fetch('../backend/weka_contract_api.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `action=verify_password&contract_id=${contractId}&password=${encodeURIComponent(password)}`
-        });
+        const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
         const result = await response.json();
-        return result.success;
+        return !!(result && result.success);
       } catch (error) {
         console.error('Password verification error:', error);
         return false;
@@ -418,8 +414,11 @@ $wekaConn = $conn; // Use existing connection
       
       const content = `
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input type="password" id="passwordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
+          <label class=\"block text-sm font-medium text-gray-700 mb-1\">Password</label>
+          <div class=\"relative\">
+            <input type=\"password\" id=\"passwordInput\" class=\"w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\" placeholder=\"Enter password\">
+            <button type=\"button\" id=\"togglePwd\" class=\"absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700\" tabindex=\"-1\" aria-label=\"Toggle password visibility\">👁️</button>
+          </div>
         </div>
       `;
       
@@ -430,6 +429,11 @@ $wekaConn = $conn; // Use existing connection
       
       // Use small width for password prompt
       showUniversalModal('Enter Password', content, actions, 'sm');
+      // Wire eye toggle for this modal after render
+      setTimeout(()=>{
+        const t=document.getElementById('togglePwd');
+        if(t){ t.addEventListener('click',()=>{ const i=document.getElementById('passwordInput'); if(!i) return; i.type = i.type==='password'?'text':'password'; t.textContent = i.type==='password'?'👁️':'🙈'; }); }
+      },0);
     }
 
     // Show new password modal

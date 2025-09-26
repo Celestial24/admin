@@ -232,6 +232,8 @@ async function load(){
             <span class="text-gray-300">|</span>
             <button onclick="viewAnalysis(${c.id})" class="text-purple-600 hover:text-purple-800" title="View Analysis">Analysis</button>
             <span class="text-gray-300">|</span>
+            <button onclick="viewContract(${c.id})" class="text-gray-600 hover:text-gray-800 border border-gray-300 px-2 py-1 rounded text-xs" title="View Details">Restricted</button>
+            <span class="text-gray-300">|</span>
             <button onclick="editContract(${c.id})" class="text-green-600 hover:text-green-800" title="Edit Contract">✓</button>
             <button onclick="deleteContract(${c.id})" class="text-red-600 hover:text-red-800" title="Delete Contract">✕</button>
           </div>

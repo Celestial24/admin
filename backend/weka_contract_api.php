@@ -387,7 +387,7 @@ try {
                     'title' => trim($_POST['title'] ?? ''),
                     'party' => trim($_POST['party'] ?? ''),
                     'category' => trim($_POST['category'] ?? 'Other'),
-                    'employee_name' => trim($_POST['employee_name'] ?? ''),
+                    'employee_name' => null, // Always set to null - no employee names stored
                     'employee_id' => trim($_POST['employee_id'] ?? ''),
                     'department' => trim($_POST['department'] ?? ''),
                     'description' => trim($_POST['description'] ?? ''),
@@ -459,7 +459,7 @@ try {
                     'title' => trim($_POST['title'] ?? ''),
                     'party' => trim($_POST['party'] ?? ''),
                     'category' => trim($_POST['category'] ?? 'Other'),
-                    'employee_name' => trim($_POST['employee_name'] ?? ''),
+                    'employee_name' => null, // Always set to null - no employee names stored
                     'employee_id' => trim($_POST['employee_id'] ?? ''),
                     'uploaded_by_id' => !empty($_POST['uploaded_by_id']) ? intval($_POST['uploaded_by_id']) : null,
                     'uploaded_by_name' => trim($_POST['uploaded_by_name'] ?? ''),

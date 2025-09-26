@@ -117,10 +117,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </nav>
     </div>
 
-    <!-- Main Content Area (for layout purposes) -->
-    <div class="flex-1 min-h-screen overflow-auto">
-        <!-- Your main content goes here -->
-    </div>
+    <!-- Main Content Area placeholder disabled when included in other pages -->
+    <div class="hidden flex-1 min-h-screen overflow-auto"></div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

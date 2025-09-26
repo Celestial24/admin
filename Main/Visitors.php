@@ -177,7 +177,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
   <?php include '../Components/sidebar/sidebar_admin.php'; ?>
 
   <!-- Main Content Area -->
-  <div class="flex-1 min-h-screen overflow-auto">
+  <div class="flex-1 min-h-screen overflow-auto" style="margin-left:0">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200 px-3 py-4">
       <div class="flex items-center justify-between">
@@ -195,7 +195,7 @@ if (isset($_POST['action']) && $_POST['action'] === "update") {
     </header>
 
     <!-- Main Content -->
-    <main class="pl-3 pr-6 py-4">
+    <main class="pl-2 pr-6 py-4">
       <?php if (isset($_GET['msg'])) echo "<p class='success'>".$_GET['msg']."</p>"; ?>
 
       <!-- Add Visitor (Modal Trigger + Modal) -->

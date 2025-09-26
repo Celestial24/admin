@@ -15,6 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 date_default_timezone_set('Asia/Manila');
 include 'sql/contract.php'; // Ensure this path is correct and secure
 
+// Improve MySQL error visibility and character set
+if (function_exists('mysqli_report')) {
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+}
+if (isset($conn) && $conn instanceof mysqli) {
+    @$conn->set_charset('utf8mb4');
+}
+
 class WekaContractAnalyzer {
     // 💡 Using constants for better maintainability
     private const RISK_HIGH = 'High';
@@ -592,9 +600,15 @@ try {
     }
 } catch (Exception $e) {
     // 🔐 SECURITY: Log the real error for debugging, but show a generic message to the user.
-    error_log('API Error on ' . __FILE__ . ': ' . $e->getMessage());
+    $traceId = uniqid('weka_', true);
+    error_log("[$traceId] API Error on " . __FILE__ . ': ' . $e->getMessage());
     http_response_code(500); // Internal Server Error
-    echo json_encode(['success' => false, 'message' => 'An unexpected error occurred. Please contact support.']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'An unexpected error occurred. Please contact support.',
+        'debug' => $e->getMessage(),
+        'trace_id' => $traceId
+    ]);
 } finally {
     if (isset($conn)) {
         $conn->close();

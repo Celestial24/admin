@@ -397,7 +397,7 @@ try {
                     'title' => trim($_POST['title'] ?? ''),
                     'party' => trim($_POST['party'] ?? ''),
                     'category' => trim($_POST['category'] ?? 'Other'),
-                    'employee_name' => null, // Always set to null - no employee names stored
+                    'employee_name' => trim($_POST['employee_name'] ?? ''),
                     'employee_id' => trim($_POST['employee_id'] ?? ''),
                     'department' => trim($_POST['department'] ?? ''),
                     'description' => trim($_POST['description'] ?? ''),
@@ -492,11 +492,13 @@ try {
                     $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
                     
                     // Define a strict allowlist of extensions and MIME types
-                    $allowedExtensions = ['pdf', 'doc', 'docx'];
+                    $allowedExtensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
                     $allowedMimeTypes = [
                         'application/pdf',
                         'application/msword',
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'image/png',
+                        'image/jpeg'
                     ];
                     $fileMimeType = mime_content_type($_FILES['document']['tmp_name']);
 

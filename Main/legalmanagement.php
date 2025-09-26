@@ -320,19 +320,19 @@ $wekaConn = $conn; // Use existing connection
       const tbody = document.getElementById('contractsTableBody');
       tbody.innerHTML = '';
       const role = window.APP_ROLE || 'Admin'; // Default to Admin for testing
-      const isAdmin = role === 'Admin';
-      const list = store.contracts.filter(c => (("employee "+String(c.id).padStart(3,'0'))+(c.employee_name||'')+(c.uploaded_by_name||'')+(c.title||'')+(c.category||'')+(c.party||'')+(c.text||'')).toLowerCase().includes(filter.toLowerCase()));
+      const isAdmin = role === 'Admin' || role === 'Super Admin';
+      const list = store.contracts.filter(c => (("employee "+String(c.id).padStart(3,'0'))+(c.employee_name||c.uploaded_by_name||window.APP_EMPLOYEE_NAME||'')+(c.title||'')+(c.category||'')+(c.party||'')+(c.text||'')).toLowerCase().includes(filter.toLowerCase()));
       document.getElementById('countContracts').innerText = list.length;
       list.forEach(c=>{
         const tr = document.createElement('tr');
         tr.className = 'border-t';
         const accessAllowed = true; // Always allow access to Views button
         const maskedParty = isAdmin ? c.party : '••••••';
-        const confidenceCell = c.weka_confidence ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
+        const confidenceCell = (c.weka_confidence ?? null) !== null ? `<div class="text-blue-600 font-medium">${c.weka_confidence}%</div>` : '—';
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">Employee ${String(c.id).padStart(3,'0')}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.employee_name || '—'}</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${employee || '—'}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || 'Other'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
@@ -931,7 +931,7 @@ $wekaConn = $conn; // Use existing connection
     function displayContractDetails(c) {
         currentContract = c;
         const role = window.APP_ROLE || 'Admin';
-        const isAdmin = role === 'Admin';
+        const isAdmin = role === 'Admin' || role === 'Super Admin';
 
         // Populate Modal
         document.getElementById('viewModalTitle').innerText = c.title;

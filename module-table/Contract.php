@@ -304,16 +304,12 @@ function openModal(modalId) {
 let currentContractId = null;
 let pendingAction = null;
 
-// Password verification helper
+// Password verification helper (use get_contract with password)
 async function verifyPassword(contractId, password) {
   try {
-    const response = await fetch('../backend/weka_contract_api.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=verify_password&contract_id=${contractId}&password=${encodeURIComponent(password)}`
-    });
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
     const result = await response.json();
-    return result.success;
+    return !!(result && result.success);
   } catch (error) {
     console.error('Password verification error:', error);
     return false;
@@ -396,16 +392,13 @@ async function deleteContractWithPassword(contractId, password) {
 // View Analysis function
 async function viewAnalysis(contractId) {
   try {
-    // Check if password is required
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
-    if (!result.success && result.password_required) {
-      showPasswordModal(contractId, 'analysis');
-    } else if (result.success) {
+    if (result && result.success) {
       displayAnalysisDetails(result.contract);
     } else {
-      alert('Error loading analysis details.');
+      // treat any failure as password required
+      showPasswordModal(contractId, 'analysis');
     }
   } catch (error) {
     console.error('Error viewing analysis:', error);
@@ -535,16 +528,12 @@ function displayAnalysisDetails(contract) {
 // View contract function
 async function viewContract(contractId) {
   try {
-    // Check if password is required
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
-    if (!result.success && result.password_required) {
-      showPasswordModal(contractId, 'view');
-    } else if (result.success) {
+    if (result && result.success) {
       displayContractDetails(result.contract);
     } else {
-      alert('Error loading contract details.');
+      showPasswordModal(contractId, 'view');
     }
   } catch (error) {
     console.error('Error viewing contract:', error);
@@ -608,33 +597,22 @@ function displayContractDetails(contract) {
 // Edit contract function
 async function editContract(contractId) {
   try {
-    // Get contract data first
+    // Try without password first
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
-    if (!result.success && result.password_required) {
-      const password = prompt('Enter password to edit this contract:');
-      if (!password) return;
-      
-      const isValid = await verifyPassword(contractId, password);
-      if (!isValid) {
-        alert('Invalid password. Access denied.');
-        return;
-      }
-      
-      // Retry with password
-      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
-      const resultWithPassword = await responseWithPassword.json();
-      
-      if (resultWithPassword.success) {
-        populateEditForm(resultWithPassword.contract, contractId, password);
-      } else {
-        alert('Error loading contract for editing.');
-      }
-    } else if (result.success) {
+    if (result && result.success) {
       populateEditForm(result.contract, contractId);
+      return;
+    }
+    // ask for password
+    const password = prompt('Enter password to edit this contract:');
+    if (!password) return;
+    const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+    const resultWithPassword = await responseWithPassword.json();
+    if (resultWithPassword && resultWithPassword.success) {
+      populateEditForm(resultWithPassword.contract, contractId, password);
     } else {
-      alert('Error loading contract for editing.');
+      alert('Invalid password or error loading contract for editing.');
     }
   } catch (error) {
     console.error('Error editing contract:', error);
@@ -672,17 +650,12 @@ async function deleteContract(contractId) {
   try {
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
     let password = '';
-    if (!result.success && result.password_required) {
+    if (!(result && result.success)) {
       password = prompt('Enter password to delete this contract:');
       if (!password) return;
-      
       const isValid = await verifyPassword(contractId, password);
-      if (!isValid) {
-        alert('Invalid password. Access denied.');
-        return;
-      }
+      if (!isValid) { alert('Invalid password. Access denied.'); return; }
     }
     
     const deleteResponse = await fetch('../backend/weka_contract_api.php', {
@@ -754,13 +727,10 @@ async function editContractFromAnalysis() {
   try {
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
-    if (!result.success && result.password_required) {
-      showPasswordModal(contractId, 'edit');
-    } else if (result.success) {
+    if (result && result.success) {
       populateEditForm(result.contract, contractId);
     } else {
-      alert('Error loading contract for editing.');
+      showPasswordModal(contractId, 'edit');
     }
   } catch (error) {
     console.error('Error editing contract:', error);
@@ -780,17 +750,12 @@ async function deleteContractFromAnalysis() {
   try {
     const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
     const result = await response.json();
-    
-    let password = '';
-    if (!result.success && result.password_required) {
-      showPasswordModal(contractId, 'delete');
-      return;
-    }
+    if (!(result && result.success)) { showPasswordModal(contractId, 'delete'); return; }
     
     const deleteResponse = await fetch('../backend/weka_contract_api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=delete&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+      body: `action=delete&contract_id=${contractId}&password=`
     });
     const deleteResult = await deleteResponse.json();
     

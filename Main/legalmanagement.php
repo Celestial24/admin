@@ -363,29 +363,10 @@ $wekaConn = $conn; // Use existing connection
         
         // Check if contract has password protection
         if (c.view_password && c.view_password.trim() !== '') {
-          const password = prompt('Enter password to access this contract:');
-          if (!password) return;
-          
-          // Verify password with API
-          try {
-            const response = await fetch('../backend/weka_contract_api.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: `action=verify_password&contract_id=${id}&password=${encodeURIComponent(password)}`
-            });
-            const result = await response.json();
-            
-            if (!result.success) {
-              alert('Invalid password. Access denied.');
-              return;
-            }
-          } catch (error) {
-            console.error('Password verification error:', error);
-            alert('Error verifying password. Please try again.');
-            return;
-          }
+          showPasswordModal(id, 'view');
+        } else {
+          fn(id);
         }
-        fn(id);
       }
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; openWithPasswordGuard(id, viewContract);

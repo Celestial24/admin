@@ -602,7 +602,8 @@ try {
     // 🔐 SECURITY: Log the real error for debugging, but show a generic message to the user.
     $traceId = uniqid('weka_', true);
     error_log("[$traceId] API Error on " . __FILE__ . ': ' . $e->getMessage());
-    http_response_code(500); // Internal Server Error
+    // Return 200 to avoid browser showing generic HTTP 500 while still indicating failure in payload
+    http_response_code(200);
     echo json_encode([
         'success' => false,
         'message' => 'An unexpected error occurred. Please contact support.',

@@ -28,8 +28,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
             <a href="/admin/Main/Dashboard.php" class="flex items-center gap-2">
-                <img src="../../assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
-                
+                <img src="/admin/assets/image/logo.png" alt="Logo" class="h-14 sidebar-logo-expanded" />
+                <img src="/admin/assets/image/logo2.png" alt="Logo" class="h-14 sidebar-logo-collapsed hidden" />
             </a>
             <button id="sidebar-toggle" class="text-white focus:outline-none">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>

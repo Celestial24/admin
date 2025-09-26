@@ -114,7 +114,7 @@ class WekaContractAnalyzer {
                 department VARCHAR(255) NULL, description TEXT, document_path VARCHAR(500),
                 view_password VARCHAR(255) NULL, ocr_text LONGTEXT, risk_score INT DEFAULT 0,
                 risk_level VARCHAR(20) DEFAULT 'Low', probability_percent INT DEFAULT 0,
-                weka_confidence INT DEFAULT 0, risk_factors JSON, recommendations JSON,
+                weka_confidence INT DEFAULT 0, risk_factors LONGTEXT, recommendations LONGTEXT,
                 legal_review_required BOOLEAN DEFAULT FALSE, high_risk_alert BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -485,7 +485,16 @@ try {
                 if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
                     $uploadDir = __DIR__ . '/../uploads/contracts';
                     if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0775, true);
+                        if (!mkdir($uploadDir, 0775, true)) {
+                            throw new Exception('Upload folder could not be created.');
+                        }
+                    }
+                    if (!is_writable($uploadDir)) {
+                        // Try to relax permissions if possible
+                        @chmod($uploadDir, 0775);
+                        if (!is_writable($uploadDir)) {
+                            throw new Exception('Upload folder is not writable.');
+                        }
                     }
 
                     $originalName = basename($_FILES['document']['name']);

@@ -276,6 +276,19 @@ async function load(){
   }
 }
 
+// Clear filters and reload
+function clearFilters(){
+  searchEl.value='';
+  statusEl.value='';
+  typeEl.value='';
+  load();
+}
+
+// Refresh table data
+function refreshList(){
+  load();
+}
+
 // Modal functions
 function closeModal(modalId) {
   document.getElementById(modalId).classList.add('hidden');
@@ -794,8 +807,8 @@ async function deleteContractFromAnalysis() {
   }
 }
 
-clearBtn.addEventListener('click', ()=>{ searchEl.value=''; statusEl.value=''; typeEl.value=''; load(); });
-refreshBtn.addEventListener('click', load);
+clearBtn.addEventListener('click', clearFilters);
+refreshBtn.addEventListener('click', refreshList);
 searchEl.addEventListener('input', load);
 statusEl.addEventListener('change', load);
 typeEl.addEventListener('change', load);

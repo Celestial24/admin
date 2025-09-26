@@ -111,9 +111,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
-                    Archive Browser
-                </a>
+              
                 <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
                     Submission History
                 </a>

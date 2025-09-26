@@ -284,7 +284,7 @@ $wekaConn = $conn; // Use existing connection
         const employee = c.employee_name || c.uploaded_by_name || window.APP_EMPLOYEE_NAME || 'Employee';
         tr.innerHTML = `
           <td class="px-3 py-3 align-top break-words whitespace-normal">Employee ${String(c.id).padStart(3,'0')}</td>
-          <td class="px-3 py-3 align-top break-words whitespace-normal">—</td>
+          <td class="px-3 py-3 align-top break-words whitespace-normal">${c.employee_name || '—'}</td>
           <td class="px-3 py-3 align-top font-medium break-words whitespace-normal">${c.title}</td>
           <td class="px-3 py-3 align-top break-words whitespace-normal">${c.category || '—'}</td>
           <td class="px-3 py-3 align-top ${isAdmin?'':'blur-protected'} break-words whitespace-normal">${maskedParty}</td>
@@ -298,13 +298,7 @@ $wekaConn = $conn; // Use existing connection
           <td class="px-3 py-3 align-top text-sm text-gray-600 break-words whitespace-normal">${c.access.join(', ')}</td>
           <td class="px-3 py-3 align-top">
             <div class="flex gap-2">
-              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>${accessAllowed?'View Details':'Restricted'}</button>
-              ${accessAllowed?`<button class="btnAnalyze px-2 py-1 border rounded text-xs" data-id="${c.id}">Weka Analysis</button>`:''}
-              ${accessAllowed?`<button class="btnRestricted px-2 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded text-xs" data-id="${c.id}">Restricted</button>`:''}
-              ${accessAllowed?`<button class="btnEdit px-2 py-1 bg-blue-100 text-blue-700 border border-blue-300 rounded text-xs" data-id="${c.id}">Edit</button>`:''}
-              ${accessAllowed?`<button class="btnDelete px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">Delete</button>`:''}
-              ${c.level==='High'&&isAdmin?`<button class="btnHighRisk px-2 py-1 bg-red-100 text-red-700 border border-red-300 rounded text-xs" data-id="${c.id}">High Risk</button>`:''}
-              ${isAdmin?`<button class="btnArchive px-2 py-1 border rounded text-xs" data-id="${c.id}">Archive</button>`:''}
+              <button class="btnView px-2 py-1 border rounded text-xs" data-id="${c.id}" ${accessAllowed?'':'disabled'}>Views</button>
             </div>
           </td>
         `;
@@ -344,24 +338,6 @@ $wekaConn = $conn; // Use existing connection
       }
       document.querySelectorAll('.btnView').forEach(b=> b.addEventListener('click', e=>{
         const id=e.target.dataset.id; openWithPasswordGuard(id, viewContract);
-      }));
-      document.querySelectorAll('.btnAnalyze').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; openWithPasswordGuard(id, analyzeContract);
-      }));
-      document.querySelectorAll('.btnRestricted').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; openWithPasswordGuard(id, viewContract);
-      }));
-      document.querySelectorAll('.btnEdit').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; openWithPasswordGuard(id, editContract);
-      }));
-      document.querySelectorAll('.btnDelete').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; openWithPasswordGuard(id, deleteContract);
-      }));
-      document.querySelectorAll('.btnHighRisk').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; showHighRiskDetails(id);
-      }));
-      document.querySelectorAll('.btnArchive').forEach(b=> b.addEventListener('click', e=>{
-        const id=e.target.dataset.id; archiveContract(id);
       }));
 
       renderAudit();
@@ -706,7 +682,8 @@ $wekaConn = $conn; // Use existing connection
               risk_factors: c.risk_factors || [],
               recommendations: c.recommendations || [],
               probability_percent: c.probability_percent,
-                // removed uploaded_by, uploaded_by_name, department from UI
+              employee_name: c.employee_name, // Include employee name
+              view_password: c.view_password, // Include password for protection
             };
             
             store.contracts.push(contract);

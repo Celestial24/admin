@@ -103,6 +103,26 @@ $userName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown User');
     </div>
   </div>
 
+  <!-- Password Modal -->
+  <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-96 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Enter Password</h3>
+        <button onclick="closeModal('passwordModal')" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input type="password" id="passwordInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password">
+        </div>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeModal('passwordModal')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button onclick="verifyPasswordAndProceed()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Verify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Analysis Modal -->
   <div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto">
@@ -112,6 +132,22 @@ $userName = $_SESSION['user']['name'] ?? ($_SESSION['name'] ?? 'Unknown User');
       </div>
       <div id="analysisContent" class="p-6 space-y-4">
         <!-- Analysis content will be loaded here -->
+      </div>
+      <div class="p-6 border-t bg-gray-50">
+        <div class="flex justify-end gap-3">
+          <button onclick="editContractFromAnalysis()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit Contract
+          </button>
+          <button onclick="deleteContractFromAnalysis()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Delete Contract
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -231,11 +267,6 @@ async function load(){
             <button onclick="viewContract(${c.id})" class="text-blue-600 hover:text-blue-800" title="View Details">Open</button>
             <span class="text-gray-300">|</span>
             <button onclick="viewAnalysis(${c.id})" class="text-purple-600 hover:text-purple-800" title="View Analysis">Analysis</button>
-            <span class="text-gray-300">|</span>
-            <button onclick="viewContract(${c.id})" class="text-gray-600 hover:text-gray-800 border border-gray-300 px-2 py-1 rounded text-xs" title="View Details">Restricted</button>
-            <span class="text-gray-300">|</span>
-            <button onclick="editContract(${c.id})" class="text-green-600 hover:text-green-800" title="Edit Contract">✓</button>
-            <button onclick="deleteContract(${c.id})" class="text-red-600 hover:text-red-800" title="Delete Contract">✕</button>
           </div>
         </td>`;
       tbody.appendChild(tr);
@@ -256,6 +287,10 @@ function openModal(modalId) {
   document.getElementById(modalId).classList.add('flex');
 }
 
+// Global variables for password modal
+let currentContractId = null;
+let pendingAction = null;
+
 // Password verification helper
 async function verifyPassword(contractId, password) {
   try {
@@ -272,6 +307,79 @@ async function verifyPassword(contractId, password) {
   }
 }
 
+// Show password modal
+function showPasswordModal(contractId, action) {
+  currentContractId = contractId;
+  pendingAction = action;
+  document.getElementById('passwordInput').value = '';
+  openModal('passwordModal');
+}
+
+// Verify password and proceed with action
+async function verifyPasswordAndProceed() {
+  const password = document.getElementById('passwordInput').value;
+  if (!password) {
+    alert('Please enter a password');
+    return;
+  }
+  
+  const isValid = await verifyPassword(currentContractId, password);
+  if (isValid) {
+    closeModal('passwordModal');
+    if (pendingAction === 'view') {
+      await viewContractWithPassword(currentContractId, password);
+    } else if (pendingAction === 'analysis') {
+      await viewAnalysisWithPassword(currentContractId, password);
+    } else if (pendingAction === 'edit') {
+      await editContractWithPassword(currentContractId, password);
+    } else if (pendingAction === 'delete') {
+      await deleteContractWithPassword(currentContractId, password);
+    }
+  } else {
+    alert('Invalid password. Access denied.');
+  }
+}
+
+// Edit contract with password
+async function editContractWithPassword(contractId, password) {
+  try {
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      populateEditForm(result.contract, contractId, password);
+    } else {
+      alert('Error loading contract for editing.');
+    }
+  } catch (error) {
+    console.error('Error editing contract:', error);
+    alert('Error loading contract for editing.');
+  }
+}
+
+// Delete contract with password
+async function deleteContractWithPassword(contractId, password) {
+  try {
+    const deleteResponse = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=delete&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+    });
+    const deleteResult = await deleteResponse.json();
+    
+    if (deleteResult.success) {
+      alert('Contract deleted successfully!');
+      closeModal('analysisModal');
+      load(); // Reload the table
+    } else {
+      alert('Error deleting contract: ' + deleteResult.message);
+    }
+  } catch (error) {
+    console.error('Error deleting contract:', error);
+    alert('Error deleting contract. Please try again.');
+  }
+}
+
 // View Analysis function
 async function viewAnalysis(contractId) {
   try {
@@ -280,24 +388,7 @@ async function viewAnalysis(contractId) {
     const result = await response.json();
     
     if (!result.success && result.password_required) {
-      const password = prompt('Enter password to view analysis:');
-      if (!password) return;
-      
-      const isValid = await verifyPassword(contractId, password);
-      if (!isValid) {
-        alert('Invalid password. Access denied.');
-        return;
-      }
-      
-      // Retry with password
-      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
-      const resultWithPassword = await responseWithPassword.json();
-      
-      if (resultWithPassword.success) {
-        displayAnalysisDetails(resultWithPassword.contract);
-      } else {
-        alert('Error loading analysis details.');
-      }
+      showPasswordModal(contractId, 'analysis');
     } else if (result.success) {
       displayAnalysisDetails(result.contract);
     } else {
@@ -309,8 +400,46 @@ async function viewAnalysis(contractId) {
   }
 }
 
+// View Analysis with password
+async function viewAnalysisWithPassword(contractId, password) {
+  try {
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      displayAnalysisDetails(result.contract);
+    } else {
+      alert('Error loading analysis details.');
+    }
+  } catch (error) {
+    console.error('Error viewing analysis:', error);
+    alert('Error loading analysis details.');
+  }
+}
+
+// View Contract with password
+async function viewContractWithPassword(contractId, password) {
+  try {
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      displayContractDetails(result.contract);
+    } else {
+      alert('Error loading contract details.');
+    }
+  } catch (error) {
+    console.error('Error viewing contract:', error);
+    alert('Error loading contract details.');
+  }
+}
+
 // Display analysis details in modal
 function displayAnalysisDetails(contract) {
+  // Store contract ID for edit/delete actions
+  window.currentAnalysisContractId = contract.id;
+  window.currentAnalysisContractPassword = null; // Will be set if password was used
+  
   const content = document.getElementById('analysisContent');
   const riskClass = {
     'High': 'bg-red-100 text-red-800',
@@ -398,24 +527,7 @@ async function viewContract(contractId) {
     const result = await response.json();
     
     if (!result.success && result.password_required) {
-      const password = prompt('Enter password to view this contract:');
-      if (!password) return;
-      
-      const isValid = await verifyPassword(contractId, password);
-      if (!isValid) {
-        alert('Invalid password. Access denied.');
-        return;
-      }
-      
-      // Retry with password
-      const responseWithPassword = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}&password=${encodeURIComponent(password)}`);
-      const resultWithPassword = await responseWithPassword.json();
-      
-      if (resultWithPassword.success) {
-        displayContractDetails(resultWithPassword.contract);
-      } else {
-        alert('Error loading contract details.');
-      }
+      showPasswordModal(contractId, 'view');
     } else if (result.success) {
       displayContractDetails(result.contract);
     } else {
@@ -620,6 +732,67 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     alert('Error updating contract. Please try again.');
   }
 });
+
+// Edit contract from analysis modal
+async function editContractFromAnalysis() {
+  const contractId = window.currentAnalysisContractId;
+  if (!contractId) return;
+  
+  try {
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
+    const result = await response.json();
+    
+    if (!result.success && result.password_required) {
+      showPasswordModal(contractId, 'edit');
+    } else if (result.success) {
+      populateEditForm(result.contract, contractId);
+    } else {
+      alert('Error loading contract for editing.');
+    }
+  } catch (error) {
+    console.error('Error editing contract:', error);
+    alert('Error loading contract for editing.');
+  }
+}
+
+// Delete contract from analysis modal
+async function deleteContractFromAnalysis() {
+  const contractId = window.currentAnalysisContractId;
+  if (!contractId) return;
+  
+  if (!confirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`../backend/weka_contract_api.php?action=get_contract&contract_id=${contractId}`);
+    const result = await response.json();
+    
+    let password = '';
+    if (!result.success && result.password_required) {
+      showPasswordModal(contractId, 'delete');
+      return;
+    }
+    
+    const deleteResponse = await fetch('../backend/weka_contract_api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=delete&contract_id=${contractId}&password=${encodeURIComponent(password)}`
+    });
+    const deleteResult = await deleteResponse.json();
+    
+    if (deleteResult.success) {
+      alert('Contract deleted successfully!');
+      closeModal('analysisModal');
+      load(); // Reload the table
+    } else {
+      alert('Error deleting contract: ' + deleteResult.message);
+    }
+  } catch (error) {
+    console.error('Error deleting contract:', error);
+    alert('Error deleting contract. Please try again.');
+  }
+}
 
 clearBtn.addEventListener('click', ()=>{ searchEl.value=''; statusEl.value=''; typeEl.value=''; load(); });
 refreshBtn.addEventListener('click', load);

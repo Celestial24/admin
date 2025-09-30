@@ -4,9 +4,9 @@ session_start();
 
 // Database Configuration
 $host = 'localhost';
-$dbname = 'legal_management_system';
-$username = 'root';
-$password = '';
+$dbname = 'admin_legal';
+$username = 'admin_legal';
+$password = '123';
 
 // Initialize database connection
 try {

@@ -55,7 +55,10 @@ if ($dept_result && $dept_row = $dept_result->fetch_assoc()) {
 <body class="flex h-screen bg-gray-50">
   <div class="flex flex-1 w-full">
 
-   
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <?php include '../Components/sidebar/sidebar_superadmin'; ?>
+    </aside>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">

@@ -56,6 +56,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
+            <!-- Topics -->
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
                 🏠 Facilities Overview
@@ -82,6 +83,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
+            <!-- Topics -->
             <div id="reports-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities-report.php' ? 'bg-gray-700' : '' ?>">
                     📊 Facilities Report
@@ -102,6 +104,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
+            <!-- Topics -->
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                       Legal Management
@@ -129,10 +132,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
              <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="archiver-submenu">
                 <span class="flex items-center gap-3">
                     <i data-lucide="folder-kanban" class="w-5 h-5"></i>
-                    <span class="sidebar-text"></span>
+                    <span class="sidebar-text">Reports</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
+            
+            <!-- Topics -->
             <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                     Submission History

@@ -84,7 +84,7 @@ if ($admin) {
         'role' => $_SESSION['role'],
         'greeting' => $isSuper ? 'Super Admin' : 'Admin',
         'name' => $_SESSION['name'],
-        'redirectUrl' => $isSuper ? '../Main/super_Dashboard.php' : '../Main/Dashboard.php'
+        'redirectUrl' => $isSuper ? '../super_admin/Dashboard.php' : '../super_admin/Dashboard.php'
     ]);
     exit;
 }

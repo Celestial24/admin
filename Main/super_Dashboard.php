@@ -57,7 +57,7 @@ if ($dept_result && $dept_row = $dept_result->fetch_assoc()) {
 
     <!-- Sidebar -->
     <aside id="sidebar">
-      <?php include '../Components/sidebar/sidebar_user'; ?>
+      <?php include '../Components/sidebar/sidebar_superadmin.php'; ?>
     </aside>
 
     <!-- Main Content -->

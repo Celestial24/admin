@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 // legal_management_system.php - Complete Legal Management System
 session_start();
 
@@ -1305,4 +1305,4 @@ $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
         }
     </script>
 </body>
-</html>
+</html> -->

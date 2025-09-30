@@ -71,7 +71,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <!-- Visitor Logs -->
             <a href="/admin/Main/Visitors.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Visitors.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="sidebar-text">Visitor Logs</span>
+                <span class="sidebar-text">Visitor Management</span>
             </a>
 
             <!-- NEW: Reports (Toggle Group) -->
@@ -104,10 +104,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                    Contract Result & Risk Analysis
-                </a>
+                      Legal Management
+                </a>                </a>
                 <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
-                    Submission History
+                      Contract Management
                 </a>
             </div>
 

@@ -24,7 +24,7 @@ if (!isset($_SESSION['username'])) {
 }
 
 // Handle Form Submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] = 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'add_case':

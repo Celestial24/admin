@@ -59,12 +59,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
                 🏠 Facilities Overview
-
                 </a>
-                <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'reservation.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Reservation.php' ? 'bg-gray-700' : '' ?>">
                 📅 Room & Facility Reservation
                 </a>
-                <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'maintenance.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Maintenance.php' ? 'bg-gray-700' : '' ?>">
                 🛠️ Maintenance Requests
                 </a>
             </div>
@@ -75,21 +74,31 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span class="sidebar-text">Visitor Logs</span>
             </a>
 
-        <!-- 
+            <!-- NEW: Reports (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="reports-submenu">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span class="sidebar-text">Reports</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
+            </button>
+            <div id="reports-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/module-table/facilities.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities-report.php' ? 'bg-gray-700' : '' ?>">
+                    📊 Facilities Report
+                </a>
+                <a href="/admin/module-table/Reservation.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-report.php' ? 'bg-gray-700' : '' ?>">
+                    👥 Visitor Logs Report
+                </a>
+                <a href="/admin/module-table/Maintenance.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'audit-trail.php' ? 'bg-gray-700' : '' ?>">
+                    🔍 Audit Trail Report
+                </a>
+            </div>
 
-    Legal & Contract Management Section
-    -----------------------------------
-    This toggle group provides navigation links related to legal and contract management.
-    - "Contract Result & Risk Analysis": Displays outcomes and risk evaluations for contracts.
-    - "Submission History": Shows the history of contract submissions for review and tracking.
-    The submenu is collapsible, improving sidebar organization and user experience.
--->
-
-            <!-- Legal Management (Toggle Group) -->
+            <!-- Legal & Contract Management (Toggle Group) -->
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="legal-submenu">
                 <span class="flex items-center gap-3">
                     <i data-lucide="gavel" class="w-5 h-5"></i>
-                    <span class="sidebar-text"> Legal & Contract</span>
+                    <span class="sidebar-text">Legal Management</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
@@ -111,14 +120,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
-              
-                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
+                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                     Submission History
                 </a>
             </div>
 
-            <!-- Navigation -->
-            <a href="/admin/Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'integration.php' ? 'bg-gray-700' : '' ?>">
+            <!-- User Management -->
+            <a href="/admin/Main/Accout-table.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Accout-table.php' ? 'bg-gray-700' : '' ?>">
                 <i data-lucide="blocks" class="w-5 h-5"></i>
                 <span class="sidebar-text">User Management</span>
             </a>

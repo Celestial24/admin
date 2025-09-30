@@ -154,7 +154,7 @@ function getStatusBadge($status) {
               <th class="px-6 py-3">Type</th>
               <th class="px-6 py-3">Capacity</th>
               <th class="px-6 py-3">Status</th>
-              <th class="px-6 py-3">Actions</th>
+              
             </tr>
           </thead>
           <tbody>
@@ -174,12 +174,7 @@ function getStatusBadge($status) {
                   </td>
                   <td class="px-6 py-4"><?= getStatusBadge($row['status']) ?></td>
                   <td class="px-6 py-4 flex justify-center gap-2">
-                    <a href="../Views/modules/facility.php?edit=<?= $row['id'] ?>" 
-                       class="text-blue-600 hover:text-blue-900" title="Edit Facility">
-                      <i data-lucide="edit" class="w-4 h-4"></i>
-                    </a>
-                    <button onclick="confirmDelete(<?= $row['id'] ?>, '<?= htmlspecialchars($row['facility_name']) ?>')" 
-                            class="text-red-600 hover:text-red-900" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+
                   </td>
                 </tr>
               <?php endwhile; ?>

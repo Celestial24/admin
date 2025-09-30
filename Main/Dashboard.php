@@ -94,43 +94,6 @@ $total_users = count($users);
           <?php include __DIR__ . '/../profile.php'; ?>
         </div>
 
-        <!-- Users Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-white border border-gray-200 rounded-md">
-            <thead>
-              <tr class="bg-gray-100 text-left">
-                <th class="py-3 px-4 border-b">Fullname</th>
-                <th class="py-3 px-4 border-b">Admin Email</th>
-                <th class="py-3 px-4 border-b">Department</th>
-                <th class="py-3 px-4 border-b">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (!empty($users)): ?>
-                <?php foreach ($users as $user): ?>
-                  <tr>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['name']) ?></td>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['email']) ?></td>
-                    <td class="py-2 px-4 border-b"><?= htmlspecialchars($user['department'] ?? 'N/A') ?></td>
-                    <td class="py-2 px-4 border-b">
-                      <form method="POST" onsubmit="return confirm('Are you sure you want to delete this account?');" style="display:inline;">
-                        <input type="hidden" name="delete_email" value="<?= htmlspecialchars($user['email']) ?>">
-                        <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                          Delete
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="4" class="py-2 px-4 border-b text-center text-gray-500">No users found.</td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-
       </main>
 
       <!-- Footer -->

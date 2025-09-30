@@ -431,10 +431,7 @@ function showPinForm($error = '') {
                     Verify PIN
                 </button>
             </form>
-            <div class="mt-6 text-center text-sm text-gray-500">
-                <p>Default PIN: 0000</p>
-                <p>For security reasons, access to this page requires additional verification.</p>
-            </div>
+          
         </div>
         <script>
             document.getElementById('pin_code')?.addEventListener('input', function(e) {

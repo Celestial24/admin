@@ -59,13 +59,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <!-- Topics -->
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                🏠 Facilities Overview
+                Facilities Overview
                 </a>
                 <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Reservation.php' ? 'bg-gray-700' : '' ?>">
-                📅 Room & Facility Reservation
+                 Room & Facility Reservation
                 </a>
                 <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Maintenance.php' ? 'bg-gray-700' : '' ?>">
-                🛠️ Maintenance Requests
+                 Maintenance Requests
                 </a>
             </div>
 

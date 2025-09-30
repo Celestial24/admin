@@ -104,7 +104,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                    Contract Result & Risk Analysis
+                    Legal Mangement
                 </a>
                 <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
                     Submission History

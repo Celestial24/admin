@@ -7,6 +7,7 @@ function loginAdmin($conn, $usernameOrEmail, $password) {
         return ['success' => false, 'error' => 'Please enter username/email and password.'];
     }
 
+    // Try admin_user table first (for hashed passwords)
     $stmt = $conn->prepare("SELECT * FROM admin_user WHERE username = ? OR email = ?");
     $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
     $stmt->execute();
@@ -17,9 +18,9 @@ function loginAdmin($conn, $usernameOrEmail, $password) {
     if (!$admin) {
         return ['success' => false, 'error' => 'Admin user not found.'];
     }
-
-    // Ideally, use hashed password even for admin
-    if (!password_verify($password, $admin['password'])) {
+    
+    // Plain text password comparison for admin_user table
+    if ($password !== $admin['password']) {
         return ['success' => false, 'error' => 'Incorrect password.'];
     }
 
@@ -66,28 +67,37 @@ if ($login_type === 'admin') {
 
 if ($result['success']) {
     $user = $result['user'];
+    
+    // Set session variables that Dashboard.php expects
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
-    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'admin')));
+    
+    // Handle role assignment
+    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user')));
     $superAliases = ['super_admin','superadmin','super admin','super'];
-    if (in_array($roleRaw, $superAliases, true)) { $roleRaw = 'super_admin'; }
-    else { $roleRaw = 'admin'; }
+    if (in_array($roleRaw, $superAliases, true)) { 
+        $roleRaw = 'super_admin'; 
+    } else { 
+        $roleRaw = ($login_type === 'admin') ? 'admin' : 'user'; 
+    }
+    
     $_SESSION['role'] = $roleRaw;
     $_SESSION['user_type'] = $roleRaw;
 
     // Redirect based on role
     if ($roleRaw === 'super_admin') {
-        header("Location: ../Main/Dashboard.php");
+        header("Location: ../Main/super_Dashboard.php");
     } elseif ($roleRaw === 'admin') {
         header("Location: ../Main/Dashboard.php");
     } else {
-        header("Location: ../Main/Dashboard.php");
+        header("Location: ../user/dashboard.php");
     }
     exit;
 } else {
     $error = $result['error'];
-    // You can display this error in your frontend
+    // Display error message
+    echo "<script>alert('Login Error: " . addslashes($error) . "');</script>";
 }
 ?>
 

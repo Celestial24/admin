@@ -83,7 +83,7 @@ if ($result['success']) {
     exit;
 } else {
     $error = $result['error'];
-  
+    echo "<script>alert('Login Error: " . addslashes($error) . "');</script>";
 }
 ?>
 

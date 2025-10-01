@@ -68,16 +68,21 @@ if ($username === '' || $password === '') {
 // Try admin first
 $admin = checkAdmin($conn, $username, $password);
 if ($admin) {
-    $_SESSION['user_type'] = 'admin';
+    $_SESSION['user_type'] = $admin['role'] ?? 'admin';
     $_SESSION['user_id'] = $admin['id'];
     $_SESSION['name'] = $admin['name'] ?? $admin['username'] ?? 'Admin';
     $_SESSION['email'] = $admin['email'] ?? '';
+    $_SESSION['role'] = $admin['role'] ?? 'admin';
+    
+    $redirectUrl = ($admin['role'] === 'super_admin') ? '../super_admin/Dashboard.php' : '../Main/Dashboard.php';
+    $greeting = ($admin['role'] === 'super_admin') ? 'Hi superadmin' : 'Hi Admin';
+    
     echo json_encode([
         'success' => true,
-        'role' => 'admin',
-        'greeting' => 'Hi Admin',
+        'role' => $admin['role'] ?? 'admin',
+        'greeting' => $greeting,
         'name' => $_SESSION['name'],
-        'redirectUrl' => '../Main/Dashboard.php'
+        'redirectUrl' => $redirectUrl
     ]);
     exit;
 }

@@ -67,7 +67,7 @@ if ($dept_result && $dept_row = $dept_result->fetch_assoc()) {
         <!-- Header -->
         <div class="flex items-center justify-between border-b pb-4">
           <h2 class="text-xl font-semibold text-gray-800">
-            Super Admin Dashboard
+           Welcome TO Administrative 
           </h2>
 
           <!-- User Profile -->

@@ -7,7 +7,6 @@ function loginAdmin($conn, $usernameOrEmail, $password) {
         return ['success' => false, 'error' => 'Please enter username/email and password.'];
     }
 
-    // Try admin_user table first (for hashed passwords)
     $stmt = $conn->prepare("SELECT * FROM admin_user WHERE username = ? OR email = ?");
     $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
     $stmt->execute();
@@ -18,9 +17,9 @@ function loginAdmin($conn, $usernameOrEmail, $password) {
     if (!$admin) {
         return ['success' => false, 'error' => 'Admin user not found.'];
     }
-    
-    // Plain text password comparison for admin_user table
-    if ($password !== $admin['password']) {
+
+    // Ideally, use hashed password even for admin
+    if (!password_verify($password, $admin['password'])) {
         return ['success' => false, 'error' => 'Incorrect password.'];
     }
 
@@ -67,37 +66,25 @@ if ($login_type === 'admin') {
 
 if ($result['success']) {
     $user = $result['user'];
-    
-    // Set session variables that Dashboard.php expects
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
-    
-    // Handle role assignment
-    $roleRaw = strtolower(trim($user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user')));
-    $superAliases = ['super_admin','superadmin','super admin','super'];
-    if (in_array($roleRaw, $superAliases, true)) { 
-        $roleRaw = 'super_admin'; 
-    } else { 
-        $roleRaw = ($login_type === 'admin') ? 'admin' : 'user'; 
-    }
-    
-    $_SESSION['role'] = $roleRaw;
-    $_SESSION['user_type'] = $roleRaw;
+    $_SESSION['role'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
 
     // Redirect based on role
-    if ($roleRaw === 'admin') {
+    if ($login_type === 'admin') {
         header("Location: ../Main/Dashboard.php");
-    } elseif ($roleRaw === 'super_admin') {
-        header("Location: ../super_admin/super_Dashboard.php");
     } else {
-        header("Location: ../user/dashboard.php");
+        if ($user['role'] === 'user') {
+            header("Location: ../user/dashboard.php");
+        } else {
+            header("Location: ../user/dashboard.php");
+        }
     }
     exit;
 } else {
     $error = $result['error'];
-    // Display error message
-    echo "<script>alert('Login Error: " . addslashes($error) . "');</script>";
+    // You can display this error in your frontend
 }
 ?>
 
@@ -252,7 +239,7 @@ if ($result['success']) {
       </div>
 
       <h3 class="text-lg sm:text-xl font-semibold mb-1">Sign in</h3>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Use your user credentials to continue.</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Use your administrator credentials to continue.</p>
 
       <!-- Inline attempt + info banners -->
       <div id="alert" class="alert alert-error hidden mb-2" role="alert"></div>
@@ -268,7 +255,7 @@ if ($result['success']) {
               <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5Z" fill="currentColor"/>
             </svg>
           </span>
-          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">username</span> or <span class="font-mono">email@example.com</span></p>
+          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">admin</span> or <span class="font-mono">admin@example.com</span></p>
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
@@ -317,7 +304,7 @@ if ($result['success']) {
         </svg>
         <span id="iconRipple" class="absolute inset-0 rounded-full border border-white/60 opacity-0"></span>
       </div>
-      <h4 id="popupTitle" class="text-xl font-extrabold text-center" style="color:var(--gold)">Hello, User 👋</h4>
+      <h4 id="popupTitle" class="text-xl font-extrabold text-center" style="color:var(--gold)">Hello, Admin 👋</h4>
       <p id="popupMsg" class="mt-1 text-sm text-center text-slate-600 dark:text-slate-400 typing"></p>
       <div class="mt-4 flex justify-center">
         <button id="popupOkBtn" class="btn !w-auto px-4 py-2 text-sm">OK</button>
@@ -474,12 +461,12 @@ if ($result['success']) {
     const q = new URLSearchParams(location.search);
     if (q.get('logout') === '1') {
       sessionStorage.removeItem('atiera_logged_in');
-        showPopup({
-          title: 'Goodbye, User 👋',
-          message: 'Thank you User — See you next time!',
-          variant: 'goodbye',
-          autocloseMs: 4200
-        });
+      showPopup({
+        title: 'Goodbye, ADMIN 👋',
+        message: 'Thank you ADMIN — See you next time!',
+        variant: 'goodbye',
+        autocloseMs: 4200
+      });
     }
   })();
 
@@ -563,7 +550,7 @@ if ($result['success']) {
         stopLoading(true);
         showPopup({
           title: data.greeting + " 👋",
-          message: `Welcome ${data.greeting} — Redirecting…`,
+          message: `Welcome ${data.name} — Redirecting…`,
           variant: 'success',
           autocloseMs: 4200,
           onClose: () => { window.location.href = data.redirectUrl; }

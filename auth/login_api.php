@@ -90,6 +90,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
             }
         } else {
             // Kung may error sa SQL
+            echo "<script>alert('Database Error: " . mysqli_error($conn) . "');</script>";
             header("Location: login.php?error=An unexpected database error occurred");
             exit();
         }

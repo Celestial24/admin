@@ -83,7 +83,7 @@ if ($result['success']) {
     exit;
 } else {
     $error = $result['error'];
-    // You can display this error in your frontend
+    echo "<script>alert('Login Error: " . addslashes($error) . "');</script>";
 }
 ?>
 

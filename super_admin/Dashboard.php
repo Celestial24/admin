@@ -78,7 +78,7 @@ if ($dept_result && $dept_row = $dept_result->fetch_assoc()) {
         <div class="grid grid-cols-1 gap-6">
           <div class="bg-white border border-gray-200 rounded-md p-4">
             <h3 class="text-lg font-semibold mb-2">Welcome</h3>
-            <p>Hello, <?php echo htmlspecialchars($_SESSION['name'] ?? 'Super Admin'); ?>. Build Super Admin widgets here.</p>
+            <p>Hi superadmin. Build Super Admin widgets here.</p>
           </div>
         </div>
 

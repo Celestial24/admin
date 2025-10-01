@@ -71,7 +71,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                         header("Location: ../Main/Dashboard.php");
                         exit();
                     } elseif ($_SESSION['role'] == 'superadmin') {
-                        header("Location: ../Main/super_Dashboard.php");
+                        header("Location: ../super_admin/super_Dashboard.php");
                         exit();
                     } else {
                         // Pangasiwaan ang ibang mga role o default case

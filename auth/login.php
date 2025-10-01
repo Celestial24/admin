@@ -88,8 +88,8 @@ if ($result['success']) {
     // Redirect based on role
     if ($roleRaw === 'admin') {
         header("Location: ../Main/Dashboard.php");
-    } elseif ($roleRaw === 'admin') {
-        header("Location: ../Main/Dashboard.php");
+    } elseif ($roleRaw === 'super_admin') {
+        header("Location: ../Main/super_Dashboard.php");
     } else {
         header("Location: ../user/dashboard.php");
     }

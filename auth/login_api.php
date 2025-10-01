@@ -1,103 +1,111 @@
 <?php
+// filepath: c:\xampp\htdocs\admin\auth\login_api.php
 session_start();
-// Isama ang iyong database connection file
-include '../backend/sql/db.php';
+header('Content-Type: application/json');
 
-// Debug: Check if we can connect to database
-if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
-}
+// Database connection
+require_once '../backend/sql/db.php';
 
-// Suriin kung ang form ay na-submit
-if (isset($_POST['username']) && isset($_POST['password'])) {
+// Helper: check admin_user table
+function checkAdmin($conn, $usernameOrEmail, $password) {
+    $stmt = $conn->prepare("SELECT * FROM admin_user WHERE username = ? OR email = ? LIMIT 1");
+    $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $admin = $result->fetch_assoc();
+    $stmt->close();
 
-    // Function para i-validate ang input
-    function validate($data){
-       $data = trim($data);
-       $data = stripslashes($data);
-       $data = htmlspecialchars($data);
-       return $data;
-    }
+    if (!$admin) return false;
 
-    $username = validate($_POST['username']);
-    $password = validate($_POST['password']);
-
-    // Suriin kung may laman ang mga field
-    if (empty($username)) {
-        header("Location: login.php?error=Username is required");
-        exit();
-    } else if (empty($password)) {
-        header("Location: login.php?error=Password is required");
-        exit();
+    // Password check: hashed or plain
+    if (isset($admin['password_hash']) && !empty($admin['password_hash'])) {
+        if (!password_verify($password, $admin['password_hash'])) return false;
+    } elseif (isset($admin['password'])) {
+        if ($admin['password'] !== $password) return false;
     } else {
-        // PAALALA TUNGKOL SA SEGURIDAD: Ang iyong database ay kasalukuyang nag-iimbak ng mga password bilang plain text.
-        // Ito ay hindi secure. Mas mainam na gamitin ang password_hash() kapag nag-iimbak at password_verify() para sa pagsusuri.
-        // Ang code sa ibaba ay gumagamit ng "prepared statements" para maiwasan ang SQL injection
-        // habang pinapanatili ang kasalukuyang paraan ng pag-verify ng password.
-
-        // Maghanda ng statement para maiwasan ang SQL injection
-        $sql = "SELECT * FROM admin_user WHERE username=? OR email=?";
-        $stmt = mysqli_prepare($conn, $sql);
-        
-        // Debug: Check if statement preparation was successful
-        if (!$stmt) {
-            die("Statement preparation failed: " . mysqli_error($conn));
-        }
-
-        if ($stmt) {
-            mysqli_stmt_bind_param($stmt, "ss", $username, $username);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-
-            if (mysqli_num_rows($result) === 1) {
-                $row = mysqli_fetch_assoc($result);
-
-                // I-verify ang password (plain text comparison for admin_user table)
-                if ($password === $row['password']) {
-                    
-                    // Itakda ang mga session variable
-                    $_SESSION['user_id'] = $row['id'];
-                    $_SESSION['username'] = $row['username'];
-                    $_SESSION['name'] = $row['name'];
-                    $_SESSION['email'] = $row['email'] ?? '';
-                    $_SESSION['role'] = $row['role'];
-                    $_SESSION['user_type'] = $row['role'];
-
-                    // Mag-redirect batay sa role ng user
-                    mysqli_stmt_close($stmt);
-                    if ($_SESSION['role'] == 'admin') {
-                        header("Location: ../Main/Dashboard.php");
-                        exit();
-                    } elseif ($_SESSION['role'] == 'super_admin') {
-                        header("Location: ../super_admin/super_Dashboard.php");
-                        exit();
-                    } else {
-                        // Pangasiwaan ang ibang mga role o default case
-                        header("Location: login.php?error=Unknown user role");
-                        exit();
-                    }
-                } else {
-                    // Kung mali ang password
-                    mysqli_stmt_close($stmt);
-                    header("Location: login.php?error=Incorrect Username or Password");
-                    exit();
-                }
-            } else {
-                // Kung hindi nahanap ang user
-                mysqli_stmt_close($stmt);
-                header("Location: login.php?error=Incorrect Username or Password");
-                exit();
-            }
-        } else {
-            // Kung may error sa SQL
-            echo "<script>alert('Database Error: " . mysqli_error($conn) . "');</script>";
-            header("Location: login.php?error=An unexpected database error occurred");
-            exit();
-        }
+        return false;
     }
-} else {
-    // Kung hindi na-submit ang form, i-redirect pabalik sa login page
-    header("Location: login.php");
-    exit();
+    return $admin;
 }
-?>
+
+// Helper: check users table
+function checkUser($conn, $usernameOrEmail, $password) {
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? OR name = ? LIMIT 1");
+    $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+
+    if (!$user) return false;
+    if (isset($user['is_verified']) && !$user['is_verified']) return 'not_verified';
+
+    // Password check: hashed or plain
+    if (isset($user['password_hash']) && !empty($user['password_hash'])) {
+        if (!password_verify($password, $user['password_hash'])) return false;
+    } elseif (isset($user['password'])) {
+        if ($user['password'] !== $password) return false;
+    } else {
+        return false;
+    }
+    return $user;
+}
+
+// Only allow POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    exit;
+}
+
+$username = trim($_POST['username'] ?? '');
+$password = $_POST['password'] ?? '';
+
+if ($username === '' || $password === '') {
+    echo json_encode(['success' => false, 'message' => 'Please enter username/email and password.']);
+    exit;
+}
+
+// Try admin first
+$admin = checkAdmin($conn, $username, $password);
+if ($admin) {
+    $_SESSION['user_type'] = 'admin';
+    $_SESSION['user_id'] = $admin['id'];
+    $_SESSION['name'] = $admin['name'] ?? $admin['username'] ?? 'Admin';
+    $_SESSION['email'] = $admin['email'] ?? '';
+    echo json_encode([
+        'success' => true,
+        'role' => 'admin',
+        'greeting' => 'Hi Admin',
+        'name' => $_SESSION['name'],
+        'redirectUrl' => '../Main/Dashboard.php'
+    ]);
+    exit;
+}
+
+// Try user table
+$user = checkUser($conn, $username, $password);
+if ($user === 'not_verified') {
+    echo json_encode(['success' => false, 'message' => 'Your account is not verified.']);
+    exit;
+}
+if ($user) {
+    $_SESSION['user_type'] = 'user';
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['name'] = $user['name'] ?? '';
+    $_SESSION['email'] = $user['email'] ?? '';
+    echo json_encode([
+        'success' => true,
+        'role' => 'superadmin',
+        'greeting' => 'Hi ' . $_SESSION['name'],
+        'name' => $_SESSION['name'],
+        'redirectUrl' => '../super_admin/dashboard.php'
+    ]);
+    exit;
+}
+
+// If both fail
+echo json_encode([
+    'success' => false,
+    'message' => 'Invalid username/email or password.'
+]);
+exit;

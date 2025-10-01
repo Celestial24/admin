@@ -73,12 +73,10 @@ if ($result['success']) {
     $_SESSION['user_type'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
 
     // Redirect based on role
-    if ($user['role'] === 'super_admin') {
-        header("Location: ../super_admin/super_Dashboard.php");
-    } elseif ($user['role'] === 'admin') {
+    if ($user['role'] === 'admin') {
         header("Location: ../Main/Dashboard.php");
-    } else {
-        header("Location: ../user/dashboard.php");
+    } elseif ($user['role'] === 'super_admin') {
+        header("Location: ../super_admin/Dashboard.php");
     }
     exit;
 } else {

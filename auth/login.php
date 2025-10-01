@@ -77,6 +77,8 @@ if ($result['success']) {
         header("Location: ../Main/Dashboard.php");
     } elseif ($user['role'] === 'super_admin') {
         header("Location: ../super_admin/Dashboard.php");
+    } else {
+        header("Location: ../super_admin/dashboard.php");
     }
     exit;
 } else {

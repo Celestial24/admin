@@ -70,16 +70,15 @@ if ($result['success']) {
     $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
     $_SESSION['email'] = $user['email'] ?? '';
     $_SESSION['role'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
+    $_SESSION['user_type'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
 
     // Redirect based on role
-    if ($login_type === 'admin') {
+    if ($user['role'] === 'super_admin') {
+        header("Location: ../super_admin/super_Dashboard.php");
+    } elseif ($user['role'] === 'admin') {
         header("Location: ../Main/Dashboard.php");
     } else {
-        if ($user['role'] === 'user') {
-            header("Location: ../user/dashboard.php");
-        } else {
-            header("Location: ../user/dashboard.php");
-        }
+        header("Location: ../user/dashboard.php");
     }
     exit;
 } else {

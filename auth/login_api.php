@@ -54,8 +54,6 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 
                 // I-verify ang password (plain text comparison for admin_user table)
                 if ($password === $row['password']) {
-                    // Set default role to admin since admin_user table doesn't have role column
-                    $row['role'] = 'admin';
                     
                     // Itakda ang mga session variable
                     $_SESSION['user_id'] = $row['id'];
@@ -70,7 +68,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                     if ($_SESSION['role'] == 'admin') {
                         header("Location: ../Main/Dashboard.php");
                         exit();
-                    } elseif ($_SESSION['role'] == 'superadmin') {
+                    } elseif ($_SESSION['role'] == 'super_admin') {
                         header("Location: ../super_admin/super_Dashboard.php");
                         exit();
                     } else {

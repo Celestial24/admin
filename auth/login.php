@@ -89,7 +89,7 @@ if ($result['success']) {
     if ($roleRaw === 'admin') {
         header("Location: ../Main/Dashboard.php");
     } elseif ($roleRaw === 'super_admin') {
-        header("Location: ../Main/super_Dashboard.php");
+        header("Location: ../super_admin/super_Dashboard.php");
     } else {
         header("Location: ../user/dashboard.php");
     }

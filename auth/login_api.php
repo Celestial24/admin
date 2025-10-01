@@ -95,10 +95,10 @@ if ($user) {
     $_SESSION['email'] = $user['email'] ?? '';
     echo json_encode([
         'success' => true,
-        'role' => 'superadmin',
+        'role' => 'super admin',
         'greeting' => 'Hi ' . $_SESSION['name'],
         'name' => $_SESSION['name'],
-        'redirectUrl' => '../super_admin/dashboard.php'
+        'redirectUrl' => '../super_admin/Dashboard.php'
     ]);
     exit;
 }

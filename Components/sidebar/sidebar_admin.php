@@ -163,34 +163,34 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </div>
 
-            <!-- Reports (Toggle Group) -->
-            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="reports-submenu">
+            <!-- User Management (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="user-submenu">
                 <span class="flex items-center gap-3">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span class="sidebar-text">Reports</span>
+                    <i data-lucide="user-cog" class="w-5 h-5"></i>
+                    <span class="sidebar-text">User Management</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             
             <!-- Topics -->
-            <div id="reports-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/module-table/facilities-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Facilities Reports
+            <div id="user-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/module-table/users.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'users.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Accounts
                 </a>
-                <a href="/admin/module-table/visitor-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Visitor Reports
+                <a href="/admin/module-table/user-roles.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'user-roles.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Roles
                 </a>
-                <a href="/admin/module-table/legal-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legal-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Legal Reports
+                <a href="/admin/module-table/user-permissions.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'user-permissions.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Permissions
                 </a>
-                <a href="/admin/module-table/document-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Document Reports
+                <a href="/admin/module-table/user-activity.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'user-activity.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Activity Logs
                 </a>
-                <a href="/admin/module-table/analytics.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'analytics.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Analytics Dashboard
+                <a href="/admin/module-table/user-registration.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'user-registration.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Registration
                 </a>
-                <a href="/admin/module-table/custom-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'custom-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Custom Reports
+                <a href="/admin/module-table/user-settings.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'user-settings.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> User Settings
                 </a>
             </div>
 

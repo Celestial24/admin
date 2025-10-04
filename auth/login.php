@@ -256,14 +256,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <form id="loginForm" class="space-y-4" method="POST" action="" novalidate>
         <input type="hidden" name="login_type" value="admin">
         <div class="field">
-          <input id="username" name="username" type="text" autocomplete="username" class="input peer" placeholder=" " required aria-describedby="userHelp">
-          <label for="username" class="float-label">Username or Email</label>
+          <input id="username" name="username" type="text" autocomplete="email" class="input peer" placeholder=" " required aria-describedby="userHelp">
+          <label for="username" class="float-label">Email or Username</label>
           <span class="icon-right" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5Z" fill="currentColor"/>
+              <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" fill="currentColor"/>
+              <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" fill="currentColor"/>
             </svg>
           </span>
-          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">admin</span> or <span class="font-mono">admin@example.com</span></p>
+          <p id="userHelp" class="mt-1 text-xs text-slate-500 dark:text-slate-400">e.g., <span class="font-mono">admin@gmail.com</span> or <span class="font-mono">admin</span></p>
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">

@@ -87,8 +87,6 @@ if ($result['success']) {
 }
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -470,7 +468,7 @@ if ($result['success']) {
   })();
 
   /* ---------- Auth + lockout ---------- */
-  const MAX_TRIES = 5, LOCK_MS = 60_000;
+  const MAX_TRIES = 5, LOCK_MS = 300_000; // 5 minutes instead of 1 minute
   const triesKey = 'atiera_login_tries';
   const lockKey  = 'atiera_login_lock';
   let   lockTimer = null;

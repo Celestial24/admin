@@ -83,7 +83,8 @@ if ($result['success']) {
     exit;
 } else {
     $error = $result['error'];
-    echo "<script>alert('Login Error: " . addslashes($error) . "');</script>";
+    // Store error in session to display inline instead of popup
+    $_SESSION['login_error'] = $error;
 }
 ?>
 
@@ -241,6 +242,13 @@ if ($result['success']) {
       <!-- Inline attempt + info banners -->
       <div id="alert" class="alert alert-error hidden mb-2" role="alert"></div>
       <div id="info" class="alert alert-info hidden mb-4" role="status"></div>
+      
+      <?php if (isset($_SESSION['login_error'])): ?>
+        <div class="alert alert-error mb-4" role="alert">
+          <?php echo htmlspecialchars($_SESSION['login_error']); ?>
+        </div>
+        <?php unset($_SESSION['login_error']); ?>
+      <?php endif; ?>
 
       <form id="loginForm" class="space-y-4" method="POST" action="" novalidate>
         <input type="hidden" name="login_type" value="admin">

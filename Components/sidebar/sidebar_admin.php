@@ -60,12 +60,36 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         .submenu-container::-webkit-scrollbar-thumb:active {
             background: rgba(209, 213, 219, 1);
         }
+        
+        /* Main navigation scrollbar */
+        nav::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        nav::-webkit-scrollbar-thumb {
+            background: rgba(75, 85, 99, 0.5);
+            border-radius: 3px;
+        }
+        
+        nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(75, 85, 99, 0.7);
+        }
+        
+        /* Hide scrollbar for Firefox on main nav */
+        nav {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+        }
     </style>
 </head>
 <body class="min-h-screen flex bg-gray-50">
 
     <!-- Sidebar Container -->
-    <div id="sidebar" class="bg-gray-800 text-white w-64 min-h-screen flex flex-col overflow-hidden">
+    <div id="sidebar" class="bg-gray-800 text-white w-64 h-screen flex flex-col overflow-hidden">
 
         <!-- Logo and Toggle Button -->
         <div class="flex items-center justify-between px-4 py-4 border-b border-gray-700">
@@ -79,7 +103,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </div>
 
         <!-- Navigation Links -->
-        <nav class="flex-1 px-2 py-4 space-y-2">
+        <nav class="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
             
             <!-- Facilities (Toggle Group) -->
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="facilities-submenu">

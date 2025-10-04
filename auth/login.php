@@ -53,38 +53,41 @@ function loginUser($conn, $emailOrName, $password) {
     return ['success' => true, 'user' => $user];
 }
 
-// --- Determine login type and credentials ---
-$login_type = $_POST['login_type'] ?? 'user';
-$usernameOrEmail = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
+// Only process login if form was submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // --- Determine login type and credentials ---
+    $login_type = $_POST['login_type'] ?? 'user';
+    $usernameOrEmail = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-if ($login_type === 'admin') {
-    $result = loginAdmin($conn, $usernameOrEmail, $password);
-} else {
-    $result = loginUser($conn, $usernameOrEmail, $password);
-}
-
-if ($result['success']) {
-    $user = $result['user'];
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
-    $_SESSION['email'] = $user['email'] ?? '';
-    $_SESSION['role'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
-    $_SESSION['user_type'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
-
-    // Redirect based on role
-    if ($user['role'] === 'admin') {
-        header("Location: ../Main/Dashboard.php");
-    } elseif ($user['role'] === 'super_admin') {
-        header("Location: ../super_admin/Dashboard.php");
+    if ($login_type === 'admin') {
+        $result = loginAdmin($conn, $usernameOrEmail, $password);
     } else {
-        header("Location: ../super_admin/dashboard.php");
+        $result = loginUser($conn, $usernameOrEmail, $password);
     }
-    exit;
-} else {
-    $error = $result['error'];
-    // Store error in session to display inline instead of popup
-    $_SESSION['login_error'] = $error;
+
+    if ($result['success']) {
+        $user = $result['user'];
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['name'] = $user['name'] ?? $user['username'] ?? '';
+        $_SESSION['email'] = $user['email'] ?? '';
+        $_SESSION['role'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
+        $_SESSION['user_type'] = $user['role'] ?? ($login_type === 'admin' ? 'admin' : 'user');
+
+        // Redirect based on role
+        if ($user['role'] === 'admin') {
+            header("Location: ../Main/Dashboard.php");
+        } elseif ($user['role'] === 'super_admin') {
+            header("Location: ../super_admin/Dashboard.php");
+        } else {
+            header("Location: ../super_admin/dashboard.php");
+        }
+        exit;
+    } else {
+        $error = $result['error'];
+        // Store error in session to display inline instead of popup
+        $_SESSION['login_error'] = $error;
+    }
 }
 ?>
 

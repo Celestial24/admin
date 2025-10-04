@@ -59,42 +59,50 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <!-- Topics -->
             <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
-                Facilities Overview
+                    <span class="text-sm text-gray-300">•</span> Facilities Overview
                 </a>
                 <a href="/admin/module-table/Reservation.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Reservation.php' ? 'bg-gray-700' : '' ?>">
-                 Room & Facility Reservation
+                    <span class="text-sm text-gray-300">•</span> Room & Facility Reservation
                 </a>
                 <a href="/admin/module-table/Maintenance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Maintenance.php' ? 'bg-gray-700' : '' ?>">
-                 Maintenance Requests
+                    <span class="text-sm text-gray-300">•</span> Maintenance Requests
+                </a>
+                <a href="/admin/module-table/room-management.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'room-management.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Room Management
+                </a>
+                <a href="/admin/module-table/equipment.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'equipment.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Equipment Inventory
+                </a>
+                <a href="/admin/module-table/booking-calendar.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'booking-calendar.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Booking Calendar
                 </a>
             </div>
 
-            <!-- Visitor Logs -->
-            <a href="/admin/Main/Visitors.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Visitors.php' ? 'bg-gray-700' : '' ?>">
-                <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="sidebar-text">Visitor Management</span>
-            </a>
-
-            <!-- NEW: Reports (Toggle Group) -->
-            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="reports-submenu">
+            <!-- Visitor Management (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="visitor-submenu">
                 <span class="flex items-center gap-3">
-                    <i data-lucide="file-text" class="w-5 h-5"></i>
-                    <span class="sidebar-text">Reports</span>
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="sidebar-text">Visitor Management</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <!-- Topics -->
-            <div id="reports-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/module-table/facilities.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities-report.php' ? 'bg-gray-700' : '' ?>">
-                    📊 Facilities Report
+            <div id="visitor-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/Main/Visitors.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Visitors.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Visitor Logs
                 </a>
-                <a href="/admin/module-table/Reservation.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-report.php' ? 'bg-gray-700' : '' ?>">
-                    👥 Visitor Logs Report
+                <a href="/admin/module-table/visitor-registration.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-registration.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Visitor Registration
                 </a>
-                <a href="/admin/module-table/Maintenance.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'audit-trail.php' ? 'bg-gray-700' : '' ?>">
-                    🔍 Audit Trail Report
+                <a href="/admin/module-table/visitor-checkin.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-checkin.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Check-in/Check-out
+                </a>
+                <a href="/admin/module-table/visitor-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Visitor Reports
                 </a>
             </div>
+
+      
 
             <!-- Legal & Contract Management (Toggle Group) -->
             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="legal-submenu">
@@ -106,11 +114,23 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             <!-- Topics -->
             <div id="legal-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/Main/legalmanagement.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
-                      Legal Management
-                </a>                </a>
-                <a href="/admin/module-table/Contract.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
-                      Contract Management
+                <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Legal Management
+                </a>
+                <a href="/admin/module-table/Contract.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Contract.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Contract Management
+                </a>
+                <a href="/admin/module-table/legal-documents.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legal-documents.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Legal Documents
+                </a>
+                <a href="/admin/module-table/compliance.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'compliance.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Compliance Tracking
+                </a>
+                <a href="/admin/module-table/legal-approvals.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legal-approvals.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Legal Approvals
+                </a>
+                <a href="/admin/module-table/legal-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legal-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Legal Reports
                 </a>
             </div>
 
@@ -123,24 +143,54 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
-                    Submission History
+                <a href="/admin/module-table/document.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Submission
+                </a>
+                <a href="/admin/module-table/document-archive.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-archive.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Archive
+                </a>
+                <a href="/admin/module-table/document-categories.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-categories.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Categories
+                </a>
+                <a href="/admin/module-table/document-search.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-search.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Search
+                </a>
+                <a href="/admin/module-table/document-approval.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-approval.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Approval
+                </a>
+                <a href="/admin/module-table/document-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Reports
                 </a>
             </div>
 
-            <!-- User Management -->
-             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="archiver-submenu">
+            <!-- Reports (Toggle Group) -->
+            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-700 group" data-submenu-toggle="reports-submenu">
                 <span class="flex items-center gap-3">
-                    <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <span class="sidebar-text">Reports</span>
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             
             <!-- Topics -->
-            <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
-                <a href="/admin/module-table/document.php" class="block px-3 py-1 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
-                    Submission History
+            <div id="reports-submenu" class="ml-9 space-y-1 hidden">
+                <a href="/admin/module-table/facilities-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Facilities Reports
+                </a>
+                <a href="/admin/module-table/visitor-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'visitor-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Visitor Reports
+                </a>
+                <a href="/admin/module-table/legal-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legal-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Legal Reports
+                </a>
+                <a href="/admin/module-table/document-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Document Reports
+                </a>
+                <a href="/admin/module-table/analytics.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'analytics.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Analytics Dashboard
+                </a>
+                <a href="/admin/module-table/custom-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'custom-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Custom Reports
                 </a>
             </div>
 

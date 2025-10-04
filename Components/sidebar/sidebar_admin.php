@@ -30,34 +30,35 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         
         /* Scrollable submenus */
         .submenu-container {
-            max-height: 300px;
+            max-height: 200px;
             overflow-y: auto;
             overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.6) rgba(55, 65, 81, 0.3);
         }
         
         /* Custom scrollbar styling */
         .submenu-container::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         
         .submenu-container::-webkit-scrollbar-track {
-            background: rgba(55, 65, 81, 0.3);
-            border-radius: 3px;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 4px;
         }
         
         .submenu-container::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.6);
-            border-radius: 3px;
+            background: rgba(156, 163, 175, 0.7);
+            border-radius: 4px;
+            border: 1px solid rgba(75, 85, 99, 0.3);
         }
         
         .submenu-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(156, 163, 175, 0.8);
+            background: rgba(156, 163, 175, 0.9);
         }
         
-        /* Firefox scrollbar */
-        .submenu-container {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(156, 163, 175, 0.6) rgba(55, 65, 81, 0.3);
+        .submenu-container::-webkit-scrollbar-thumb:active {
+            background: rgba(209, 213, 219, 1);
         }
     </style>
 </head>
@@ -107,6 +108,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
                 <a href="/admin/module-table/booking-calendar.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'booking-calendar.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> Booking Calendar
+                </a>
+                <a href="/admin/module-table/facility-scheduling.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facility-scheduling.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Facility Scheduling
+                </a>
+                <a href="/admin/module-table/room-availability.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'room-availability.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Room Availability
+                </a>
+                <a href="/admin/module-table/facility-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facility-reports.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Facility Reports
+                </a>
+                <a href="/admin/module-table/cleaning-schedule.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'cleaning-schedule.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Cleaning Schedule
+                </a>
+                <a href="/admin/module-table/utility-management.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'utility-management.php' ? 'bg-gray-700' : '' ?>">
+                    <span class="text-sm text-gray-300">•</span> Utility Management
                 </a>
             </div>
 

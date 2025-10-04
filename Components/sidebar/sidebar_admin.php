@@ -27,6 +27,38 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         .rotate-180 {
             transform: rotate(180deg);
         }
+        
+        /* Scrollable submenus */
+        .submenu-container {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Custom scrollbar styling */
+        .submenu-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .submenu-container::-webkit-scrollbar-track {
+            background: rgba(55, 65, 81, 0.3);
+            border-radius: 3px;
+        }
+        
+        .submenu-container::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.6);
+            border-radius: 3px;
+        }
+        
+        .submenu-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.8);
+        }
+        
+        /* Firefox scrollbar */
+        .submenu-container {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.6) rgba(55, 65, 81, 0.3);
+        }
     </style>
 </head>
 <body class="min-h-screen flex bg-gray-50">
@@ -57,7 +89,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <!-- Topics -->
-            <div id="facilities-submenu" class="ml-9 space-y-1 hidden">
+            <div id="facilities-submenu" class="ml-9 space-y-1 hidden submenu-container">
                 <a href="/admin/module-table/facilities.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'facilities.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> Facilities Overview
                 </a>
@@ -87,7 +119,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <!-- Topics -->
-            <div id="visitor-submenu" class="ml-9 space-y-1 hidden">
+            <div id="visitor-submenu" class="ml-9 space-y-1 hidden submenu-container">
                 <a href="/admin/Main/Visitors.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'Visitors.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> Visitor Logs
                 </a>
@@ -113,7 +145,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
             <!-- Topics -->
-            <div id="legal-submenu" class="ml-9 space-y-1 hidden">
+            <div id="legal-submenu" class="ml-9 space-y-1 hidden submenu-container">
                 <a href="/admin/Main/legalmanagement.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'legalmanagement.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> Legal Management
                 </a>
@@ -142,7 +174,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform submenu-chevron"></i>
             </button>
-            <div id="archiver-submenu" class="ml-9 space-y-1 hidden">
+            <div id="archiver-submenu" class="ml-9 space-y-1 hidden submenu-container">
                 <a href="/admin/module-table/document.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> Document Submission
                 </a>
@@ -150,16 +182,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <span class="text-sm text-gray-300">•</span> Document Archive
                 </a>
                 <a href="/admin/module-table/document-categories.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-categories.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Document Categories
+                    <span class="text-sm text-gray-300">•</span> Categories
                 </a>
                 <a href="/admin/module-table/document-search.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-search.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Document Search
+                    <span class="text-sm text-gray-300">•</span>  Search
                 </a>
                 <a href="/admin/module-table/document-approval.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-approval.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Document Approval
+                    <span class="text-sm text-gray-300">•</span>  Approval
                 </a>
                 <a href="/admin/module-table/document-reports.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'document-reports.php' ? 'bg-gray-700' : '' ?>">
-                    <span class="text-sm text-gray-300">•</span> Document Reports
+                    <span class="text-sm text-gray-300">•</span>  Reports
                 </a>
             </div>
 
@@ -173,7 +205,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             
             <!-- Topics -->
-            <div id="user-submenu" class="ml-9 space-y-1 hidden">
+            <div id="user-submenu" class="ml-9 space-y-1 hidden submenu-container">
                 <a href="/admin/module-table/users.php" class="block px-3 py-2 rounded-md hover:bg-gray-700 <?= $currentPage === 'users.php' ? 'bg-gray-700' : '' ?>">
                     <span class="text-sm text-gray-300">•</span> User Accounts
                 </a>
